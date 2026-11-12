@@ -2,6 +2,7 @@
 key2
 key2.pub
 *.key
+*.key.json
 *.pem
 .env
 .env.*
