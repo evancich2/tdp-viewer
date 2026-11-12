@@ -1,16 +1,40 @@
 import { useEffect, useRef, useState } from "react";
-import { AuditLog, PackageSession, defaultPolicy, loadTrustStore, type AuditEntry, type TrustStore } from "../core";
-import demoTrustStore from "../../samples/trust-store.json?raw";
+import {
+  AuditLog,
+  PackageSession,
+  defaultPolicy,
+  loadAnchors,
+  loadTrustStoreFile,
+  type Anchors,
+  type AuditEntry,
+  type RootKey,
+  type TrustStore,
+} from "../core";
+import demoAnchors from "../../samples/anchors.json?raw";
+import demoTrustStore from "../../samples/trust-store.signed.json?raw";
 import { BomTree } from "./BomTree";
 import { ComparePanel } from "./ComparePanel";
 import { FilePreview } from "./FilePreview";
 import { onInstallAvailable, onLaunchFiles, registerServiceWorker } from "../pwa/client";
-import { fingerprint, forget, recall, remember } from "./trustMemory";
+import { fingerprint, forget, recall, recordSerial, remember, seenSerials } from "./trustMemory";
+
+interface PinnedRoots {
+  anchors: Anchors;
+  json: string;
+  label: string;
+}
 
 const readFile = (f: File) => f.arrayBuffer().then((b) => new Uint8Array(b));
 
 export function App() {
-  const [trust, setTrust] = useState<{ store: TrustStore; label: string; json: string; fingerprint: string } | null>(null);
+  const [trust, setTrust] = useState<{
+    store: TrustStore;
+    label: string;
+    json: string;
+    fingerprint: string;
+    signedBy?: RootKey;
+  } | null>(null);
+  const [roots, setRoots] = useState<PinnedRoots | null>(null);
   const [remembered, setRemembered] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [applyUpdate, setApplyUpdate] = useState<(() => void) | null>(null);
@@ -23,16 +47,38 @@ export function App() {
 
   const refreshAudit = async () => setAuditEntries(await audit.list());
 
-  async function applyTrustStore(json: string, label: string, fromMemory = false) {
+  /** Pins the organization roots that must sign trust stores. Any trust store already loaded is re-checked. */
+  async function pinRoots(json: string, label: string): Promise<PinnedRoots | null> {
     try {
-      const store = await loadTrustStore(json);
+      const pinned = { anchors: await loadAnchors(json), json, label };
+      setRoots(pinned);
+      setTrust(null);
+      setSession(null);
+      forget();
+      setRemembered(false);
+      setError(null);
+      await audit.append("trust", label, `pinned roots: ${pinned.anchors.roots.map((r) => `${r.name} (${r.keyId})`).join(", ")}`);
+      await refreshAudit();
+      return pinned;
+    } catch (e) {
+      setError(`Root keys rejected: ${(e as Error).message}`);
+      return null;
+    }
+  }
+
+  async function applyTrustStore(json: string, label: string, fromMemory = false, pinned = roots) {
+    try {
+      const loaded = await loadTrustStoreFile(json, { anchors: pinned?.anchors, seenSerials: seenSerials() });
+      const { store, signedBy } = loaded;
+      if (signedBy) recordSerial(signedBy.keyId, store.serial!);
       const fp = await fingerprint(json);
-      setTrust({ store, label, json, fingerprint: fp });
+      setTrust({ store, label, json, fingerprint: fp, signedBy });
       setRemembered(fromMemory);
       if (!fromMemory) forget();
       setSession(null);
       setError(null);
-      await audit.append("trust", label, `${store.keys.length} keys, fingerprint ${fp}${fromMemory ? ", remembered on this device" : ""}`);
+      const how = signedBy ? `signed by ${signedBy.name}, serial ${store.serial}, expires ${store.expires}` : "unsigned";
+      await audit.append("trust", label, `${store.keys.length} keys, ${how}, fingerprint ${fp}${fromMemory ? ", remembered on this device" : ""}`);
       await refreshAudit();
     } catch (e) {
       if (fromMemory) forget();
@@ -40,9 +86,14 @@ export function App() {
     }
   }
 
+  async function useDemoKeys() {
+    const pinned = await pinRoots(demoAnchors, "demo root (samples/anchors.json)");
+    if (pinned) await applyTrustStore(demoTrustStore, "demo keys (samples/trust-store.signed.json)", false, pinned);
+  }
+
   function toggleRemember(on: boolean) {
     if (!trust) return;
-    if (on && !remember({ json: trust.json, label: trust.label })) {
+    if (on && !remember({ json: trust.json, label: trust.label, anchorsJson: roots?.json })) {
       setError("This browser won't store data for this site, so the trust store can't be remembered.");
       return;
     }
@@ -64,7 +115,20 @@ export function App() {
     if (started.current) return;
     started.current = true;
     const saved = recall();
-    if (saved) void applyTrustStore(saved.json, saved.label, true);
+    if (saved)
+      void (async () => {
+        let pinned: PinnedRoots | null = null;
+        if (saved.anchorsJson) {
+          try {
+            pinned = { anchors: await loadAnchors(saved.anchorsJson), json: saved.anchorsJson, label: "remembered roots" };
+            setRoots(pinned);
+          } catch {
+            forget();
+            return;
+          }
+        }
+        await applyTrustStore(saved.json, saved.label, true, pinned);
+      })();
     registerServiceWorker((apply) => setApplyUpdate(() => apply));
     onInstallAvailable((fn) => setInstall(() => fn));
     onLaunchFiles((file) => setPendingFile(file));
@@ -110,16 +174,43 @@ export function App() {
 
       <section className="step">
         <h2>1. Trust store</h2>
-        <p className="muted">The signing keys you trust. A package can't supply its own.</p>
+        <p className="muted">
+          The signing keys you trust. A package can't supply its own. Pin your organization's root key first and only trust
+          stores it signed will be accepted.
+        </p>
+        <div className="row">
+          <label className="button">
+            Pin root keys…
+            <input type="file" accept=".json" hidden
+              onChange={async (e) => { const f = e.target.files?.[0]; if (f) await pinRoots(await f.text(), f.name); e.target.value = ""; }} />
+          </label>
+          {roots ? (
+            <span>
+              Pinned: {roots.anchors.roots.map((r) => <strong key={r.keyId}>{r.name} </strong>)}
+              <button className="link small" onClick={() => { setRoots(null); setTrust(null); setSession(null); forget(); setRemembered(false); }}>
+                Unpin
+              </button>
+            </span>
+          ) : (
+            <span className="muted">No root pinned: any trust store you load is trusted as-is.</span>
+          )}
+        </div>
         <div className="row">
           <label className="button">
             Load trust store…
             <input type="file" accept=".json" hidden
-              onChange={async (e) => { const f = e.target.files?.[0]; if (f) await applyTrustStore(await f.text(), f.name); }} />
+              onChange={async (e) => { const f = e.target.files?.[0]; if (f) await applyTrustStore(await f.text(), f.name); e.target.value = ""; }} />
           </label>
-          <button onClick={() => applyTrustStore(demoTrustStore, "demo keys (samples/trust-store.json)")}>Use demo keys</button>
+          <button onClick={() => void useDemoKeys()}>Use demo keys</button>
           {trust && <span>Using <strong>{trust.label}</strong>: {trust.store.keys.length} keys · fingerprint <code>{trust.fingerprint}</code></span>}
         </div>
+        {trust && (
+          <p className={trust.signedBy ? "signed" : "muted"}>
+            {trust.signedBy
+              ? `✓ Signed by ${trust.signedBy.name} · serial ${trust.store.serial} · expires ${trust.store.expires!.slice(0, 10)}`
+              : "Unsigned trust store: you are vouching for every key in it yourself."}
+          </p>
+        )}
         {trust && (
           <label className="row muted">
             <input type="checkbox" checked={remembered} onChange={(e) => toggleRemember(e.target.checked)} />

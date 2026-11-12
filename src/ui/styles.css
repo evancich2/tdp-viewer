@@ -103,3 +103,4 @@ select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; 
 .key.removed { background: rgb(214, 40, 40); }
 .key.added { background: rgb(20, 150, 70); }
 button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+p.signed { color: var(--pass-fg); margin: 0.25rem 0; }

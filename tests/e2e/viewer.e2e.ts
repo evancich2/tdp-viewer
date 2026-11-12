@@ -43,6 +43,13 @@ try {
 
   await page.goto(`${ORIGIN}/`);
   await page.getByRole("button", { name: "Use demo keys" }).click();
+  await page.getByText(/✓ Signed by Sample Org Root/).waitFor();
+  // With a root pinned, an unsigned trust store is refused.
+  await page.locator("label", { hasText: "Load trust store" }).locator("input").setInputFiles("samples/trust-store.json");
+  await page.getByText(/isn't signed, and you've pinned a root key/).waitFor();
+  await page.getByRole("button", { name: "Use demo keys" }).click();
+  await page.getByText(/✓ Signed by Sample Org Root/).waitFor();
+  console.log("ok  signed trust store accepted under the pinned root; unsigned one refused");
 
   // Tampered package: rejected, nothing openable.
   await page.locator('input[accept=".tdp,.zip"]').setInputFiles("samples/tampered.tdp");
