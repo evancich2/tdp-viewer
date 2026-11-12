@@ -42,8 +42,12 @@ Each milestone becomes a set of GitHub issues.
 - [x] `pack` a folder with a `tdp-package.json` spec
 - [x] `sign`: multi-party, one signature at a time; checks contents and role before signing
 
+## Done: v0.7 signed trust stores
+- [x] Organization root keys (`keygen --roles root`), anchors file, `trust anchor` and `trust sign`
+- [x] Viewer and CLI accept only root-signed trust stores once a root is pinned
+- [x] Serial numbers with rollback protection; expiry on signed stores
+
 ## Packaging tools: next
-- [ ] Signed trust stores, chained to an organizational root key
 - [ ] Hardware-backed keys (PIV/CAC smart card, YubiKey) for signing
 
 ## Done: v0.5 revision compare

@@ -24,6 +24,20 @@ npm run tdp -- trust add trust-store.json keys/abe.pub.json
 npm run tdp -- trust revoke trust-store.json <keyId>     # when a key is lost or someone leaves
 ```
 
+### Optional: sign the trust store with an organization root
+
+Instead of every viewer vetting each signer key by hand, one organization root key vouches for the trust store:
+
+```sh
+npm run tdp -- keygen --name "Acme Root" --roles root --out keys/root       # keep this key offline
+npm run tdp -- trust anchor anchors.json keys/root.pub.json                 # give anchors.json to every viewer
+npm run tdp -- trust sign trust-store.json --key keys/root.key.json --out trust-store.signed.json
+```
+
+Viewers pin `anchors.json` once (**Pin root keys…** in the app, `--anchors` in the CLI) and then accept only trust stores that root signed. Each signed release gets the next serial number and an expiry (`--days`, default 365); a viewer refuses a serial lower than one it has already seen from that root, so an old trust store from before a revocation can't be replayed. After a revocation, sign and distribute the store again.
+
+A root key can't also sign packages: keep it single-purpose and offline.
+
 ## 3. Describe the package
 
 Put a `tdp-package.json` in the folder:
@@ -50,6 +64,7 @@ npm run tdp -- pack parts/W-100 --out W-100_A.tdp
 npm run tdp -- sign W-100_A.tdp --key keys/ann.key.json --role author
 npm run tdp -- sign W-100_A.tdp --key keys/abe.key.json --role approver
 npm run tdp -- verify W-100_A.tdp --trust trust-store.json
+npm run tdp -- verify W-100_A.tdp --trust trust-store.signed.json --anchors anchors.json   # with a signed trust store
 ```
 
 Signing never rewrites the manifest or files; it only adds to `tdp-manifest.sig.json`, so signers can work one after another on the same file. Before signing, the tool checks every file against the manifest and refuses if anything doesn't match, so a signature always means "I checked this". It also refuses a role the key isn't authorized for.

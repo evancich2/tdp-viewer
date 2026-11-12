@@ -7,7 +7,7 @@ TDP Viewer treats every package as hostile until proven otherwise, and keeps re-
 | Principle | How it's applied | Code |
 |---|---|---|
 | Never trust, always verify | A package is `trusted` only if *every* check passes; there is no partial trust. File bytes are re-hashed on every open. | `verifyPackage`, `PackageSession.openFile` |
-| Explicit trust anchors | Signer keys come from an operator-supplied trust store. A key's id is derived from its public key, so it can't be spoofed. | `loadTrustStore`, `keyIdFor` |
+| Explicit trust anchors | Signer keys come from an operator-supplied trust store. A key's id is derived from its public key, so it can't be spoofed. Optionally an organization root signs the trust store; once a root is pinned, unsigned stores are refused, and serial numbers block rollback to an older store. | `loadTrustStoreFile`, `keyIdFor` |
 | Least privilege | Keys are authorized per role (`author`, `checker`, `approver`, `release`) and only within a validity window. | `checkSignature` |
 | Separation of duties | Required roles must be signed by distinct keys. One person can't author and approve. | `verifyPackage` step 3 |
 | Default deny | Strict schemas reject unknown fields; unlisted files, disallowed media types and mismatched content fail. | `schema.ts`, `policy.ts` |
@@ -80,7 +80,6 @@ Remembering the trust store is opt-in. It is stored in the browser's site storag
 
 These are tracked in [ROADMAP.md](../ROADMAP.md):
 
-- Trust store distribution and integrity (today the operator loads a JSON file; it should itself be signed by an organizational root).
 - Online revocation status (revocation is a flag in the trust store; there's no live check, by design for offline use).
 - Fuzzing the PDF and STEP parsers (the verifier itself is fuzzed: `tests/fuzz.test.ts`).
 - Chain of custody across organizations (designed in [chain-of-custody.md](chain-of-custody.md)).

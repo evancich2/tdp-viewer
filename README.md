@@ -21,7 +21,7 @@ TDP Viewer opens a `.tdp` package in the browser and refuses to show anything un
 ## Zero trust, concretely
 
 - **Nothing in a package is trusted by default.** Everything not explicitly allowed by the policy is rejected: unknown fields, unlisted files, unexpected media types.
-- **Trust anchors come from you, not the package.** You load a trust store of signer keys; a package can't vouch for itself.
+- **Trust anchors come from you, not the package.** You load a trust store of signer keys; a package can't vouch for itself. Optionally pin your organization's root key, and only trust stores it signed (with rollback protection) are accepted.
 - **Separation of duties.** The default policy requires both an `author` and an `approver` signature, from *different* keys, each authorized for that role and valid at signing time and now. Revoked keys fail.
 - **Verify on every access.** UI code can only read file bytes through `PackageSession.openFile`, which re-checks the digest each time and denies everything from a rejected package.
 - **Hostile-input handling.** Zip-bomb limits, path-traversal and duplicate-name checks, strict schemas, and content sniffing (a "PDF" must start with `%PDF-`).
@@ -43,7 +43,7 @@ npm install
 npm run dev          # open the printed URL
 ```
 
-In the app, click **Use demo keys**, then open `samples/sample.tdp` (trusted) or `samples/tampered.tdp` (one drawing altered after signing, so it's rejected). To see a change report, open `samples/sample.tdp` and compare it with `samples/sample-rev-c.tdp`, where a sample change order thickens the gusset.
+In the app, click **Use demo keys** (it pins the demo root and loads the root-signed demo trust store), then open `samples/sample.tdp` (trusted) or `samples/tampered.tdp` (one drawing altered after signing, so it's rejected). To see a change report, open `samples/sample.tdp` and compare it with `samples/sample-rev-c.tdp`, where a sample change order thickens the gusset.
 
 ### Printing on a Bambu Lab printer
 

@@ -71,3 +71,23 @@ See [zero-trust.md](zero-trust.md#what-a-signature-covers) for the exact signed 
   ]
 }
 ```
+
+## Signed trust store and anchors
+
+A root key signs the exact bytes of a trust store:
+
+```json
+{
+  "schema": "tdp-signed-truststore/0.1",
+  "payload": "<base64 of the trust-store JSON, which includes serial, issuer, issued and expires>",
+  "signatures": [{ "keyId": "<root key id>", "alg": "Ed25519", "signedAt": "…", "sig": "<base64>" }]
+}
+```
+
+The signed message is `tdp-truststore-signature/0.1\n<signedAt>\n<sha256 of payload bytes>`.
+
+Viewers pin roots in an anchors file:
+
+```json
+{ "schema": "tdp-anchors/0.1", "roots": [{ "keyId": "…", "name": "Acme Root", "publicKey": "<base64>" }] }
+```
