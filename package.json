@@ -15,10 +15,13 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "tdp": "tsx tools/tdp.ts",
-    "sample": "tsx tools/make-sample.ts"
+    "sample": "tsx tools/make-sample.ts",
+    "e2e": "vite build && tsx tests/e2e/viewer.e2e.ts"
   },
   "dependencies": {
     "fflate": "0.8.3",
+    "occt-import-js": "0.0.23",
+    "pdfjs-dist": "6.4.299",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "zod": "4.6.7"
@@ -28,6 +31,7 @@
     "@types/react": "18.3.31",
     "@types/react-dom": "18.3.7",
     "@vitejs/plugin-react": "6.3.0",
+    "playwright-core": "1.64.1",
     "tsx": "4.23.15",
     "typescript": "7.0.2",
     "vite": "8.3.8",

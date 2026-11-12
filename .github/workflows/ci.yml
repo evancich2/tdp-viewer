@@ -22,3 +22,4 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run tdp -- verify samples/sample.tdp --trust samples/trust-store.json
+      - run: npm run e2e
