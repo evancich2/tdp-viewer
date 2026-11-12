@@ -26,7 +26,7 @@ TDP Viewer opens a `.tdp` package in the browser and refuses to show anything un
 - **Every action is recorded.** A hash-chained audit log covers each load, verdict, denial and file open, and can be exported.
 - **No network, strict CSP.** Production builds ship `default-src 'none'; connect-src 'none'`.
 
-Details: [docs/zero-trust.md](docs/zero-trust.md) · Package format: [docs/package-format.md](docs/package-format.md)
+Details: [docs/zero-trust.md](docs/zero-trust.md) · Package format: [docs/package-format.md](docs/package-format.md) · Building packages: [docs/packaging.md](docs/packaging.md)
 
 ## Built with
 
@@ -61,7 +61,9 @@ npm run sample       # regenerate the sample packages with fresh demo keys
 npm run tdp -- verify samples/sample.tdp --trust samples/trust-store.json
 ```
 
-The CLI exits 0 for a trusted package and 1 for a rejected one, so it can gate a CI pipeline or a receiving-inspection script.
+### Making your own packages
+
+The `tdp` CLI creates passphrase-protected signing keys, manages the trust store, packs a folder into a `.tdp`, and adds signatures one signer at a time. See [docs/packaging.md](docs/packaging.md). `tdp verify` exits 0 for a trusted package and 1 for a rejected one, so it can gate a CI pipeline or a receiving-inspection script.
 
 ## Deploying
 

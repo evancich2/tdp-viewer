@@ -35,10 +35,15 @@ Each milestone becomes a set of GitHub issues.
 - [ ] STL export for other slicers
 - [ ] Rebuild occt-import-js with `-sDYNAMIC_EXECUTION=0` to drop the STEP worker's `unsafe-eval`
 
-## Packaging tools
-- [ ] CLI `keygen`, `pack` and `sign` commands (private keys never written unencrypted)
-- [ ] Multi-party signing: add signatures to an existing package without rebuilding it
+## Done: v0.4 packaging tools
+- [x] CLI `keygen` with scrypt + AES-256-GCM encrypted key files
+- [x] `trust add` / `trust revoke`
+- [x] `pack` a folder with a `tdp-package.json` spec
+- [x] `sign`: multi-party, one signature at a time; checks contents and role before signing
+
+## Packaging tools: next
 - [ ] Signed trust stores, chained to an organizational root key
+- [ ] Hardware-backed keys (PIV/CAC smart card, YubiKey) for signing
 
 ## Configuration control
 - [ ] Revision diff: compare two TDPs (files added, removed or changed; BOM changes)
@@ -54,7 +59,6 @@ Each milestone becomes a set of GitHub issues.
 - [ ] Fuzz tests for the archive reader and schemas
 - [ ] Broaden the end-to-end tests (rejected-package cases, keyboard use)
 - [ ] Signed audit-log export
-- [ ] Optional hardware-backed signing (WebAuthn, PIV/CAC smart cards)
 
 ## Later
 - [ ] PMI display: dimensions and tolerances embedded in STEP AP242 models
