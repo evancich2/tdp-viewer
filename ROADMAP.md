@@ -50,6 +50,15 @@ Each milestone becomes a set of GitHub issues.
 - [x] Revision diff in the CLI (`tdp diff`) and UI: package fields, parts, and files (added, removed, changed, moved, revised)
 - [x] Sample rev C package with a change order
 
+## Chain of custody ([design](docs/chain-of-custody.md))
+- [ ] Signed custody events (packaged, signed, transferred, received, inspected, printed), hash-linked and carried in the package
+- [ ] Viewer: verify and show the custody timeline for a package
+- [ ] CLI: `tdp custody add` to record a handoff with your key
+- [ ] Merkle-tree custody log with signed tree heads, inclusion and consistency proofs (Certificate Transparency style)
+- [ ] Exchange and compare signed tree heads between organizations; flag any inconsistency
+- [ ] Record 3D-print exports as custody events
+- [ ] Optional anchoring of tree heads: RFC 3161 timestamps, public transparency logs, or a blockchain where required (root hash only, never package data)
+
 ## Configuration control
 - [x] Drawing overlay compare for revised drawings, with changed areas boxed
 - [ ] Multi-page drawing compare
@@ -71,7 +80,7 @@ Each milestone becomes a set of GitHub issues.
 - [ ] Persistent audit log on the device (append-only, exportable), opt-in
 
 ## Hardening
-- [ ] Fuzz tests for the archive reader and schemas
+- [x] Fuzz tests: mutated packages, mangled manifests, zip bombs, path traversal, case collisions
 - [ ] Broaden the end-to-end tests (rejected-package cases, keyboard use)
 - [ ] Signed audit-log export
 

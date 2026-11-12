@@ -82,7 +82,8 @@ These are tracked in [ROADMAP.md](../ROADMAP.md):
 
 - Trust store distribution and integrity (today the operator loads a JSON file; it should itself be signed by an organizational root).
 - Online revocation status (revocation is a flag in the trust store; there's no live check, by design for offline use).
-- Fuzzing the PDF and STEP parsers.
+- Fuzzing the PDF and STEP parsers (the verifier itself is fuzzed: `tests/fuzz.test.ts`).
+- Chain of custody across organizations (designed in [chain-of-custody.md](chain-of-custody.md)).
 - Release signing for app updates (today the server's `sw.js` is the root of trust for code).
 - The `unsafe-eval` exception in the STEP worker.
 - What happens to a 3MF after export: the slicer and printer are outside the viewer's control.
