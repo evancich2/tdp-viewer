@@ -1,0 +1,27 @@
+{
+  "schema": "tdp-truststore/0.1",
+  "keys": [
+    {
+      "keyId": "e25236ae20919bec9dbff5f1f558a074",
+      "name": "Sample Author (demo key)",
+      "publicKey": "hAIEQ2Q3waZ8CDXetbohXeP5wFUc+TIkLSoMhpHBNmM=",
+      "roles": [
+        "author"
+      ],
+      "notBefore": "2026-11-11T05:05:57.724Z",
+      "notAfter": "2028-11-11T05:05:57.724Z",
+      "revoked": false
+    },
+    {
+      "keyId": "0d9862cef7a4d571cadca268cbcad6f6",
+      "name": "Sample Approver (demo key)",
+      "publicKey": "gifGBdGViGD0evyFBFmvFAOFhWLUY3jwK5bfLESdO8U=",
+      "roles": [
+        "approver"
+      ],
+      "notBefore": "2026-11-11T05:05:57.724Z",
+      "notAfter": "2028-11-11T05:05:57.724Z",
+      "revoked": false
+    }
+  ]
+}
