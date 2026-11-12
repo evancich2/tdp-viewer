@@ -1,0 +1,10 @@
+{
+  "schema": "tdp-anchors/0.1",
+  "roots": [
+    {
+      "keyId": "8cc94378daeafc3ef621e32d09b006e0",
+      "name": "Sample Org Root (demo key)",
+      "publicKey": "kvXfdahOv1g+La/Je81ddZaPlcv2spHUdQ0SLtGMJhk="
+    }
+  ]
+}
