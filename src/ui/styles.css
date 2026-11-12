@@ -94,3 +94,4 @@ code { font-size: 0.9em; }
 
 .spread { justify-content: space-between; }
 .banner.info { background: color-mix(in srgb, var(--accent) 14%, var(--bg)); color: var(--fg); }
+select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }

@@ -29,8 +29,9 @@ Each milestone becomes a set of GitHub issues.
 - [ ] Title-block metadata panel beside the drawing
 
 ## 3D printing
+- [x] Printer profiles with a build-volume fit check (Bambu Lab H2C)
 - [ ] Print settings carried in the package (material, infill, orientation) and written into the 3MF
-- [ ] Bambu LAN print bridge: a separate local CLI that uploads a sliced `.gcode.3mf` to a printer in LAN mode (FTPS + MQTT, access code) and reports status; kept out of the browser app so the viewer stays network-free
+- [ ] Bambu LAN print bridge for the H2C: a separate local CLI that uploads a sliced `.gcode.3mf` over FTPS (port 990) and starts it over MQTT (port 8883) with the printer's access code; likely needs LAN-only mode plus Developer Mode on the printer; kept out of the browser app so the viewer stays network-free
 - [ ] Slicing through the Bambu Studio CLI from the bridge
 - [ ] STL export for other slicers
 - [ ] Rebuild occt-import-js with `-sDYNAMIC_EXECUTION=0` to drop the STEP worker's `unsafe-eval`

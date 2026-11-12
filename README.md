@@ -13,7 +13,7 @@ TDP Viewer opens a `.tdp` package in the browser and refuses to show anything un
 - **Verify** a package against your trust store and policy, with a per-check report.
 - **View drawings:** PDF pages rendered with pdf.js in an isolated worker, with zoom (buttons or Ctrl/⌘ + scroll), pan by dragging, rotate and multi-page navigation. Only page content is drawn: no links, forms, annotations or scripts.
 - **View 3D models:** STEP files meshed by OpenCascade in a throwaway worker and shown with three.js: orbit, preset views (iso, top, front, right), click a solid to select it, show or hide solids, and see each solid's size.
-- **Print a part:** turn a verified STEP model into a 3MF that [Bambu Studio](https://bambulab.com/en/download/studio) opens directly, ready to slice and send to a Bambu Lab printer (or any 3MF slicer). The model is meshed with OpenCascade in a throwaway worker, checked to be watertight, and stamped with its part number, revision and the package and source digests, so a printed part traces back to the exact signed package.
+- **Print a part:** turn a verified STEP model into a 3MF that [Bambu Studio](https://bambulab.com/en/download/studio) opens directly, ready to slice and send to a Bambu Lab printer (or any 3MF slicer). The model is meshed with OpenCascade in a throwaway worker, checked to be watertight, and stamped with its part number, revision and the package and source digests, so a printed part traces back to the exact signed package. Pick the target printer (Bambu Lab H2C by default) and the export checks every solid against its build volume, allowing for rotation.
 - **Compare revisions:** open a second package to see what changed: package fields, parts (revision, quantity, name, parent) and files, with renamed files shown as moved and new revisions of a part's drawing or model shown as revised. Both packages must verify first.
 - **Browse** the BOM tree and file list; every file open and export goes into the audit log.
 - **Install it as an app** (PWA): works fully offline after the first visit, opens `.tdp` files double-clicked in the OS (Chrome and Edge), and can remember your trust store on the device. Updates are verified file by file and wait until you choose to reload.
@@ -48,8 +48,8 @@ In the app, click **Use demo keys**, then open `samples/sample.tdp` (trusted) or
 ### Printing on a Bambu Lab printer
 
 1. Open a trusted package and select a `.stp` model.
-2. Click **Export 3MF for Bambu Studio**. The browser saves `<part>_<rev>.3mf`.
-3. Open the 3MF in Bambu Studio, pick the printer, plate and filament, slice, and print over LAN or cloud as usual.
+2. Leave **Printer** on *Bambu Lab H2C* (or pick another) and click **Export 3MF for Bambu Studio**. The browser saves `<part>_<rev>.3mf` and warns if a solid can't fit the build volume. The H2C check uses a conservative 300 × 320 × 320 mm, which holds in both single- and dual-nozzle modes.
+3. Open the 3MF in Bambu Studio, choose the H2C profile, nozzles and filament, slice, and print over LAN or cloud as usual.
 
 The viewer itself never talks to the printer; see the roadmap for a separate LAN print bridge.
 
