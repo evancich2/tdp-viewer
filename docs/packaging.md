@@ -53,3 +53,11 @@ npm run tdp -- verify W-100_A.tdp --trust trust-store.json
 ```
 
 Signing never rewrites the manifest or files; it only adds to `tdp-manifest.sig.json`, so signers can work one after another on the same file. Before signing, the tool checks every file against the manifest and refuses if anything doesn't match, so a signature always means "I checked this". It also refuses a role the key isn't authorized for.
+
+## 5. Compare revisions
+
+```sh
+npm run tdp -- diff W-100_A.tdp W-100_B.tdp --trust trust-store.json
+```
+
+Both packages must verify. The report lists package field changes, then files (`+` added, `-` removed, `~` changed or revised, `>` moved), then parts.

@@ -45,8 +45,14 @@ Each milestone becomes a set of GitHub issues.
 - [ ] Signed trust stores, chained to an organizational root key
 - [ ] Hardware-backed keys (PIV/CAC smart card, YubiKey) for signing
 
+## Done: v0.5 revision compare
+- [x] Revision diff in the CLI (`tdp diff`) and UI: package fields, parts, and files (added, removed, changed, moved, revised)
+- [x] Sample rev C package with a change order
+
 ## Configuration control
-- [ ] Revision diff: compare two TDPs (files added, removed or changed; BOM changes)
+- [ ] Side-by-side drawing compare with pixel overlay for revised drawings
+- [ ] Geometry compare for revised models (volume, bounding box, overlay)
+- [ ] Change-order (ECO) metadata in the manifest, linked to the parts it affects
 - [ ] Effectivity and supersession fields in the manifest
 - [ ] Policy editor: required roles, allowed media types, limits
 

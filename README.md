@@ -14,6 +14,7 @@ TDP Viewer opens a `.tdp` package in the browser and refuses to show anything un
 - **View drawings:** PDF pages rendered with pdf.js in an isolated worker, with zoom (buttons or Ctrl/⌘ + scroll), pan by dragging, rotate and multi-page navigation. Only page content is drawn: no links, forms, annotations or scripts.
 - **View 3D models:** STEP files meshed by OpenCascade in a throwaway worker and shown with three.js: orbit, preset views (iso, top, front, right), click a solid to select it, show or hide solids, and see each solid's size.
 - **Print a part:** turn a verified STEP model into a 3MF that [Bambu Studio](https://bambulab.com/en/download/studio) opens directly, ready to slice and send to a Bambu Lab printer (or any 3MF slicer). The model is meshed with OpenCascade in a throwaway worker, checked to be watertight, and stamped with its part number, revision and the package and source digests, so a printed part traces back to the exact signed package.
+- **Compare revisions:** open a second package to see what changed: package fields, parts (revision, quantity, name, parent) and files, with renamed files shown as moved and new revisions of a part's drawing or model shown as revised. Both packages must verify first.
 - **Browse** the BOM tree and file list; every file open and export goes into the audit log.
 
 ## Zero trust, concretely
@@ -41,7 +42,7 @@ npm install
 npm run dev          # open the printed URL
 ```
 
-In the app, click **Use demo keys**, then open `samples/sample.tdp` (trusted) or `samples/tampered.tdp` (one drawing altered after signing, so it's rejected).
+In the app, click **Use demo keys**, then open `samples/sample.tdp` (trusted) or `samples/tampered.tdp` (one drawing altered after signing, so it's rejected). To see a change report, open `samples/sample.tdp` and compare it with `samples/sample-rev-c.tdp`, where a sample change order thickens the gusset.
 
 ### Printing on a Bambu Lab printer
 
@@ -59,6 +60,7 @@ npm run e2e          # build, then drive the app in headless Chrome (needs Googl
 npm run build        # typecheck + production build into dist/
 npm run sample       # regenerate the sample packages with fresh demo keys
 npm run tdp -- verify samples/sample.tdp --trust samples/trust-store.json
+npm run tdp -- diff samples/sample.tdp samples/sample-rev-c.tdp --trust samples/trust-store.json
 ```
 
 ### Making your own packages
