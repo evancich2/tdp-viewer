@@ -1,6 +1,6 @@
 import { sha256Hex, utf8 } from "./bytes";
 
-export type AuditAction = "load" | "verify" | "deny" | "open" | "export";
+export type AuditAction = "trust" | "load" | "verify" | "deny" | "open" | "export";
 
 export interface AuditEntry {
   seq: number;

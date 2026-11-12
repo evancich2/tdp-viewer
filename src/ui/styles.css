@@ -91,3 +91,6 @@ code { font-size: 0.9em; }
 .diff tr.removed td:first-child, .diff del { color: var(--fail-fg); }
 .diff tr.changed td:first-child, .diff tr.revised td:first-child, .diff tr.moved td:first-child { color: var(--accent); }
 .diff ins, .diff del { text-decoration: none; font-weight: 600; }
+
+.spread { justify-content: space-between; }
+.banner.info { background: color-mix(in srgb, var(--accent) 14%, var(--bg)); color: var(--fg); }
