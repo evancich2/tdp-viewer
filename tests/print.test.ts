@@ -17,6 +17,7 @@ import {
 } from "../src/core";
 import { utf8 } from "../src/core/bytes";
 import { meshStep, type Occt } from "../src/mesh/occt";
+import { PRINTERS, checkFit } from "../src/core/printers";
 import { sampleContents } from "../tools/sample-data";
 import { writeStep } from "../tools/step-writer";
 
@@ -67,7 +68,7 @@ describe("exportForPrint", () => {
   it("writes a 3MF with every solid and provenance back to the signed package", async () => {
     const session = await open();
     expect(session.trusted).toBe(true);
-    const out = await exportForPrint(session, "models/SMP-1000_B.stp", nodeMesher, now);
+    const out = await exportForPrint(session, "models/SMP-1000_B.stp", nodeMesher, { now });
 
     expect(out.fileName).toBe("SMP-1000_B.3mf");
     expect(out.meshes.every((m) => m.stats.watertight)).toBe(true);
@@ -83,22 +84,32 @@ describe("exportForPrint", () => {
     const log = await session.audit.list();
     expect(log.map((e) => e.action)).toEqual(["load", "verify", "open", "export"]);
     expect(log.at(-1)!.detail).toContain(out.sha256);
+    expect(out.printer.name).toBe("Bambu Lab H2C");
+    expect(out.fits).toBe(true);
+    expect(model).toContain('<metadata name="tdp:TargetPrinter">Bambu Lab H2C</metadata>');
+  });
+
+  it("flags parts too large for the target printer", async () => {
+    const tiny = { id: "tiny", name: "Tiny", buildVolume: [50, 50, 50] as [number, number, number] };
+    const out = await exportForPrint(await open(), "models/SMP-1000_B.stp", nodeMesher, { now, printer: tiny });
+    expect(out.fits).toBe(false);
+    expect(out.meshes.find((m) => !m.fit.fits)?.fit.size).toEqual([60, 40, 30]); // the bracket
   });
 
   it("refuses non-model files", async () => {
     const session = await open();
-    await expect(exportForPrint(session, "drawings/SMP-1001_A.pdf", nodeMesher, now)).rejects.toBeInstanceOf(AccessDenied);
+    await expect(exportForPrint(session, "drawings/SMP-1001_A.pdf", nodeMesher, { now })).rejects.toBeInstanceOf(AccessDenied);
     expect((await session.audit.list()).at(-1)!.action).toBe("deny");
   });
 
   it("refuses when policy disables print export", async () => {
     const session = await open({ ...defaultPolicy, print: { ...defaultPolicy.print, allowExport: false } });
-    await expect(exportForPrint(session, "models/SMP-1001_A.stp", nodeMesher, now)).rejects.toThrow(/disabled by policy/);
+    await expect(exportForPrint(session, "models/SMP-1001_A.stp", nodeMesher, { now })).rejects.toThrow(/disabled by policy/);
   });
 
   it("refuses models from an untrusted package", async () => {
     const session = await PackageSession.open("t.tdp", tdp, { ...store, keys: [] }, defaultPolicy, new AuditLog(), now);
-    await expect(exportForPrint(session, "models/SMP-1001_A.stp", nodeMesher, now)).rejects.toThrow(/not trusted/);
+    await expect(exportForPrint(session, "models/SMP-1001_A.stp", nodeMesher, { now })).rejects.toThrow(/not trusted/);
   });
 
   it("refuses meshes that aren't watertight", async () => {
@@ -107,6 +118,15 @@ describe("exportForPrint", () => {
       const [m] = await nodeMesher(step);
       return [{ ...m!, indices: Array.from(m!.indices).slice(3) }];
     };
-    await expect(exportForPrint(session, "models/SMP-1001_A.stp", leaky, now)).rejects.toThrow(/not watertight/);
+    await expect(exportForPrint(session, "models/SMP-1001_A.stp", leaky, { now })).rejects.toThrow(/not watertight/);
+  });
+});
+
+describe("checkFit", () => {
+  const h2c = PRINTERS.find((p) => p.id === "bambu-h2c")!;
+  it("lets the slicer rotate the part", () => {
+    expect(checkFit([319, 10, 10], h2c).fits).toBe(true); // longest side along Y
+    expect(checkFit([321, 321, 10], h2c).fits).toBe(false);
+    expect(checkFit([300, 320, 320], h2c).fits).toBe(true);
   });
 });
