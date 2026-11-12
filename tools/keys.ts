@@ -4,17 +4,22 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:
 import { z } from "zod";
 import { fromBase64, toBase64 } from "../src/core/bytes";
 import { SignerRole, TrustedKey } from "../src/core/schema";
+import type { RootKey } from "../src/core/truststore";
 import { generateKeyPair, keyIdFor } from "../src/core/signing";
 
 export const MIN_PASSPHRASE = 12;
 const SCRYPT = { N: 1 << 17, r: 8, p: 1 };
+
+/** A key is either a package signer (author, approver, ...) or an organization root that signs trust stores. */
+export const KeyRole = z.union([SignerRole, z.literal("root")]);
+export type KeyRole = z.infer<typeof KeyRole>;
 
 export const KeyFile = z
   .object({
     schema: z.literal("tdp-key/0.1"),
     keyId: z.string(),
     name: z.string(),
-    roles: z.array(SignerRole).min(1),
+    roles: z.array(KeyRole).min(1),
     publicKey: z.string(),
     kdf: z.object({ alg: z.literal("scrypt"), N: z.number(), r: z.number(), p: z.number(), salt: z.string() }).strict(),
     cipher: z.object({ alg: z.literal("AES-256-GCM"), iv: z.string(), tag: z.string(), data: z.string() }).strict(),
@@ -28,18 +33,21 @@ function deriveKey(passphrase: string, salt: Uint8Array, kdf: { N: number; r: nu
 
 export interface NewKey {
   keyFile: KeyFile;
-  /** The entry to add to a trust store. */
-  trusted: TrustedKey;
+  /** For signer keys: the entry to add to a trust store. For a root key: the entry to pin in an anchors file. */
+  trusted: TrustedKey | RootKey;
 }
 
 export async function createKey(opts: {
   name: string;
-  roles: SignerRole[];
+  roles: KeyRole[];
   passphrase: string;
   validDays: number;
   now?: Date;
 }): Promise<NewKey> {
   if (opts.passphrase.length < MIN_PASSPHRASE) throw new Error(`passphrase must be at least ${MIN_PASSPHRASE} characters`);
+  const isRoot = opts.roles.includes("root");
+  // Keep root keys single-purpose: a root that also signed packages would be a bigger target.
+  if (isRoot && opts.roles.length > 1) throw new Error("a root key can't also have package-signing roles");
   const pair = await generateKeyPair();
   const pkcs8 = new Uint8Array(await crypto.subtle.exportKey("pkcs8", pair.privateKey));
   const salt = randomBytes(16);
@@ -61,15 +69,17 @@ export async function createKey(opts: {
       kdf: { alg: "scrypt", ...SCRYPT, salt: toBase64(salt) },
       cipher: { alg: "AES-256-GCM", iv: toBase64(iv), tag: toBase64(cipher.getAuthTag()), data: toBase64(data) },
     },
-    trusted: {
-      keyId: pair.keyId,
-      name: opts.name,
-      publicKey: pair.publicKey,
-      roles: opts.roles,
-      notBefore: now.toISOString(),
-      notAfter: new Date(now.getTime() + opts.validDays * 86_400_000).toISOString(),
-      revoked: false,
-    },
+    trusted: isRoot
+      ? { keyId: pair.keyId, name: opts.name, publicKey: pair.publicKey }
+      : {
+          keyId: pair.keyId,
+          name: opts.name,
+          publicKey: pair.publicKey,
+          roles: opts.roles as SignerRole[],
+          notBefore: now.toISOString(),
+          notAfter: new Date(now.getTime() + opts.validDays * 86_400_000).toISOString(),
+          revoked: false,
+        },
   };
 }
 
@@ -77,7 +87,7 @@ export async function createKey(opts: {
 export async function unlockKey(
   json: string,
   passphrase: string,
-): Promise<{ keyId: string; name: string; roles: SignerRole[]; privateKey: CryptoKey }> {
+): Promise<{ keyId: string; name: string; roles: KeyRole[]; privateKey: CryptoKey }> {
   const file = KeyFile.parse(JSON.parse(json));
   if ((await keyIdFor(file.publicKey)) !== file.keyId) throw new Error("key file: key id does not match public key");
   const decipher = createDecipheriv(

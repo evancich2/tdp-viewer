@@ -1,4 +1,5 @@
-// Writes samples/sample.tdp (rev B), samples/sample-rev-c.tdp, samples/tampered.tdp and samples/trust-store.json.
+// Writes the sample packages (rev B, rev C, tampered), the demo trust store (plain and root-signed)
+// and the anchors file that pins the demo root.
 // Signing keys are generated in memory and thrown away; only public keys are written.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { unzipSync, zipSync } from "fflate";
@@ -6,6 +7,7 @@ import { utf8 } from "../src/core/bytes";
 import { buildPackage } from "../src/core/pack";
 import type { TrustStore } from "../src/core/schema";
 import { generateKeyPair } from "../src/core/signing";
+import { signTrustStore, type Anchors } from "../src/core/truststore";
 import { sampleContents, type SampleRevision } from "./sample-data";
 
 const now = new Date();
@@ -55,4 +57,11 @@ writeFileSync("samples/sample.tdp", tdp);
 writeFileSync("samples/tampered.tdp", tampered);
 writeFileSync("samples/sample-rev-c.tdp", revC);
 writeFileSync("samples/trust-store.json", JSON.stringify(trustStore, null, 2) + "\n");
-console.log("wrote samples/sample.tdp, samples/sample-rev-c.tdp, samples/tampered.tdp, samples/trust-store.json");
+
+// The same trust store signed by a demo organization root, and the anchors file that pins it.
+const root = { ...(await generateKeyPair()), name: "Sample Org Root (demo key)" };
+const anchors: Anchors = { schema: "tdp-anchors/0.1", roots: [{ keyId: root.keyId, name: root.name, publicKey: root.publicKey }] };
+const signedStore = await signTrustStore(trustStore, root, { serial: 1, validDays: 730, now });
+writeFileSync("samples/anchors.json", JSON.stringify(anchors, null, 2) + "\n");
+writeFileSync("samples/trust-store.signed.json", JSON.stringify(signedStore, null, 2) + "\n");
+console.log("wrote samples/: sample.tdp, sample-rev-c.tdp, tampered.tdp, trust-store.json, trust-store.signed.json, anchors.json");
