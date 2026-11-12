@@ -1,0 +1,13 @@
+# Secrets: never commit keys
+key2
+key2.pub
+*.key
+*.pem
+.env
+.env.*
+!.env.example
+
+node_modules/
+dist/
+coverage/
+.DS_Store
