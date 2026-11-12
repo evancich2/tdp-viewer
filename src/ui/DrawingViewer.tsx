@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import * as pdfjs from "pdfjs-dist";
-import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { ManifestFile } from "../core";
-
-pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+import { openPdf, pdfjs } from "./pdf";
 
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 8;
@@ -24,28 +21,12 @@ export function DrawingViewer({ file, bytes }: { file: ManifestFile; bytes: Uint
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const worker = new pdfjs.PDFWorker();
-    const task = pdfjs.getDocument({
-      data: bytes.slice(),
-      worker,
-      useWasm: false,
-      useWorkerFetch: false,
-      useSystemFonts: true,
-      enableXfa: false,
-      disableRange: true,
-      disableStream: true,
-      disableAutoFetch: true,
-      maxImageSize: 64 * 1024 * 1024,
-      verbosity: 0,
-    });
+    const pdf = openPdf(bytes);
     setDoc(null);
     setError(null);
     setPage(1);
-    task.promise.then(setDoc, (e: Error) => setError(e.message));
-    return () => {
-      void task.destroy();
-      worker.destroy();
-    };
+    pdf.promise.then(setDoc, (e: Error) => setError(e.message));
+    return pdf.close;
   }, [file.path, bytes]);
 
   useEffect(() => {
