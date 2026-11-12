@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { utf8 } from "../core/bytes";
 import type { ManifestFile, PackageSession } from "../core";
-import { DrawingViewer } from "./DrawingViewer";
 import { PrintPanel } from "./PrintPanel";
+
+// pdf.js and three.js are loaded only when a drawing or model is opened.
+const DrawingViewer = lazy(() => import("./DrawingViewer").then((m) => ({ default: m.DrawingViewer })));
+const ModelViewer = lazy(() => import("./ModelViewer").then((m) => ({ default: m.ModelViewer })));
 
 type State =
   | { kind: "loading" }
@@ -35,9 +38,14 @@ export function FilePreview({ session, path, onAccess }: { session: PackageSessi
         {file.mediaType} · {bytes.length.toLocaleString()} bytes · SHA-256 <code>{file.sha256.slice(0, 16)}…</code>
       </p>
       {file.mediaType === "application/pdf" ? (
-        <DrawingViewer file={file} bytes={bytes} />
+        <Suspense fallback={<p className="muted">Loading drawing viewer…</p>}>
+          <DrawingViewer file={file} bytes={bytes} />
+        </Suspense>
       ) : file.mediaType === "model/step" ? (
         <>
+          <Suspense fallback={<p className="muted">Loading 3D viewer…</p>}>
+            <ModelViewer file={file} bytes={bytes} />
+          </Suspense>
           <PrintPanel session={session} file={file} onAccess={onAccess} />
           <details>
             <summary>STEP source</summary>

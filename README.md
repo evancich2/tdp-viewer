@@ -6,12 +6,13 @@ TDP Viewer opens a `.tdp` package in the browser and refuses to show anything un
 
 **Who it's for:** engineers, configuration managers and suppliers who receive or hand off TDPs and need to know a package is complete, unaltered and properly released before they build from it.
 
-> Status: early development. Verification, the audit log, the PDF drawing viewer and 3D-print export work today. The interactive 3D viewer is next; see [ROADMAP.md](ROADMAP.md).
+> Status: early development. Verification, the audit log, the drawing and 3D viewers and 3D-print export work today; see [ROADMAP.md](ROADMAP.md) for what's next.
 
 ## Features
 
 - **Verify** a package against your trust store and policy, with a per-check report.
 - **View drawings:** PDF pages rendered with pdf.js in an isolated worker, with zoom (buttons or Ctrl/⌘ + scroll), pan by dragging, rotate and multi-page navigation. Only page content is drawn: no links, forms, annotations or scripts.
+- **View 3D models:** STEP files meshed by OpenCascade in a throwaway worker and shown with three.js: orbit, preset views (iso, top, front, right), click a solid to select it, show or hide solids, and see each solid's size.
 - **Print a part:** turn a verified STEP model into a 3MF that [Bambu Studio](https://bambulab.com/en/download/studio) opens directly, ready to slice and send to a Bambu Lab printer (or any 3MF slicer). The model is meshed with OpenCascade in a throwaway worker, checked to be watertight, and stamped with its part number, revision and the package and source digests, so a printed part traces back to the exact signed package.
 - **Browse** the BOM tree and file list; every file open and export goes into the audit log.
 
@@ -29,7 +30,7 @@ Details: [docs/zero-trust.md](docs/zero-trust.md) · Package format: [docs/packa
 
 ## Built with
 
-TypeScript, React, Vite, [zod](https://zod.dev) for strict schemas, [fflate](https://github.com/101arrowz/fflate) for zip, [pdf.js](https://mozilla.github.io/pdf.js/) for drawings, [occt-import-js](https://github.com/kovacsv/occt-import-js) (OpenCascade compiled to WebAssembly, LGPL-2.1, used unmodified) for STEP, and the browser's built-in WebCrypto (SHA-256, Ed25519). Tests use Vitest, and the end-to-end check drives a real Chrome through playwright-core. The same verification core runs in the browser and in Node.
+TypeScript, React, Vite, [zod](https://zod.dev) for strict schemas, [fflate](https://github.com/101arrowz/fflate) for zip, [pdf.js](https://mozilla.github.io/pdf.js/) for drawings, [occt-import-js](https://github.com/kovacsv/occt-import-js) (OpenCascade compiled to WebAssembly, LGPL-2.1, used unmodified) for STEP, [three.js](https://threejs.org) for 3D, and the browser's built-in WebCrypto (SHA-256, Ed25519). Tests use Vitest, and the end-to-end check drives a real Chrome through playwright-core. The same verification core runs in the browser and in Node.
 
 ## Run it
 

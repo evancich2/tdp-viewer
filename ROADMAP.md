@@ -19,11 +19,14 @@ Each milestone becomes a set of GitHub issues.
 - [x] Real synthetic sample geometry (STEP B-rep writer) and dimensioned sample drawings
 - [x] Per-path CSP headers and `_headers` file; end-to-end test in real Chrome
 
-## Next: 3D viewer
-- [ ] Interactive 3D STEP viewer (three.js): orbit, part tree, measure
-- [ ] Pick a part in 3D to highlight it in the BOM, and the reverse
+## Done: v0.3 3D viewer
+- [x] Interactive 3D STEP viewer (three.js): orbit, preset views, click to select, show/hide solids, sizes
+- [x] Load pdf.js and three.js lazily (main bundle 694 KB to 264 KB)
+
+## Next
+- [ ] Pick a part in 3D to highlight it in the BOM, and the reverse (needs assembly structure from STEP)
+- [ ] Measure tool: point-to-point distance in the 3D view
 - [ ] Title-block metadata panel beside the drawing
-- [ ] Load pdf.js lazily to shrink the main bundle
 
 ## 3D printing
 - [ ] Print settings carried in the package (material, infill, orientation) and written into the 3MF

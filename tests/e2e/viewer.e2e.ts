@@ -55,8 +55,14 @@ try {
   await page.getByText("Page 1 of 1").waitFor();
   console.log(`ok  drawing rendered (${inked.w}x${inked.h}, ${inked.dark} dark px), zoom works`);
 
-  // 3MF export from the STEP model.
+  // 3D view of the STEP model.
   await page.getByRole("button", { name: "models/SMP-1000_B.stp" }).click();
+  await page.locator('.model-canvas[data-solids="3"]').waitFor({ timeout: 60_000 });
+  await page.getByRole("button", { name: "Top" }).click();
+  await page.getByRole("checkbox", { name: /^Show / }).first().uncheck();
+  console.log("ok  3D model shows 3 solids; view and visibility controls work");
+
+  // 3MF export from the STEP model.
   const downloadPromise = page.waitForEvent("download", { timeout: 60_000 });
   await page.getByRole("button", { name: "Export 3MF for Bambu Studio" }).click();
   const download = await downloadPromise;

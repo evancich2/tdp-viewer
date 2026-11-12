@@ -70,3 +70,19 @@ code { font-size: 0.9em; }
 .drawing-scroll canvas { display: block; margin: 0 auto; background: #fff; }
 .print { margin-top: 1rem; }
 .print ul { margin: 0.5rem 0 0; padding-left: 1.2rem; }
+
+.model { border: 1px solid var(--border); border-radius: 6px; }
+.model-canvas { position: relative; height: 420px; background: linear-gradient(#eef1f5, #d9dee5); }
+@media (prefers-color-scheme: dark) { .model-canvas { background: linear-gradient(#2a2e35, #1c1f24); } }
+.model-canvas canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.model-canvas .overlay { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; }
+.solids { list-style: none; margin: 0; padding: 6px 8px; font-size: 0.9em; }
+.solids li { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.solids li.selected button { font-weight: 600; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
+.swatch[data-color="0"] { background: #4f7fd9; }
+.swatch[data-color="1"] { background: #d98a4f; }
+.swatch[data-color="2"] { background: #5fae6e; }
+.swatch[data-color="3"] { background: #b76cc4; }
+.swatch[data-color="4"] { background: #c9b23f; }
+.swatch[data-color="5"] { background: #4fb3b8; }
