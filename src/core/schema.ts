@@ -96,6 +96,11 @@ export const TrustStore = z
   .object({
     schema: z.literal("tdp-truststore/0.1"),
     keys: z.array(TrustedKey).max(1000),
+    /** Set when a root signs the store. Increases with every signed release; see truststore.ts. */
+    serial: z.number().int().positive().optional(),
+    issuer: z.string().max(200).optional(),
+    issued: isoTime.optional(),
+    expires: isoTime.optional(),
   })
   .strict();
 export type TrustStore = z.infer<typeof TrustStore>;

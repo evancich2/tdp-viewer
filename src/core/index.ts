@@ -12,3 +12,4 @@ export * from "./print";
 export * from "./diff";
 export * from "./printers";
 export * from "./imagediff";
+export * from "./truststore";
