@@ -15,6 +15,7 @@ export class PackageSession {
     readonly name: string,
     readonly result: VerifyResult,
     readonly audit: AuditLog,
+    readonly policy: Policy,
   ) {}
 
   static async open(
@@ -30,7 +31,7 @@ export class PackageSession {
     const failed = result.checks.filter((c) => c.status === "fail").map((c) => c.message);
     if (result.verdict === "trusted") await audit.append("verify", name, `trusted, manifest ${result.manifestSha256}`);
     else await audit.append("deny", name, failed.join("; "));
-    return new PackageSession(name, result, audit);
+    return new PackageSession(name, result, audit, policy);
   }
 
   get trusted(): boolean {

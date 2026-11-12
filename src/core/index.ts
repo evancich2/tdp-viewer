@@ -6,3 +6,6 @@ export * from "./audit";
 export * from "./verify";
 export * from "./session";
 export * from "./pack";
+export * from "./mesh";
+export * from "./threemf";
+export * from "./print";

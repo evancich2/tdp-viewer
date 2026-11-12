@@ -18,6 +18,13 @@ export interface Policy {
   };
   /** Allowed clock skew when checking validity windows, in milliseconds. */
   clockSkewMs: number;
+  /** Exporting a model for 3D printing takes it outside the viewer, so it's governed separately. */
+  print: {
+    allowExport: boolean;
+    /** Refuse meshes with holes or flipped faces; a slicer would print them wrong. */
+    requireWatertight: boolean;
+    maxTriangles: number;
+  };
 }
 
 export type MagicCheck = (head: Uint8Array) => boolean;
@@ -53,4 +60,9 @@ export const defaultPolicy: Policy = {
     maxCompressionRatio: 200,
   },
   clockSkewMs: 5 * 60 * 1000,
+  print: {
+    allowExport: true,
+    requireWatertight: true,
+    maxTriangles: 2_000_000,
+  },
 };
