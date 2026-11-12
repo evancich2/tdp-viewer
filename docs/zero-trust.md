@@ -61,6 +61,21 @@ OpenCascade's Emscripten glue builds functions at runtime, so the STEP worker is
 
 Workers take their CSP from HTTP headers only, so a deployment must send the headers in `dist/_headers`.
 
+## Progressive web app
+
+The service worker (`src/pwa/service-worker.js`, about 60 lines of plain JavaScript) is the only code allowed to make network requests, and only to the app's own origin.
+
+- **Only app files are cached.** The build writes the list of files into `sw.js`. Packages and trust stores are opened from local files and never pass through the service worker or any cache.
+- **Integrity-pinned updates.** Each file's SHA-256 is fixed into `sw.js` at build time. Installing a version downloads every file and checks its digest before caching anything; one mismatch fails the install and the previous version keeps running. The app is therefore never a mix of two versions, and a file altered on the server, a CDN or a proxy without a matching `sw.js` is refused.
+- **User-controlled activation.** A new version waits until the user clicks **Reload to update**.
+- **Headers preserved.** Cached responses keep their HTTP headers, so the STEP worker's CSP still applies offline.
+
+What it does *not* protect against: the root of trust for the code is still `sw.js` served from the origin over HTTPS. Whoever controls the server can publish a new `sw.js` with new digests. Signing releases with a key pinned on first install would close that gap, but browsers replace service workers on their own, so it needs a different mechanism (see the roadmap).
+
+### Remembered trust store
+
+Remembering the trust store is opt-in. It is stored in the browser's site storage, revalidated (schema and key ids) each time it's loaded, shown with a fingerprint of its exact bytes, and logged in the audit log as a `trust` event. Unticking the box deletes it. Anything able to run script on the origin could alter it; the strict CSP is what prevents that.
+
 ## Threats not yet covered
 
 These are tracked in [ROADMAP.md](../ROADMAP.md):
@@ -68,6 +83,6 @@ These are tracked in [ROADMAP.md](../ROADMAP.md):
 - Trust store distribution and integrity (today the operator loads a JSON file; it should itself be signed by an organizational root).
 - Online revocation status (revocation is a flag in the trust store; there's no live check, by design for offline use).
 - Fuzzing the PDF and STEP parsers.
-- Service-worker update integrity once the app is a PWA.
+- Release signing for app updates (today the server's `sw.js` is the root of trust for code).
 - The `unsafe-eval` exception in the STEP worker.
 - What happens to a 3MF after export: the slicer and printer are outside the viewer's control.

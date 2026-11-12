@@ -16,6 +16,7 @@ TDP Viewer opens a `.tdp` package in the browser and refuses to show anything un
 - **Print a part:** turn a verified STEP model into a 3MF that [Bambu Studio](https://bambulab.com/en/download/studio) opens directly, ready to slice and send to a Bambu Lab printer (or any 3MF slicer). The model is meshed with OpenCascade in a throwaway worker, checked to be watertight, and stamped with its part number, revision and the package and source digests, so a printed part traces back to the exact signed package.
 - **Compare revisions:** open a second package to see what changed: package fields, parts (revision, quantity, name, parent) and files, with renamed files shown as moved and new revisions of a part's drawing or model shown as revised. Both packages must verify first.
 - **Browse** the BOM tree and file list; every file open and export goes into the audit log.
+- **Install it as an app** (PWA): works fully offline after the first visit, opens `.tdp` files double-clicked in the OS (Chrome and Edge), and can remember your trust store on the device. Updates are verified file by file and wait until you choose to reload.
 
 ## Zero trust, concretely
 
@@ -69,7 +70,11 @@ The `tdp` CLI creates passphrase-protected signing keys, manages the trust store
 
 ## Deploying
 
-`npm run build` writes a static site to `dist/`. Serve it with the Content-Security-Policy as an **HTTP header**, not just the `<meta>` tag, because Web Workers ignore `<meta>` CSP. `dist/_headers` has the exact headers (Netlify and Cloudflare Pages read it as is), including the one relaxation: the STEP worker may `eval`, which OpenCascade's glue code needs.
+`npm run build` writes a static site to `dist/`. Serve it over HTTPS (service workers need a secure origin). Serve it with the Content-Security-Policy as an **HTTP header**, not just the `<meta>` tag, because Web Workers ignore `<meta>` CSP. `dist/_headers` has the exact headers (Netlify and Cloudflare Pages read it as is), including two scoped exceptions: the STEP worker may `eval` (OpenCascade's glue code needs it), and the service worker may fetch the app's own files. Serve `sw.js` with `Cache-Control: no-cache` (also in `_headers`) so updates are noticed.
+
+### Installing and offline use
+
+Open the site in Chrome, Edge or Safari and use **Install app** (or the browser's install menu). After the first visit the service worker has cached the whole app, so it runs with no network. To open `.tdp` files from Finder or Explorer, install it in Chrome or Edge, tick **Remember this trust store on this device**, then open a `.tdp` with TDP Viewer.
 
 ## Sample data
 

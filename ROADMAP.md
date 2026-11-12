@@ -56,10 +56,17 @@ Each milestone becomes a set of GitHub issues.
 - [ ] Effectivity and supersession fields in the manifest
 - [ ] Policy editor: required roles, allowed media types, limits
 
-## Progressive web app
-- [ ] Installable PWA with an offline app shell (no TDP content is ever cached)
-- [ ] Integrity-pinned service worker updates
-- [ ] Open `.tdp` files straight from the OS (File Handling API in Chromium)
+## Done: v0.6 progressive web app
+- [x] Installable PWA: manifest, icons, install button
+- [x] Offline app shell via a hand-written service worker; no TDP content is ever cached
+- [x] Integrity-pinned updates: every file checked against build-time SHA-256 before caching; user-triggered activation
+- [x] Open `.tdp` files from the OS (File Handling API in Chromium)
+- [x] Opt-in remembered trust store with fingerprint and audit entry
+- [x] End-to-end PWA test: offline use, update prompt, tampered-file refusal
+
+## Progressive web app: next
+- [ ] Signed releases: verify app updates against a release key, not just the server
+- [ ] Persistent audit log on the device (append-only, exportable), opt-in
 
 ## Hardening
 - [ ] Fuzz tests for the archive reader and schemas
