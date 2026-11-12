@@ -51,7 +51,8 @@ Each milestone becomes a set of GitHub issues.
 - [x] Sample rev C package with a change order
 
 ## Configuration control
-- [ ] Side-by-side drawing compare with pixel overlay for revised drawings
+- [x] Drawing overlay compare for revised drawings, with changed areas boxed
+- [ ] Multi-page drawing compare
 - [ ] Geometry compare for revised models (volume, bounding box, overlay)
 - [ ] Change-order (ECO) metadata in the manifest, linked to the parts it affects
 - [ ] Effectivity and supersession fields in the manifest

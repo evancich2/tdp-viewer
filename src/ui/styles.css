@@ -95,3 +95,11 @@ code { font-size: 0.9em; }
 .spread { justify-content: space-between; }
 .banner.info { background: color-mix(in srgb, var(--accent) 14%, var(--bg)); color: var(--fg); }
 select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }
+
+.drawing-compare { margin-top: 1rem; }
+.drawing-compare .legend { padding: 6px 8px; margin: 0; }
+.drawing-compare canvas { max-width: 100%; height: auto; }
+.key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; }
+.key.removed { background: rgb(214, 40, 40); }
+.key.added { background: rgb(20, 150, 70); }
+button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }

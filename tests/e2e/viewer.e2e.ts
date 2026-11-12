@@ -92,6 +92,10 @@ try {
   await page.locator('.compare input[type="file"]').setInputFiles("samples/sample-rev-c.tdp");
   await page.getByText("SMP-1002_C.pdf → drawings/SMP-1002_D.pdf").waitFor();
   await page.getByText("2 files unchanged.").waitFor();
+  await page.locator("tr", { hasText: "SMP-1002_D.pdf" }).getByRole("button", { name: "Compare drawings" }).click();
+  await page.locator(".drawing-compare:not([data-changed-pixels='0'])").waitFor({ timeout: 20_000 });
+  const changedPx = Number(await page.locator(".drawing-compare").getAttribute("data-changed-pixels"));
+  console.log(`ok  drawing overlay highlights the rev C to D changes (${changedPx} px)`);
   await page.locator('.compare input[type="file"]').setInputFiles("samples/tampered.tdp");
   await page.getByText("can't compare against a package that doesn't verify").waitFor();
   console.log("ok  revision compare shows rev C changes and refuses a tampered package");
