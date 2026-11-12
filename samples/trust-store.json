@@ -2,25 +2,25 @@
   "schema": "tdp-truststore/0.1",
   "keys": [
     {
-      "keyId": "604a72d11b19e845bbe671e043f7b3a0",
+      "keyId": "33cdd4ce55d6df0390db2cba4e392a03",
       "name": "Sample Author (demo key)",
-      "publicKey": "DHZP8e1K6gLCVsF235oMKGoh/Er2orZJm6A9G0Vspzo=",
+      "publicKey": "5S3WYbxBfB3+jvLJEek/2TQaQMlvC7+712cWcsSMBL0=",
       "roles": [
         "author"
       ],
-      "notBefore": "2026-11-11T05:14:43.688Z",
-      "notAfter": "2028-11-11T05:14:43.688Z",
+      "notBefore": "2026-11-11T05:29:59.938Z",
+      "notAfter": "2028-11-11T05:29:59.938Z",
       "revoked": false
     },
     {
-      "keyId": "2dd7beac03ada5b79f2107272628dabd",
+      "keyId": "88dfa20f50e351b347f0cdfbb80b3890",
       "name": "Sample Approver (demo key)",
-      "publicKey": "S/eG76oytb4oyScch5375fhe/aAQwTLZmTZ7yQ70mRI=",
+      "publicKey": "IGb8xt9IFg3kdCAfICqDc8Luh7Lx96YdohxFLO6ivCY=",
       "roles": [
         "approver"
       ],
-      "notBefore": "2026-11-11T05:14:43.688Z",
-      "notAfter": "2028-11-11T05:14:43.688Z",
+      "notBefore": "2026-11-11T05:29:59.938Z",
+      "notAfter": "2028-11-11T05:29:59.938Z",
       "revoked": false
     }
   ]

@@ -63,19 +63,25 @@ function drawView(prisms: Prism[]): string[] {
 
 // Sample geometry in millimetres: an L-shaped bracket and triangular gussets in its inside corner.
 const bracket: Prism = { outline: [[0, 0], [60, 0], [60, 5], [5, 5], [5, 40], [0, 40]], z0: 0, height: 30 };
-const gusset = (z0: number): Prism => ({ outline: [[5, 5], [35, 5], [5, 35]], z0, height: 4 });
+const gusset = (z0: number, thickness: number): Prism => ({ outline: [[5, 5], [35, 5], [5, 35]], z0, height: thickness });
 
-const geometry: Record<string, Prism[]> = {
-  "SMP-1000": [bracket, gusset(0), gusset(26)],
-  "SMP-1001": [bracket],
-  "SMP-1002": [gusset(0)],
-};
+/**
+ * Revision B is the baseline. Revision C thickens the gusset from 4 to 6 mm (gusset rev C → D,
+ * assembly rev B → C) under a change order, leaving the bracket untouched.
+ */
+export type SampleRevision = "B" | "C";
 
-export function sampleContents(): { inputs: PackInput[]; bom: BomItem[] } {
+export function sampleContents(revision: SampleRevision = "B"): { inputs: PackInput[]; bom: BomItem[] } {
+  const t = revision === "B" ? 4 : 6;
+  const geometry: Record<string, Prism[]> = {
+    "SMP-1000": [bracket, gusset(0, t), gusset(30 - t, t)],
+    "SMP-1001": [bracket],
+    "SMP-1002": [gusset(0, t)],
+  };
   const parts = [
-    { pn: "SMP-1000", rev: "B", name: "Sample Bracket Assembly", qty: 1, parent: undefined },
+    { pn: "SMP-1000", rev: revision, name: "Sample Bracket Assembly", qty: 1, parent: undefined },
     { pn: "SMP-1001", rev: "A", name: "Mounting Bracket", qty: 1, parent: "SMP-1000" },
-    { pn: "SMP-1002", rev: "C", name: "Gusset Plate", qty: 2, parent: "SMP-1000" },
+    { pn: "SMP-1002", rev: revision === "B" ? "C" : "D", name: "Gusset Plate", qty: 2, parent: "SMP-1000" },
   ];
   const inputs: PackInput[] = [];
   const bom: BomItem[] = [];
@@ -90,5 +96,9 @@ export function sampleContents(): { inputs: PackInput[]; bom: BomItem[] } {
   }
   const csv = ["part_number,revision,name,quantity,parent", ...parts.map((p) => `${p.pn},${p.rev},${p.name},${p.qty},${p.parent ?? ""}`)].join("\n");
   inputs.push({ path: "bom/bom.csv", bytes: utf8.encode(csv + "\n"), mediaType: "text/csv", role: "bom" });
+  if (revision === "C") {
+    const eco = "ECO-0042 (sample)\nReason: gusset cracking in vibration test (fictional).\nChange: gusset SMP-1002 thickness 4 mm -> 6 mm, rev C -> D.\nEffect: assembly SMP-1000 rev B -> C. Bracket SMP-1001 unchanged.\n";
+    inputs.push({ path: "notes/ECO-0042.txt", bytes: utf8.encode(eco), mediaType: "text/plain", role: "spec" });
+  }
   return { inputs, bom };
 }

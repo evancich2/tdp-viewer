@@ -1,4 +1,4 @@
-// Writes samples/sample.tdp, samples/tampered.tdp and samples/trust-store.json.
+// Writes samples/sample.tdp (rev B), samples/sample-rev-c.tdp, samples/tampered.tdp and samples/trust-store.json.
 // Signing keys are generated in memory and thrown away; only public keys are written.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { unzipSync, zipSync } from "fflate";
@@ -6,7 +6,7 @@ import { utf8 } from "../src/core/bytes";
 import { buildPackage } from "../src/core/pack";
 import type { TrustStore } from "../src/core/schema";
 import { generateKeyPair } from "../src/core/signing";
-import { sampleContents } from "./sample-data";
+import { sampleContents, type SampleRevision } from "./sample-data";
 
 const now = new Date();
 const days = (n: number) => new Date(now.getTime() + n * 86_400_000).toISOString();
@@ -21,25 +21,29 @@ const trustStore: TrustStore = {
   ],
 };
 
-const { inputs, bom } = sampleContents();
-const tdp = await buildPackage(
-  {
-    id: crypto.randomUUID(),
-    title: "Sample Bracket Assembly TDP",
-    partNumber: "SMP-1000",
-    revision: "B",
-    created: now.toISOString(),
-    expires: days(365),
-    distribution: "Synthetic sample data. Not a real part.",
-  },
-  inputs,
-  bom,
-  [
-    { ...author, role: "author" },
-    { ...approver, role: "approver" },
-  ],
-  now,
-);
+const build = (revision: SampleRevision) => {
+  const { inputs, bom } = sampleContents(revision);
+  return buildPackage(
+    {
+      id: crypto.randomUUID(),
+      title: "Sample Bracket Assembly TDP",
+      partNumber: "SMP-1000",
+      revision,
+      created: now.toISOString(),
+      expires: days(365),
+      distribution: "Synthetic sample data. Not a real part.",
+    },
+    inputs,
+    bom,
+    [
+      { ...author, role: "author" },
+      { ...approver, role: "approver" },
+    ],
+    now,
+  );
+};
+const tdp = await build("B");
+const revC = await build("C");
 
 // A copy with one drawing altered after signing, to show what rejection looks like.
 const files = unzipSync(tdp);
@@ -49,5 +53,6 @@ const tampered = zipSync(files);
 mkdirSync("samples", { recursive: true });
 writeFileSync("samples/sample.tdp", tdp);
 writeFileSync("samples/tampered.tdp", tampered);
+writeFileSync("samples/sample-rev-c.tdp", revC);
 writeFileSync("samples/trust-store.json", JSON.stringify(trustStore, null, 2) + "\n");
-console.log("wrote samples/sample.tdp, samples/tampered.tdp, samples/trust-store.json");
+console.log("wrote samples/sample.tdp, samples/sample-rev-c.tdp, samples/tampered.tdp, samples/trust-store.json");
