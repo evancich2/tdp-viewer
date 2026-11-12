@@ -61,3 +61,12 @@ tr.fail td { color: var(--fail-fg); }
 pre { overflow: auto; max-height: 60vh; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85em; }
 .audit { font-size: 0.85em; padding-left: 1.5rem; }
 code { font-size: 0.9em; }
+
+.drawing { border: 1px solid var(--border); border-radius: 6px; }
+.toolbar { padding: 6px; border-bottom: 1px solid var(--border); }
+.toolbar .sep { width: 12px; }
+.drawing-scroll { overflow: auto; max-height: 70vh; cursor: grab; touch-action: none; background: #808080; }
+.drawing-scroll:active { cursor: grabbing; }
+.drawing-scroll canvas { display: block; margin: 0 auto; background: #fff; }
+.print { margin-top: 1rem; }
+.print ul { margin: 0.5rem 0 0; padding-left: 1.2rem; }

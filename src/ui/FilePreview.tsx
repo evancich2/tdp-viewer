@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { utf8 } from "../core/bytes";
 import type { ManifestFile, PackageSession } from "../core";
+import { DrawingViewer } from "./DrawingViewer";
+import { PrintPanel } from "./PrintPanel";
 
 type State =
   | { kind: "loading" }
@@ -33,11 +35,14 @@ export function FilePreview({ session, path, onAccess }: { session: PackageSessi
         {file.mediaType} · {bytes.length.toLocaleString()} bytes · SHA-256 <code>{file.sha256.slice(0, 16)}…</code>
       </p>
       {file.mediaType === "application/pdf" ? (
-        <p className="muted">The drawing viewer (pdf.js) is on the roadmap. Digest verified.</p>
+        <DrawingViewer file={file} bytes={bytes} />
       ) : file.mediaType === "model/step" ? (
         <>
-          <p className="muted">The 3D viewer is on the roadmap. STEP source:</p>
-          <pre>{utf8.decode(bytes)}</pre>
+          <PrintPanel session={session} file={file} onAccess={onAccess} />
+          <details>
+            <summary>STEP source</summary>
+            <pre>{utf8.decode(bytes)}</pre>
+          </details>
         </>
       ) : (
         <pre>{utf8.decode(bytes)}</pre>
