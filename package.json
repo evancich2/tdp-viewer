@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit",
     "tdp": "tsx tools/tdp.ts",
     "sample": "tsx tools/make-sample.ts",
-    "e2e": "vite build && tsx tests/e2e/viewer.e2e.ts"
+    "e2e": "vite build && tsx tests/e2e/viewer.e2e.ts && tsx tests/e2e/pwa.e2e.ts"
   },
   "dependencies": {
     "fflate": "0.8.3",
