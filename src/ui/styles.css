@@ -1,0 +1,63 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1c1e21;
+  --muted: #5f6670;
+  --border: #d8dce1;
+  --accent: #1f5fbf;
+  --pass-bg: #e6f4ea;
+  --pass-fg: #146c2e;
+  --fail-bg: #fce8e6;
+  --fail-fg: #a50e0e;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171a;
+    --fg: #e6e8eb;
+    --muted: #9aa1aa;
+    --border: #30343a;
+    --accent: #7aa7ff;
+    --pass-bg: #0f2e1a;
+    --pass-fg: #7fd99a;
+    --fail-bg: #3a1514;
+    --fail-fg: #ff9b93;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
+.app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+h1 { margin: 0; }
+h2 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
+h3 { font-size: 1rem; margin: 1rem 0 0.5rem; }
+.muted { color: var(--muted); margin: 0.25rem 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+button, .button {
+  display: inline-block; padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px;
+  background: transparent; color: var(--fg); font: inherit; cursor: pointer;
+}
+button:disabled, .button.disabled { opacity: 0.5; cursor: not-allowed; }
+button.link { border: none; padding: 0; color: var(--accent); text-align: left; }
+button.link:disabled { color: var(--muted); }
+button.small { font-size: 0.85em; margin-left: 8px; }
+
+.banner { margin: 1rem 0; padding: 10px 14px; border-radius: 6px; }
+.banner.pass { background: var(--pass-bg); color: var(--pass-fg); }
+.banner.fail { background: var(--fail-bg); color: var(--fail-fg); }
+
+.checks { list-style: none; padding: 0; margin: 0; }
+.checks li.pass span { color: var(--pass-fg); }
+.checks li.fail { color: var(--fail-fg); }
+
+.columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+@media (max-width: 800px) { .columns { grid-template-columns: minmax(0, 1fr); } }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+tr.fail td { color: var(--fail-fg); }
+
+.bom { padding-left: 1.2rem; }
+pre { overflow: auto; max-height: 60vh; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85em; }
+.audit { font-size: 0.85em; padding-left: 1.5rem; }
+code { font-size: 0.9em; }
