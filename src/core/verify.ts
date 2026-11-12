@@ -141,18 +141,40 @@ export async function verifyPackage(
     fail("validity", `package expired ${manifest.package.expires}`);
   else pass("validity", manifest.package.expires ? `valid until ${manifest.package.expires}` : "no expiry set");
 
-  // 5. Contents: exactly the listed files, each matching its declared digest, size and type.
+  // 5-6. Contents and BOM
+  const contents = await checkContents(manifest, entries, policy);
+  checks.push(...contents.checks);
+  const files = contents.files;
+
+  const verdict = checks.every((c) => c.status === "pass") ? "trusted" : "rejected";
+  return { verdict, checks, manifest, manifestSha256, files, entries };
+}
+
+/**
+ * Checks that the archive holds exactly the files the manifest lists, each matching its size,
+ * digest and allowed media type, and that the BOM's references resolve. Signers run this too,
+ * so nobody signs a manifest without checking what it describes.
+ */
+export async function checkContents(
+  manifest: Manifest,
+  entries: ArchiveEntry[],
+  policy: Policy,
+): Promise<{ checks: Check[]; files: FileResult[] }> {
+  const checks: Check[] = [];
+  const byPath = new Map(entries.map((e) => [e.path, e]));
   const listed = new Map(manifest.files.map((f) => [f.path, f]));
   const files: FileResult[] = [];
-  if (listed.size !== manifest.files.length) fail("contents", "manifest lists a path more than once");
   for (const entry of entries) {
     if (entry.path === MANIFEST_PATH || entry.path === SIGNATURES_PATH) continue;
     if (!listed.has(entry.path)) files.push({ path: entry.path, ok: false, problems: ["not listed in manifest"] });
   }
+  const seen = new Set<string>();
   for (const f of manifest.files) {
     const problems: string[] = [];
     const pathProblem = checkPath(f.path);
     const entry = byPath.get(f.path);
+    if (seen.has(f.path)) problems.push("listed more than once");
+    seen.add(f.path);
     if (pathProblem) problems.push(pathProblem);
     if (f.path === MANIFEST_PATH || f.path === SIGNATURES_PATH) problems.push("reserved path");
     if (!entry) problems.push("missing from package");
@@ -166,16 +188,19 @@ export async function verifyPackage(
     files.push({ path: f.path, ok: problems.length === 0, problems });
   }
   const badFiles = files.filter((f) => !f.ok);
-  if (badFiles.length) fail("contents", `${badFiles.length} of ${files.length} files failed`);
-  else pass("contents", `all ${files.length} files match the manifest`);
+  checks.push(
+    badFiles.length
+      ? { id: "contents", status: "fail", message: `${badFiles.length} of ${files.length} files failed` }
+      : { id: "contents", status: "pass", message: `all ${files.length} files match the manifest` },
+  );
 
-  // 6. BOM references
   const bomProblems = checkBom(manifest, listed);
-  if (bomProblems.length) fail("bom", bomProblems.join("; "));
-  else pass("bom", `${manifest.bom.length} BOM items, references resolve`);
-
-  const verdict = checks.every((c) => c.status === "pass") ? "trusted" : "rejected";
-  return { verdict, checks, manifest, manifestSha256, files, entries };
+  checks.push(
+    bomProblems.length
+      ? { id: "bom", status: "fail", message: bomProblems.join("; ") }
+      : { id: "bom", status: "pass", message: `${manifest.bom.length} BOM items, references resolve` },
+  );
+  return { checks, files };
 }
 
 async function checkSignature(
