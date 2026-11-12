@@ -14,6 +14,8 @@ TDP Viewer treats every package as hostile until proven otherwise, and keeps re-
 | Assume breach | Size, ratio, entry-count and path checks run before and after decompression, since zip headers are attacker-controlled. | `readArchive`, `checkPath` |
 | Continuous monitoring | Every load, verdict, denial, open and export goes into a hash-chained audit log. | `AuditLog` |
 | Minimize attack surface | No backend, no network: production CSP sets `connect-src 'none'`. | `vite.config.ts` |
+| Isolate parsers | PDF and STEP bytes are parsed in workers, never on the page. The STEP worker is created per model and terminated afterwards. | `DrawingViewer`, `mesh/client.ts` |
+| Govern data leaving the viewer | 3D-print export is a separate policy decision, accepts only verified STEP models, refuses meshes that aren't watertight, and logs the output's digest. | `exportForPrint`, `policy.print` |
 
 ## What a signature covers
 
@@ -37,11 +39,35 @@ Binding the role and time means a signature can't be relabeled as a different ro
 5. **Contents:** exactly the listed files; size, digest, allowed media type and content sniffing for each.
 6. **BOM:** file references resolve, parents exist, no cycles.
 
+## Drawings
+
+pdf.js parses each PDF in its own worker, destroyed when the drawing closes. It is configured to fetch nothing (`useWorkerFetch: false`, no cMap or font URLs, no WASM decoders), and pages are drawn to a canvas with annotations disabled, so links, forms and embedded JavaScript never become live.
+
+## 3D-print export
+
+A STEP model becomes a 3MF only through `exportForPrint`, which:
+
+1. checks `policy.print.allowExport` and that the file is a STEP model;
+2. reads it through `PackageSession.openFile`, re-verifying its digest;
+3. meshes it with OpenCascade in a fresh worker, welds the mesh, and checks the triangle limit and that every solid is watertight;
+4. writes the part number, revision, package id, manifest digest and source digest into the 3MF metadata;
+5. logs the export with the 3MF's SHA-256.
+
+Any refusal is logged as a `deny`.
+
+### The one CSP relaxation
+
+OpenCascade's Emscripten glue builds functions at runtime, so the STEP worker is served with `script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'`. The page itself is not. The worker has no DOM, `connect-src 'none'`, its WASM is inlined so it loads nothing, and it only receives bytes that already passed verification. Rebuilding occt-import-js with `-sDYNAMIC_EXECUTION=0` would remove the exception (see the roadmap).
+
+Workers take their CSP from HTTP headers only, so a deployment must send the headers in `dist/_headers`.
+
 ## Threats not yet covered
 
 These are tracked in [ROADMAP.md](../ROADMAP.md):
 
 - Trust store distribution and integrity (today the operator loads a JSON file; it should itself be signed by an organizational root).
 - Online revocation status (revocation is a flag in the trust store; there's no live check, by design for offline use).
-- Parser hardening for PDF and STEP rendering, which should run in a sandboxed worker.
+- Fuzzing the PDF and STEP parsers.
 - Service-worker update integrity once the app is a PWA.
+- The `unsafe-eval` exception in the STEP worker.
+- What happens to a 3MF after export: the slicer and printer are outside the viewer's control.

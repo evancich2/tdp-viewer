@@ -12,12 +12,25 @@ Each milestone becomes a set of GitHub issues.
 - [x] Synthetic sample packages, including a tampered one
 - [x] Strict production CSP with no network access
 
-## Next: viewers
-- [ ] PDF drawing viewer with pdf.js, rendered in a Web Worker: multi-page, zoom, pan
-- [ ] Title-block metadata panel beside the drawing
-- [ ] 3D STEP viewer: three.js with occt-import-js (OpenCascade WASM) in a worker; orbit, part tree
+## Done: v0.2 drawings and printing
+- [x] PDF drawing viewer: pdf.js in a per-document worker; pages, zoom, pan, rotate; no annotations or scripts
+- [x] STEP meshing with OpenCascade (occt-import-js) in a throwaway worker
+- [x] 3MF export for Bambu Studio, with provenance metadata and watertight checks, governed by policy
+- [x] Real synthetic sample geometry (STEP B-rep writer) and dimensioned sample drawings
+- [x] Per-path CSP headers and `_headers` file; end-to-end test in real Chrome
+
+## Next: 3D viewer
+- [ ] Interactive 3D STEP viewer (three.js): orbit, part tree, measure
 - [ ] Pick a part in 3D to highlight it in the BOM, and the reverse
-- [ ] Replace placeholder sample STEP files with real synthetic geometry
+- [ ] Title-block metadata panel beside the drawing
+- [ ] Load pdf.js lazily to shrink the main bundle
+
+## 3D printing
+- [ ] Print settings carried in the package (material, infill, orientation) and written into the 3MF
+- [ ] Bambu LAN print bridge: a separate local CLI that uploads a sliced `.gcode.3mf` to a printer in LAN mode (FTPS + MQTT, access code) and reports status; kept out of the browser app so the viewer stays network-free
+- [ ] Slicing through the Bambu Studio CLI from the bridge
+- [ ] STL export for other slicers
+- [ ] Rebuild occt-import-js with `-sDYNAMIC_EXECUTION=0` to drop the STEP worker's `unsafe-eval`
 
 ## Packaging tools
 - [ ] CLI `keygen`, `pack` and `sign` commands (private keys never written unencrypted)
@@ -36,7 +49,7 @@ Each milestone becomes a set of GitHub issues.
 
 ## Hardening
 - [ ] Fuzz tests for the archive reader and schemas
-- [ ] Playwright end-to-end tests
+- [ ] Broaden the end-to-end tests (rejected-package cases, keyboard use)
 - [ ] Signed audit-log export
 - [ ] Optional hardware-backed signing (WebAuthn, PIV/CAC smart cards)
 
