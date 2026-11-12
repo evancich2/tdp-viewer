@@ -73,6 +73,14 @@ try {
   await page.getByText("watertight").first().waitFor();
   console.log(`ok  3MF exported: ${download.suggestedFilename()} with ${objects} watertight objects`);
 
+  // Compare with revision C.
+  await page.locator('.compare input[type="file"]').setInputFiles("samples/sample-rev-c.tdp");
+  await page.getByText("SMP-1002_C.pdf → drawings/SMP-1002_D.pdf").waitFor();
+  await page.getByText("2 files unchanged.").waitFor();
+  await page.locator('.compare input[type="file"]').setInputFiles("samples/tampered.tdp");
+  await page.getByText("can't compare against a package that doesn't verify").waitFor();
+  console.log("ok  revision compare shows rev C changes and refuses a tampered package");
+
   const auditText = await page.locator(".audit").innerText();
   if (!/export/.test(auditText)) fail("export missing from audit log");
   console.log("ok  export recorded in audit log");

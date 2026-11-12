@@ -86,3 +86,8 @@ code { font-size: 0.9em; }
 .swatch[data-color="3"] { background: #b76cc4; }
 .swatch[data-color="4"] { background: #c9b23f; }
 .swatch[data-color="5"] { background: #4fb3b8; }
+
+.diff tr.added td:first-child, .diff ins { color: var(--pass-fg); }
+.diff tr.removed td:first-child, .diff del { color: var(--fail-fg); }
+.diff tr.changed td:first-child, .diff tr.revised td:first-child, .diff tr.moved td:first-child { color: var(--accent); }
+.diff ins, .diff del { text-decoration: none; font-weight: 600; }

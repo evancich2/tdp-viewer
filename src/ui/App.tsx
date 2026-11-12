@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AuditLog, PackageSession, defaultPolicy, loadTrustStore, type AuditEntry, type TrustStore } from "../core";
 import demoTrustStore from "../../samples/trust-store.json?raw";
 import { BomTree } from "./BomTree";
+import { ComparePanel } from "./ComparePanel";
 import { FilePreview } from "./FilePreview";
 
 const readFile = (f: File) => f.arrayBuffer().then((b) => new Uint8Array(b));
@@ -128,6 +129,10 @@ export function App() {
             </div>
           )}
         </>
+      )}
+
+      {session?.trusted && trust && (
+        <ComparePanel key={session.name + session.result.manifestSha256} session={session} trustStore={trust.store} audit={audit} onAccess={refreshAudit} />
       )}
 
       <section>
