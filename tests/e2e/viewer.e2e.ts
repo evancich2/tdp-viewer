@@ -6,16 +6,29 @@ import { unzipSync } from "fflate";
 import { chromium } from "playwright-core";
 
 const PORT = 4180;
+const ORIGIN = `http://127.0.0.1:${PORT}`;
+
+// Run vite directly (not through npx) so killing it really stops the server.
+const server = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "preview", "--host", "127.0.0.1", "--port", String(PORT), "--strictPort"], {
+  stdio: ["ignore", "inherit", "inherit"],
+});
+const finish = (code: number): never => {
+  server.kill();
+  process.exit(code);
+};
 const fail = (msg: string): never => {
   console.error(`FAIL ${msg}`);
-  process.exit(1);
+  return finish(1);
 };
+// A hang anywhere is a failure, not a stuck CI job.
+setTimeout(() => fail("timed out after 3 minutes"), 180_000).unref();
+process.on("unhandledRejection", (e) => fail(String((e as Error)?.stack ?? e)));
 
-const server = spawn("npx", ["vite", "preview", "--port", String(PORT), "--strictPort"], { stdio: "pipe" });
-await new Promise<void>((resolve, reject) => {
-  server.stdout.on("data", (d) => String(d).includes(String(PORT)) && resolve());
-  server.on("exit", () => reject(new Error("vite preview exited")));
-});
+for (let i = 0; ; i++) {
+  if (i > 100) fail("vite preview did not start");
+  if (await fetch(ORIGIN).then((r) => r.ok, () => false)) break;
+  await new Promise((r) => setTimeout(r, 200));
+}
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 try {
@@ -24,9 +37,9 @@ try {
   page.on("console", (m) => /Content.Security.Policy|Refused to/i.test(m.text()) && problems.push(m.text()));
   page.on("pageerror", (e) => problems.push(e.message));
   const offsite: string[] = [];
-  page.on("request", (r) => !r.url().startsWith(`http://localhost:${PORT}/`) && !r.url().startsWith("blob:") && !r.url().startsWith("data:") && offsite.push(r.url()));
+  page.on("request", (r) => !r.url().startsWith(`${ORIGIN}/`) && !r.url().startsWith("blob:") && !r.url().startsWith("data:") && offsite.push(r.url()));
 
-  await page.goto(`http://localhost:${PORT}/`);
+  await page.goto(`${ORIGIN}/`);
   await page.getByRole("button", { name: "Use demo keys" }).click();
 
   // Tampered package: rejected, nothing openable.
@@ -88,7 +101,9 @@ try {
   if (problems.length) fail(`console/CSP problems:\n${problems.join("\n")}`);
   if (offsite.length) fail(`off-origin requests: ${offsite.join(", ")}`);
   console.log("ok  no CSP violations, no off-origin requests");
+} catch (e) {
+  fail(String((e as Error).stack ?? e));
 } finally {
   await browser.close();
-  server.kill();
 }
+finish(0);
