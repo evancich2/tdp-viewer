@@ -108,16 +108,19 @@ try {
   const fresh = await browser.newContext();
   const p2 = await fresh.newPage();
   await p2.goto(`${ORIGIN}/`);
+  // Browsers drop a registration whose first install fails, sometimes before we can look, so
+  // register explicitly and poll until a worker is active (bad) or nothing is pending (refused).
   const outcome = await p2.evaluate(async () => {
-    const reg = await navigator.serviceWorker.getRegistration();
-    const worker = reg?.installing ?? reg?.waiting ?? reg?.active;
-    if (!worker) return "none";
-    if (worker.state === "redundant" || worker.state === "activated") return worker.state;
-    return new Promise<string>((resolve) =>
-      worker.addEventListener("statechange", () => ["redundant", "activated"].includes(worker.state) && resolve(worker.state)),
-    );
+    await navigator.serviceWorker.register("/sw.js").catch(() => null);
+    for (const deadline = Date.now() + 20_000; Date.now() < deadline; ) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg?.active) return "activated";
+      if (!reg?.installing && !reg?.waiting) return "refused";
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    return "timeout";
   });
-  if (outcome !== "redundant") fail(`tampered build installed anyway (${outcome})`);
+  if (outcome !== "refused") fail(`tampered build installed anyway (${outcome})`);
   const leftovers = await p2.evaluate(async () => (await caches.keys()).length);
   if (leftovers !== 0) fail("tampered build left a cache behind");
   console.log("ok  a file that doesn't match its pinned SHA-256 blocks the install");
