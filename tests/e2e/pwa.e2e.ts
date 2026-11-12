@@ -18,6 +18,8 @@ const finish = (code: number): never => {
 };
 const fail = (msg: string): never => {
   console.error(`FAIL ${msg}`);
+  // In GitHub Actions, also surface the failure as an annotation on the run.
+  if (process.env.GITHUB_ACTIONS) console.log(`::error title=${process.argv[1]!.split("/").pop()}::${msg.replace(/\n/g, "%0A")}`);
   return finish(1);
 };
 setTimeout(() => fail("timed out after 3 minutes"), 180_000).unref();
