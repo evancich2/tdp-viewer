@@ -6,6 +6,7 @@
 //   tdp pack <folder> --out <package.tdp>
 //   tdp sign <package.tdp> --key <keys/jane.key.json> --role approver
 //   tdp verify <package.tdp> --trust <trust-store.json>
+//   tdp diff <old.tdp> <new.tdp> --trust <trust-store.json>
 //
 // Passphrases come from the TDP_PASSPHRASE environment variable or an interactive prompt.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -13,6 +14,7 @@ import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
 import { defaultPolicy } from "../src/core/policy";
 import { SignerRole } from "../src/core/schema";
+import { diffManifests, formatDiff } from "../src/core/diff";
 import { loadTrustStore, verifyPackage } from "../src/core/verify";
 import { addToTrustStore, pack, revokeInTrustStore, sign } from "./commands";
 import { MIN_PASSPHRASE, createKey, unlockKey } from "./keys";
@@ -131,6 +133,20 @@ switch (command) {
     for (const f of result.files.filter((f) => !f.ok)) console.log(`      ${f.path}: ${f.problems.join("; ")}`);
     console.log(result.verdict.toUpperCase());
     process.exit(result.verdict === "trusted" ? 0 : 1);
+  }
+  case "diff": {
+    const [oldFile, newFile] = positionals;
+    if (!oldFile || !newFile || !values.trust) die("usage: tdp diff <old.tdp> <new.tdp> --trust <trust-store.json>");
+    const store = await loadTrustStore(readFileSync(values.trust, "utf8"));
+    // Only compare packages that verify; a diff against an unverified package would mean trusting it.
+    const [a, b] = await Promise.all(
+      [oldFile, newFile].map((f) => verifyPackage(new Uint8Array(readFileSync(f)), store, defaultPolicy)),
+    );
+    for (const [f, r] of [[oldFile, a!], [newFile, b!]] as const)
+      if (r.verdict !== "trusted") die(`${f} is not trusted: ${r.checks.filter((c) => c.status === "fail").map((c) => c.message).join("; ")}`);
+    console.log(`${a!.manifest!.package.partNumber} rev ${a!.manifest!.package.revision} → rev ${b!.manifest!.package.revision}`);
+    console.log(formatDiff(diffManifests(a!.manifest!, b!.manifest!)));
+    break;
   }
   default:
     die(`usage:\n${USAGE}`);

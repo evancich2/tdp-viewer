@@ -9,3 +9,4 @@ export * from "./pack";
 export * from "./mesh";
 export * from "./threemf";
 export * from "./print";
+export * from "./diff";
