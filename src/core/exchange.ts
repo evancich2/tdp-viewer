@@ -238,7 +238,7 @@ export interface PublicationCheck {
  */
 export interface SourceAdapter {
   describe(): AdapterDescriptor;
-  checkPublication(model: EngineeringModel): PublicationCheck[];
+  checkPublication(model: EngineeringModel): PublicationCheck[] | Promise<PublicationCheck[]>;
   reconcile(proposals: ProposalSet, now?: Date): Promise<AckSet>;
 }
 

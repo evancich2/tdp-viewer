@@ -505,7 +505,7 @@ export async function runLab(opts: { legacySample?: { tdp: Uint8Array; trustJson
     const pkgUnchanged = (await sha256Hex(lab.revA.tdp)) === packageHashBefore && (await canonicalSha256(lab.ledgers["SN-0002"])) === ledgerHashBefore;
     demo("P07-e", "An NCR proposed as a ChangeRequest: accepted for review, flagged as needing a newly published baseline; no baseline is altered", "requiresNewBaseline true; package and ledger unchanged", `${cr?.status}, requiresNewBaseline=${cr?.requiresNewBaseline}; package ${pkgUnchanged ? "unchanged" : "CHANGED"}; ${imported.problems.length ? imported.problems.join("; ") : "acks match proposals"}`, cr?.requiresNewBaseline === true && pkgUnchanged && imported.problems.length === 0);
     const moved = new LocalFixtureAdapter({ ...JSON.parse(JSON.stringify(initial)), sourceItems: { ...initial.sourceItems, [PART]: { ...initial.sourceItems[PART]!, revision: "B" } } });
-    const pub = moved.checkPublication(lab.revA.model).find((c) => c.source.startsWith(PART))!;
+    const pub = (await moved.checkPublication(lab.revA.model)).find((c) => c.source.startsWith(PART))!;
     demo("P07-f", "Publication version check after the source moves to rev B", "rev A reported superseded", pub.message, pub.status === "superseded");
     const tamperedAcks = JSON.parse(JSON.stringify(acks)) as AckSet;
     tamperedAcks.acks.find((a) => a.status === "unsupported")!.status = "accepted";

@@ -21,7 +21,9 @@
 //   tdp sync export <ledger.json> --package <package.tdp> --recipe <recipe.json> --fixture <fixture.json> --out <proposals.json> [--known-proposals <p.json> --known-acks <a.json>] <context>
 //   tdp sync apply-fixture <proposals.json> --fixture <fixture.json> --out <acks.json> [--key <ack-key.json>]   (local fixture adapter; updates the fixture file)
 //   tdp sync import <proposals.json> <acks.json> [--trust <trust-store> --authority <authority> [--anchors <anchors.json>]]   (with trust: acks must be signed)
-//   tdp sync check-publication --package <package.tdp> --fixture <fixture.json> <context>
+//   tdp sync check-publication --package <package.tdp> (--fixture <fixture.json> | --onshape) <context>
+//   tdp source onshape-ref --id <source-id> --document <did> --version <vid> --element <eid> --revision <rev> [--part-number <pn>] [--out <ref.json>]
+//                          (Onshape commands read ONSHAPE_ACCESS_KEY / ONSHAPE_SECRET_KEY from the environment; read-only)
 //
 //   <context> = --trust <trust-store> --authority <authority> --process <process.json> [--anchors <anchors.json>] [--evidence-dir <dir>] [--successor <newer.tdp> ...] [--at <ISO time>]
 //
@@ -41,6 +43,7 @@ import { signEvidenceBundle, verifySignedEvidence } from "../src/core/evidence";
 import { TransitionDenied as RecordDenied, verifyLedger } from "../src/core/records";
 import { utf8 } from "../src/core/bytes";
 import * as wf from "./workflow-commands";
+import { OnshapeClient, OnshapeReadAdapter, credentialsFromEnv } from "./onshape";
 import { KeyRole, MIN_PASSPHRASE, createKey, unlockKey } from "./keys";
 
 const USAGE = readFileSync(new URL(import.meta.url), "utf8")
@@ -134,6 +137,13 @@ const { values, positionals } = parseArgs({
     "known-proposals": { type: "string" },
     "known-acks": { type: "string" },
     successor: { type: "string", multiple: true },
+    onshape: { type: "boolean", default: false },
+    id: { type: "string" },
+    document: { type: "string" },
+    version: { type: "string" },
+    element: { type: "string" },
+    revision: { type: "string" },
+    "part-number": { type: "string" },
   },
 });
 
@@ -376,13 +386,26 @@ switch (command) {
       process.exit(r.problems.length ? 1 : 0);
     }
     if (action === "check-publication") {
-      if (!values.fixture) die("usage: tdp sync check-publication --package <tdp> --fixture <fixture.json> <context>");
+      if (!values.fixture === !values.onshape) die("usage: tdp sync check-publication --package <tdp> (--fixture <fixture.json> | --onshape) <context>");
       const c = await workflowContext();
-      const checks = wf.checkPublication(c, readFileSync(values.fixture, "utf8"));
+      const adapter = values.onshape ? new OnshapeReadAdapter(new OnshapeClient(credentialsFromEnv())) : readFileSync(values.fixture!, "utf8");
+      if (values.onshape) console.log("reading Onshape (read-only; nothing is written to Onshape)");
+      const checks = await wf.checkPublication(c, adapter);
       for (const ch of checks) console.log(`  ${ch.status.padEnd(12)} ${ch.message}`);
       process.exit(checks.every((ch) => ch.status === "current") ? 0 : 1);
     }
     die("usage: tdp sync export|apply-fixture|import|check-publication ...");
+    break;
+  }
+  case "source": {
+    const [action] = positionals;
+    if (action !== "onshape-ref" || !values.id || !values.document || !values.version || !values.element || !values.revision)
+      die("usage: tdp source onshape-ref --id <source-id> --document <did> --version <vid> --element <eid> --revision <rev> [--part-number <pn>] [--out <ref.json>]");
+    const adapter = new OnshapeReadAdapter(new OnshapeClient(credentialsFromEnv()));
+    const ref = await adapter.captureReference({ id: values.id, documentId: values.document, versionId: values.version, elementId: values.element, partNumber: values["part-number"], revision: values.revision });
+    if (values.out) writeJson(values.out, ref);
+    console.log(JSON.stringify(ref, null, 2));
+    console.error("Captured from Onshape for the engineering model. The release state is declared, not verified: record source-release evidence under your authority configuration.");
     break;
   }
   default:

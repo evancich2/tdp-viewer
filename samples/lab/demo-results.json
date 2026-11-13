@@ -304,7 +304,7 @@
     "id": "P08-a",
     "scenario": "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)",
     "expected": "measurements recorded",
-    "actual": "package verification (rev A, 6 files): 1.93 ms; ledger verification (SN-0001, 16 records): 5.99 ms; ledger verification per record: 0.37 ms; ledger size: 27601 bytes",
+    "actual": "package verification (rev A, 6 files): 1.85 ms; ledger verification (SN-0001, 16 records): 4.94 ms; ledger verification per record: 0.31 ms; ledger size: 27601 bytes",
     "pass": true
   },
   {

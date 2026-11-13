@@ -6,7 +6,7 @@ import { canonicalSha256 } from "../src/core/canonical";
 import { loadAuthority, type AuthorityConfig } from "../src/core/authority";
 import type { TrustStore } from "../src/core/schema";
 import { buildEvidenceBundle } from "../src/core/evidence";
-import { AckSet, FixtureState, LocalFixtureAdapter, ProposalSet, PublishingRecipe, buildProposals, importAcknowledgements } from "../src/core/exchange";
+import { type SourceAdapter, AckSet, FixtureState, LocalFixtureAdapter, ProposalSet, PublishingRecipe, buildProposals, importAcknowledgements } from "../src/core/exchange";
 import { loadProcess } from "../src/core/process";
 import { defaultPolicy } from "../src/core/policy";
 import {
@@ -184,6 +184,7 @@ export async function syncImport(proposalsJson: string, acksJson: string, trust?
   return importAcknowledgements(ProposalSet.parse(JSON.parse(proposalsJson)), AckSet.parse(JSON.parse(acksJson)), trust);
 }
 
-export function checkPublication(c: LoadedContext, fixtureJson: string) {
-  return new LocalFixtureAdapter(FixtureState.parse(JSON.parse(fixtureJson))).checkPublication(c.ctx.baseline.model);
+export async function checkPublication(c: LoadedContext, adapter: SourceAdapter | string) {
+  const a = typeof adapter === "string" ? new LocalFixtureAdapter(FixtureState.parse(JSON.parse(adapter))) : adapter;
+  return a.checkPublication(c.ctx.baseline.model);
 }

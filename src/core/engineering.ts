@@ -33,8 +33,8 @@ export const SourceReference = z
     reference: z.record(z.string().regex(/^[a-z][a-zA-Z0-9]{0,31}$/), text(200)).refine((r) => Object.keys(r).length <= 12, "at most 12 reference fields"),
     declaredRevision: revision,
     declaredReleaseState: text(64),
-    /** How the reference got here. Nothing in this increment pulls from a live system. */
-    capture: z.enum(["manual-entry", "fixture"]),
+    /** How the reference got here: typed in, from a fixture, or read from the source system's API (CLI only). */
+    capture: z.enum(["manual-entry", "fixture", "api-read"]),
     capturedAt: isoTime,
   })
   .strict();
