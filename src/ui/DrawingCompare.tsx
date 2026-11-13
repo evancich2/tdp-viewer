@@ -32,6 +32,7 @@ export function DrawingCompare({ older, newer, onAccess }: { older: DrawingSide;
         newer.session.openFile(newer.path, "drawing compare"),
       ]);
       onAccess();
+      if (cancelled) return; // closed while the files were being read: don't start workers nobody will close
       const pa = openPdf(a.bytes);
       const pb = openPdf(b.bytes);
       closers.push(pa.close, pb.close);

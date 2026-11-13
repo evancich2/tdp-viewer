@@ -119,7 +119,8 @@ const inlineOcctWasm = (): Plugin => ({
 });
 
 export default defineConfig({
-  plugins: [react(), contentSecurityPolicy(), previewHeaders(), serviceWorker()],
+  // inlineOcctWasm is listed here too: the dev server transforms worker modules with the main plugins.
+  plugins: [react(), contentSecurityPolicy(), previewHeaders(), serviceWorker(), inlineOcctWasm()],
   build: { sourcemap: true },
   worker: { format: "es", plugins: () => [inlineOcctWasm()] },
 });

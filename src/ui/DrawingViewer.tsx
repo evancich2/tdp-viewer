@@ -22,11 +22,17 @@ export function DrawingViewer({ file, bytes }: { file: ManifestFile; bytes: Uint
 
   useEffect(() => {
     const pdf = openPdf(bytes);
+    // Results from a document already closed (switched away, or StrictMode's dev re-run) are ignored:
+    // closing rejects its promise with "Worker was destroyed".
+    let live = true;
     setDoc(null);
     setError(null);
     setPage(1);
-    pdf.promise.then(setDoc, (e: Error) => setError(e.message));
-    return pdf.close;
+    pdf.promise.then((d) => live && setDoc(d), (e: Error) => live && setError(e.message));
+    return () => {
+      live = false;
+      pdf.close();
+    };
   }, [file.path, bytes]);
 
   useEffect(() => {

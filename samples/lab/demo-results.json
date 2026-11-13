@@ -325,14 +325,14 @@
     "id": "P08-b",
     "scenario": "A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately",
     "expected": "verified; 45 units closed",
-    "actual": "verified; 45 units closed; 224.72 ms",
+    "actual": "verified; 45 units closed; 232.4 ms",
     "pass": true
   },
   {
     "id": "P08-a",
     "scenario": "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)",
     "expected": "measurements recorded",
-    "actual": "package verification (rev A, 6 files): 1.51 ms; ledger verification (SN-0001, 16 records): 4.66 ms; ledger verification per record: 0.29 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 224.72 ms; large ledger verification per record: 0.33 ms",
+    "actual": "package verification (rev A, 6 files): 1.54 ms; ledger verification (SN-0001, 16 records): 4.67 ms; ledger verification per record: 0.29 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 232.4 ms; large ledger verification per record: 0.34 ms",
     "pass": true
   },
   {
