@@ -15,12 +15,12 @@ source-system release is represented; see docs/laboratory-demo.md for the eviden
 | P02-a | Suitability: build-volume fit passes, but missing firmware is a gap, so the result is review-required (fit alone isn't capability) | review-required with gap 'printer firmware not recorded'; fit pass | review-required; fit pass; gaps: printer firmware not recorded | PASS |
 | P02-b | Manual queue/build records: a failed job is recorded with its errors and the unit is requeued under the same CIP | J-0001 failed with errors; J-0002 completed; state closed | first-layer adhesion failure at layer 3 (synthetic); final state closed | PASS |
 | P02-c | Operator authority via a verified delegation from a configured key with mayDelegate | dispatch by delegated operator verifies | dispatch by Jo Second-Shift Operator (demo, delegated only) via delegation 40fe54e2-66c1… | PASS |
-| P03-a | SN-0001 measured within limits (guard-banded / simple acceptance) → accept; disposition is a separate signed decision | inspection accepted; dispositioned accept | Inspection accepted (measurement outcome; not a disposition); Dispositioned accept by Mel Disposition Authority (demo) | PASS |
-| P03-b | SN-0002 tab 6.25 mm > 6.20 mm + U → reject → NCR → scrap | rejected; NCR-0001; scrap | Inspection rejected one or more characteristics; Dispositioned scrap by Mel Disposition Authority (demo); state closed | PASS |
-| P03-c | SN-0003 tab 6.198 mm is within U of the upper limit → indeterminate, held (never an automatic pass) | indeterminate; state inspection-held | Inspection indeterminate: held for missing or insufficient measurement evidence; state inspection-held | PASS |
+| P03-a | SN-0001 measured within limits (guard-banded / simple acceptance) → accept; disposition is a separate signed decision | inspection accepted; dispositioned accept | Inspection accepted (SN-0001) (measurement outcome; not a disposition); Dispositioned accept (SN-0001) by Mel Disposition Authority (demo) | PASS |
+| P03-b | SN-0002 tab 6.25 mm > 6.20 mm + U → reject → NCR → scrap | rejected; NCR-0001; scrap | Inspection rejected one or more characteristics (SN-0002); Dispositioned scrap (SN-0002) by Mel Disposition Authority (demo); state closed | PASS |
+| P03-c | SN-0003 tab 6.198 mm is within U of the upper limit → indeterminate, held (never an automatic pass) | indeterminate; state inspection-held | Inspection indeterminate (SN-0003): held for missing or insufficient measurement evidence; state inspection-held | PASS |
 | P03-d | Units, limits and missing evidence: 0.2378 in converts and is accepted; degrees vs mm, or no calibration evidence → indeterminate | accept; indeterminate; indeterminate | accept (6.04012 mm); indeterminate; indeterminate | PASS |
-| P03-e | Disposition authority tries to 'accept' a held (indeterminate) inspection directly | DENIED: a held inspection needs an NCR before any disposition | DENIED: disposition is not allowed from state inspection-held (needs inspected or nonconforming) | PASS |
-| P04-a | A validly signed build start that skips suitability, planning and authorization | ledger rejected: not allowed from state source-released | record 3 (dispatch-build) by Oli Operator (demo): denied: dispatch-build is not allowed from state source-released (needs queued) | PASS |
+| P03-e | Disposition authority tries to 'accept' a held (indeterminate) inspection directly | DENIED: a held inspection needs an NCR before any disposition | DENIED: disposition is not allowed from state inspection-held for SN-0003 (needs inspected or nonconforming) | PASS |
+| P04-a | A validly signed build start that skips suitability, planning and authorization | ledger rejected: not allowed from state source-released | record 3 (dispatch-build) by Oli Operator (demo): denied: dispatch-build is not allowed from state source-released for SN-0001 (needs queued) | PASS |
 | P04-b | Planning before source release is recorded (missing approval/evidence step) | DENIED before signing | DENIED: plan-build is not allowed from state requirements-approved (needs process-qualified) | PASS |
 | P04-c | Suitability review without the required capability-study / calibration evidence | DENIED: requires evidence tagged capability-study | DENIED: review-suitability requires evidence tagged capability-study | PASS |
 | P04-d | An inspection record that claims 'accept' when the decision rules give 'reject' | ledger rejected: decision rules give reject | record 10 (inspect) by Ines Inspector (demo): denied: inspect: record says accept, but the decision rules give reject | PASS |
@@ -38,22 +38,28 @@ source-system release is represented; see docs/laboratory-demo.md for the eviden
 | P06-c | The newest two records dropped: the chain alone still verifies; an independently retained checkpoint detects it | chain verifies; checkpoint reports truncation | verified; checkpoint: ledger has 14 verified records, but a retained checkpoint saw 16: history was truncated | PASS |
 | P06-d | A measurement evidence file altered after recording | held: its hash can't be checked; nothing is accepted on the altered file | held: record 14 (inspect) by Ines Inspector (demo) (Lab Inspection (synthetic)) as inspector: accept; held: evidence EV-MEAS (… | PASS |
 | P06-e | An inspection limit widened inside the signed engineering model | package rejected; no ledger can bind to it | rejected: 1 of 6 files failed; package is not trusted; records can't be checked against it | PASS |
-| P06-f | Recovery: re-verifying the retained ledger and evidence from scratch | verified, same head as the checkpoint | verified, head 932778502eabbef9… | PASS |
+| P06-f | Recovery: re-verifying the retained ledger and evidence from scratch | verified, same head as the checkpoint | verified, head 772d8b8dad3ff9dd… | PASS |
 | P07-a | SN-0001 proposals to the fixture PLM: AsBuiltUnit create then update (expected version 1), lossy-but-accepted InspectionResult, held lossy ProcessReview, unsupported ProcessPlan | accepted ×4, rejected (lossy held) ×1, unsupported ×1 | {"rejected":1,"unsupported":1,"accepted":4} | PASS |
 | P07-b | Replaying the same transactions | all duplicate; source objects unchanged | {"duplicate":6}; objects unchanged | PASS |
 | P07-c | Reusing a transaction id with different content | rejected: transaction id reused with different content | transaction id reused with different content | PASS |
 | P07-d | SN-0002 AsBuiltUnit already exists at the source with different content; the later update in the same set must not overwrite it | conflict, then dependent update refused; source object untouched | conflict: object already exists at version 1 with different content \| conflict: an earlier transaction for this object in the same set was not applied; resolve it first; source object v1 manual | PASS |
 | P07-e | An NCR proposed as a ChangeRequest: accepted for review, flagged as needing a newly published baseline; no baseline is altered | requiresNewBaseline true; package and ledger unchanged | accepted, requiresNewBaseline=true; package unchanged; acks match proposals | PASS |
 | P07-f | Publication version check after the source moves to rev B | rev A reported superseded | SYN-PH-2001@A (SRC-SYN-PH-2001): source is now at revision B | PASS |
-| P08-a | Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed) | measurements recorded | package verification (rev A, 6 files): 1.63 ms; ledger verification (SN-0001, 16 records): 6.1 ms; ledger verification per record: 0.38 ms; ledger size: 27550 bytes | PASS |
+| P07-g | Acknowledgements are signed by the source system's configured key; an edited ack, or one signed by another trusted key, is refused | signed ack accepted; both forgeries refused and nothing is marked synchronized | signed by Lab Fixture PLM acknowledgement key (demo); edited: acknowledgement signature does not verify; other key: key 2dc8491a0f7ba77d37908452fc002f1c is not configured to acknowledge for lab-fixture; versions kept: 0 | PASS |
+| P01-f | Once rev B (which supersedes rev A) is known, new work under rev A is refused, but a unit in progress may still be re-inspected | queue DENIED as superseded; re-inspection ALLOWED; baseline status warns | DENIED: enter-queue: baseline BL-SYN-PH-2000-A is superseded by BL-SYN-PH-2000-B (package 7258e9e3-a724-4cef-9c4c-a7b1b6…; re-inspect: ALLOWED; status: Superseded by BL-SYN-PH-2000-B: no new work under BL-SYN-PH-… | PASS |
+| P05-i | A CIP that allows at most two dispatches: a third attempt needs a new authorization | DENIED: at most 2 dispatch-build, 2 already used | DENIED: dispatch-build is not authorized: CIP CIP-SN-0001 allows at most 2 dispatch-build record(s), and 2 already used it | PASS |
+| P02-d | A lot of two serials in one ledger: shared approvals and CIP, separate unit tracks (one accepted and incorporated, one scrapped) | SN-0004 closed, SN-0005 scrapped; statuses per unit | verified; SN-0004=closed, SN-0005=scrapped; Dispositioned accept (SN-0004) by Mel Disposition Authority (demo); Dispositioned scrap (SN-0005) by Mel Disposition Authority (demo) | PASS |
+| P03-f | Dispositioning SN-0005 by citing SN-0004's accepted inspection | DENIED: a unit is dispositioned against its own latest inspection | DENIED: disposition: must disposition the latest inspection | PASS |
+| P08-a | Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed) | measurements recorded | package verification (rev A, 6 files): 1.93 ms; ledger verification (SN-0001, 16 records): 5.99 ms; ledger verification per record: 0.37 ms; ledger size: 27601 bytes | PASS |
+| P06-g | Signed evidence bundle: verifies as exported, fails after any edit | valid; altered copy refused | signed by Casey Configuration Manager (demo); altered: signature does not verify (bundle altered?) | PASS |
 
 ## Measured software performance (this machine)
 
 | Metric | Value | Note |
 |---|---|---|
-| package verification (rev A, 6 files) | 1.63 ms | mean of 5, this machine |
-| ledger verification (SN-0001, 16 records) | 6.1 ms | mean of 5, includes every gate re-evaluation |
-| ledger verification per record | 0.38 ms | full chain re-verified from genesis |
-| ledger size | 27550 bytes | 16 signed records |
+| package verification (rev A, 6 files) | 1.93 ms | mean of 5, this machine |
+| ledger verification (SN-0001, 16 records) | 5.99 ms | mean of 5, includes every gate re-evaluation |
+| ledger verification per record | 0.37 ms | full chain re-verified from genesis |
+| ledger size | 27601 bytes | 16 signed records |
 
-39 of 39 demonstrations passed.
+45 of 45 demonstrations passed.

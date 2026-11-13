@@ -147,9 +147,41 @@ try {
   if (!(await badge("Inspection").getAttribute("class"))!.includes("warn")) fail("indeterminate inspection should be held (warn), not accepted");
   console.log("ok  forbidden step rejected with its reason; indeterminate inspection shown as held");
 
+  // Record a step in the browser: the inspector raises an NCR against SN-0003's held inspection.
+  await page.locator(".record-form label", { hasText: "Signing key file" }).locator("input").setInputFiles("samples/lab/keys/inspector.key.json");
+  await page.getByLabel("Passphrase").fill("lab-demo-passphrase (public, demo only)");
+  await page.getByRole("button", { name: "Unlock" }).click();
+  await page.getByText(/Signing as Ines Inspector/).waitFor({ timeout: 30_000 });
+  await page.locator(".record-form select").first().selectOption("raise-nonconformance");
+  const dataBox = page.locator(".record-form textarea");
+  const tmpl = JSON.parse(await dataBox.inputValue());
+  await dataBox.fill(JSON.stringify({ ...tmpl, ncrId: "NCR-E2E", characteristics: ["CH-002"], description: "e2e: wrong characteristic" }));
+  await page.locator(".record-form label", { hasText: "Reason" }).locator("input").fill("e2e");
+  await page.getByRole("button", { name: "Check and sign" }).click();
+  await page.locator(".record-form .banner.fail", { hasText: /DENIED, nothing signed: .*CH-002 was not rejected or held/ }).waitFor();
+  await dataBox.fill(JSON.stringify({ ...tmpl, ncrId: "NCR-E2E", characteristics: ["CH-001"], description: "e2e: tab within U of the upper limit" }));
+  await page.getByRole("button", { name: "Check and sign" }).click();
+  await page.locator(".record-form .banner.pass", { hasText: /Signed record 11: raise-nonconformance/ }).waitFor();
+  await page.locator('[data-ledger-verdict="verified"]', { hasText: "11 records" }).waitFor();
+  const dl = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download ledger" }).click();
+  const saved = JSON.parse(readFileSync(await (await dl).path(), "utf8"));
+  if (saved.entries.length !== 11) fail(`downloaded ledger has ${saved.entries.length} records`);
+  console.log("ok  browser signing: a forbidden NCR is refused with nothing signed; a valid one is signed, re-verified and downloadable");
+
+  // A lot ledger: per-unit tracks; and supersession once rev B is loaded.
+  await ledgerInput.setInputFiles("samples/lab/ledgers/LOT-0004.ledger.json");
+  await page.locator('[data-ledger-verdict="verified"]').waitFor();
+  await page.getByLabel("Unit").selectOption({ label: "SN-0005: scrapped" });
+  await page.locator(".badge[data-status='Disposition']", { hasText: "scrap (SN-0005)" }).waitFor();
+  await page.locator(".workflow label", { hasText: "Load newer baselines" }).locator("input").setInputFiles("samples/lab/SYN-PH-2000_B.tdp");
+  await page.locator(".badge[data-status='Baseline']", { hasText: "Superseded by BL-SYN-PH-2000-B" }).waitFor();
+  console.log("ok  lot ledger shows each unit's track; loading rev B marks rev A superseded");
+
   await page.locator(".workflow label", { hasText: "Open proposals" }).locator("input").setInputFiles("samples/lab/exchange/SN-0002.proposals.json");
   await page.locator(".workflow label", { hasText: "Import acknowledgements" }).locator("input").setInputFiles("samples/lab/exchange/SN-0002.acks.json");
   await page.locator('[data-sync-state="conflict"]').first().waitFor();
+  await page.getByText(/Acknowledgements signed by Lab Fixture PLM acknowledgement key/).waitFor();
   await page.getByText(/Needs a newly published baseline/).waitFor();
   console.log("ok  sync acknowledgements imported: conflict explicit, change request flagged for a new baseline");
 

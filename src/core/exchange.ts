@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { canonicalSha256 } from "./canonical";
+import type { AuthorityConfig } from "./authority";
+import { utf8 } from "./bytes";
+import type { TrustStore } from "./schema";
+import { signEd25519, verifyEd25519 } from "./signing";
 import { ArtifactClass, RelationshipType, SourceSystem, itemKey, type EngineeringModel } from "./engineering";
 import { RecordKind } from "./process";
 import type { BaselineContext, LedgerResult, VerifiedRecord } from "./records";
@@ -109,8 +113,26 @@ export const AckSet = z
     proposalSetSha256: sha256,
     acknowledgedAt: isoTime,
     acks: z.array(Acknowledgement),
+    /** Signature by a key the authority configuration names for this source system. */
+    signature: z.object({ keyId: z.string().regex(/^[0-9a-f]{32}$/), alg: z.literal("Ed25519"), signedAt: isoTime, sig: z.string().min(1).max(200) }).strict().optional(),
   })
   .strict();
+
+export const ackSigningMessage = (digest: string, signedAt: string) => utf8.encode(`tdp-sync-acks-signature/0.1\n${signedAt}\n${digest}`);
+const unsignedDigest = ({ signature: _s, ...rest }: AckSet) => canonicalSha256(rest);
+
+/** Checks an acknowledgement set's signature against the authority's keys for its source system. */
+export async function verifyAckSignature(acks: AckSet, trustStore: TrustStore, authority: AuthorityConfig, now = new Date()): Promise<{ signer?: string; problem?: string }> {
+  if (!acks.signature) return { problem: "acknowledgements are unsigned" };
+  const allowed = authority.sources.filter((s) => s.system === acks.adapter.system).flatMap((s) => s.acknowledgementKeys ?? []);
+  if (!allowed.includes(acks.signature.keyId)) return { problem: `key ${acks.signature.keyId} is not configured to acknowledge for ${acks.adapter.system}` };
+  const key = trustStore.keys.find((k) => k.keyId === acks.signature!.keyId);
+  if (!key) return { problem: "acknowledgement key is not in the trust store" };
+  if (key.revoked || authority.revokedKeys.some((r) => r.keyId === key.keyId)) return { problem: `${key.name}'s key is revoked` };
+  if (now.getTime() < Date.parse(key.notBefore) || now.getTime() > Date.parse(key.notAfter)) return { problem: `${key.name}'s key is not currently valid` };
+  const ok = await verifyEd25519(key.publicKey, acks.signature.sig, ackSigningMessage(await unsignedDigest(acks), acks.signature.signedAt));
+  return ok ? { signer: key.name } : { problem: "acknowledgement signature does not verify" };
+}
 export type AckSet = z.infer<typeof AckSet>;
 
 /** Problems with the recipe against the baseline it claims to publish. */
@@ -244,7 +266,7 @@ const sameAttributes = (a: Record<string, unknown>, b: Record<string, unknown>) 
 
 /** A stand-in source system kept in a JSON file. Clearly a fixture: it is labeled as one in every acknowledgement. */
 export class LocalFixtureAdapter implements SourceAdapter {
-  constructor(public state: FixtureState) {}
+  constructor(public state: FixtureState, private signer?: { keyId: string; privateKey: CryptoKey }) {}
 
   describe(): AdapterDescriptor {
     return { system: this.state.system, label: this.state.label, fixture: true, objectTypes: this.state.objectTypes };
@@ -308,13 +330,17 @@ export class LocalFixtureAdapter implements SourceAdapter {
       this.state.objects[key] = { version: cur.version + 1, attributes: tx.attributes, lastTx: tx.txId };
       remember(ack("accepted", cur.version + 1, `updated.${changeNote}`, { requiresNewBaseline: tx.changesDefinition }));
     }
-    return {
+    const out: AckSet = {
       schema: "tdp-sync-acks/0.1",
       adapter: { system: this.state.system, label: this.state.label, fixture: true },
       proposalSetSha256: await canonicalSha256(set),
       acknowledgedAt: now.toISOString(),
       acks,
     };
+    if (!this.signer) return out;
+    const signedAt = now.toISOString();
+    const sig = await signEd25519(this.signer.privateKey, ackSigningMessage(await unsignedDigest(out), signedAt));
+    return { ...out, signature: { keyId: this.signer.keyId, alg: "Ed25519", signedAt, sig } };
   }
 }
 
@@ -328,10 +354,21 @@ export interface ReconciliationRow {
  * Matches acknowledgements to the proposals they answer. Only ever reports: the baseline, its
  * package and the signed ledger are left exactly as they were.
  */
-export async function importAcknowledgements(proposals: ProposalSet, acks: AckSet): Promise<{ rows: ReconciliationRow[]; problems: string[]; versions: Record<string, number>; changeRequests: Transaction[] }> {
+export async function importAcknowledgements(
+  proposals: ProposalSet,
+  acks: AckSet,
+  /** When given, the acknowledgements must be signed by a key the authority names for their source system. */
+  trust?: { trustStore: TrustStore; authority: AuthorityConfig; now?: Date },
+): Promise<{ rows: ReconciliationRow[]; problems: string[]; versions: Record<string, number>; changeRequests: Transaction[]; signedBy?: string }> {
   const set = ProposalSet.parse(proposals);
   const a = AckSet.parse(acks);
   const problems: string[] = [];
+  let signedBy: string | undefined;
+  if (trust) {
+    const v = await verifyAckSignature(a, trust.trustStore, trust.authority, trust.now);
+    if (v.problem) problems.push(v.problem);
+    signedBy = v.signer;
+  }
   if ((await canonicalSha256(set)) !== a.proposalSetSha256) problems.push("acknowledgements answer a different proposal set");
   const rows: ReconciliationRow[] = set.transactions.map((tx) => {
     const ack = a.acks.find((x) => x.txId === tx.txId);
@@ -345,5 +382,5 @@ export async function importAcknowledgements(proposals: ProposalSet, acks: AckSe
     if (ok && r.ack!.sourceVersion) versions[`${r.tx.target.objectType}/${r.tx.target.objectId}`] = r.ack!.sourceVersion;
   }
   const changeRequests = rows.filter((r) => r.ack?.requiresNewBaseline).map((r) => r.tx);
-  return { rows, problems, versions, changeRequests };
+  return { rows: problems.length && trust ? rows.map((r) => ({ tx: r.tx, state: r.tx.status === "proposed" ? ("pending" as const) : r.tx.status })) : rows, problems, versions: problems.length && trust ? {} : versions, changeRequests, signedBy };
 }

@@ -208,6 +208,18 @@
       "notBefore": "2026-11-09T13:00:00.000Z",
       "notAfter": "2028-11-10T00:00:00.000Z",
       "revoked": false
+    },
+    {
+      "keyId": "9aca58a636765f866453faab14a0952d",
+      "name": "Lab Fixture PLM acknowledgement key (demo)",
+      "organization": {
+        "name": "Lab Fixture PLM (synthetic)"
+      },
+      "publicKey": "QeoKhZO1f+CdRcCsAaVMAjSNshLpAJJgK6Hf30R358c=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
     }
   ]
 }

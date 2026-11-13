@@ -17,6 +17,9 @@
     },
     {
       "name": "Lab Inspection (synthetic)"
+    },
+    {
+      "name": "Lab Fixture PLM (synthetic)"
     }
   ],
   "sources": [
@@ -31,6 +34,9 @@
       "integration": "file-exchange",
       "releasedStates": [
         "Released"
+      ],
+      "acknowledgementKeys": [
+        "9aca58a636765f866453faab14a0952d"
       ]
     }
   ],

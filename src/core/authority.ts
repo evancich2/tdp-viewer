@@ -53,6 +53,8 @@ export const AuthorityConfig = z
             integration: z.enum(["none", "file-exchange"]),
             /** Release states this source uses to mean "released for build". */
             releasedStates: z.array(z.string().min(1).max(64)).min(1).max(8),
+            /** Trust-store keys allowed to sign acknowledgements on behalf of this source system. */
+            acknowledgementKeys: z.array(keyId).max(8).optional(),
           })
           .strict(),
       )

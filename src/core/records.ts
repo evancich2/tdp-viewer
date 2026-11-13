@@ -81,6 +81,8 @@ export const RecordData = z.discriminatedUnion("kind", [
       notBefore: isoTime,
       notAfter: isoTime,
       policyVersion: z.number().int().positive(),
+      /** Optional caps: at most `max` records of `transition` may rely on this CIP, across all units. */
+      limits: z.array(z.object({ transition: z.string().min(1).max(64), max: z.number().int().positive() }).strict()).max(20).optional(),
     })
     .strict(),
   z.object({ kind: z.literal("queue-entry"), jobId: id, submittedFile: z.object({ name: text(255), sha256 }).strict(), settings }).strict(),
@@ -176,6 +178,14 @@ export function baselineFrom(result: VerifyResult): BaselineContext {
   return { packageId: result.manifest!.package.id, manifestSha256: result.manifestSha256!, created: result.manifest!.package.created, model: result.engineering.model };
 }
 
+/** A trusted baseline that names this one in its `supersedes`. */
+export interface Successor {
+  packageId: string;
+  manifestSha256: string;
+  baselineId: string;
+  created: string;
+}
+
 export interface WorkflowContext {
   baseline: BaselineContext;
   authority: LoadedAuthority;
@@ -184,7 +194,25 @@ export interface WorkflowContext {
   now: Date;
   skewMs: number;
   evidence?: EvidenceStore;
+  /**
+   * Newer baselines the operator knows supersede this one. Once one is known, new work (planning,
+   * authorization, queueing, starting builds) under this baseline is refused; units already in
+   * progress may still be completed, inspected, dispositioned and closed.
+   */
+  successors?: Successor[];
 }
+
+/** Successors of `baseline` among other verified packages: trusted 0.2 baselines whose `supersedes` names it. */
+export function successorsOf(baseline: BaselineContext, others: readonly VerifyResult[]): Successor[] {
+  return others.flatMap((r) => {
+    const s = r.verdict === "trusted" ? r.engineering?.model.baseline.supersedes : undefined;
+    if (!s || s.packageId !== baseline.packageId || s.manifestSha256 !== baseline.manifestSha256 || s.baselineId !== baseline.model.baseline.id) return [];
+    return [{ packageId: r.manifest!.package.id, manifestSha256: r.manifestSha256!, baselineId: r.engineering!.model.baseline.id, created: r.manifest!.package.created }];
+  });
+}
+
+/** Kinds of record that start new work on a baseline, and so stop once it is superseded. */
+const NEW_WORK = new Set(["plan", "authorization", "queue-entry", "build-start"]);
 
 export interface VerifiedRecord {
   record: WorkflowRecord;
@@ -196,6 +224,8 @@ export interface VerifiedRecord {
   held: string[];
   inspection?: InspectionEvaluation;
   suitability?: { outcome: string; checks: SuitabilityCheck[] };
+  /** The CIP this record relied on, if its transition needs authorization. */
+  authorizedBy?: string;
 }
 
 export type LedgerCheckStatus = "pass" | "fail" | "held";
@@ -212,12 +242,37 @@ export interface LedgerResult {
   instance?: LedgerInstance;
   /** Records that verified, in order (up to the first failure). */
   records: VerifiedRecord[];
+  /** State of the single unit when the ledger has exactly one; otherwise the instance-level state. */
   state: string;
+  /** Instance-level state: from records that name no unit. */
+  instanceState: string;
+  /** Each physical unit's own state. A ledger may carry one unit or several (a lot, a batch of serials). */
+  units: { unit: PhysicalUnitRef; key: string; state: string }[];
   /** Digest of the last verified record (or the genesis digest), for checkpoints. */
   head?: string;
 }
 
 export class TransitionDenied extends Error {}
+
+export type PhysicalUnitRef = { serial?: string; lot?: string };
+export const unitKey = (u?: PhysicalUnitRef) => (u ? (u.serial ? `serial:${u.serial}` : `lot:${u.lot}`) : "");
+export const unitLabel = (u?: PhysicalUnitRef) => (u ? (u.serial ?? `lot ${u.lot}`) : "instance");
+
+/**
+ * A unit's track: the instance-level records (no unit) plus that unit's own records. Each unit
+ * moves through the unit-level part of the process on its own; instance-level steps (approvals,
+ * planning, authorization) are shared by every unit in the ledger.
+ */
+export function trackOf(history: readonly VerifiedRecord[], unit?: PhysicalUnitRef): VerifiedRecord[] {
+  const k = unitKey(unit);
+  return history.filter((h) => !h.record.unit || unitKey(h.record.unit) === k);
+}
+
+function unitsIn(process: LoadedProcess, history: readonly VerifiedRecord[]): LedgerResult["units"] {
+  const seen = new Map<string, PhysicalUnitRef>();
+  for (const h of history) if (h.record.unit) seen.set(unitKey(h.record.unit), h.record.unit);
+  return [...seen].map(([key, unit]) => ({ unit, key, state: stateOf(process, trackOf(history, unit)) }));
+}
 
 const stateOf = (process: LoadedProcess, history: readonly VerifiedRecord[]) => {
   for (let i = history.length - 1; i >= 0; i--) {
@@ -247,7 +302,7 @@ export function findAuthorization(
   history: readonly VerifiedRecord[],
   ctx: WorkflowContext,
   operation: string,
-  who: { organization?: string; role?: string; unit?: { serial?: string; lot?: string } },
+  who: { organization?: string; role?: string; unit?: { serial?: string; lot?: string }; transition?: string },
   at: string,
 ): { cip?: Authorization & { recordId: string }; problem?: string } {
   const cips = history.filter((h) => h.record.data.kind === "authorization").reverse();
@@ -266,6 +321,11 @@ export function findAuthorization(
       const ok = (who.unit.serial && d.units.serials?.includes(who.unit.serial)) || (who.unit.lot && d.units.lots?.includes(who.unit.lot));
       if (!ok) { reasons.push(`${label} doesn't cover unit ${who.unit.serial ?? who.unit.lot}`); continue; }
     }
+    const limit = who.transition && d.limits?.find((l) => l.transition === who.transition);
+    if (limit) {
+      const used = history.filter((x) => x.authorizedBy === d.cipId && x.record.action === limit.transition).length;
+      if (used >= limit.max) { reasons.push(`${label} allows at most ${limit.max} ${limit.transition} record(s), and ${used} already used it`); continue; }
+    }
     return { cip: { ...d, recordId: h.record.recordId } };
   }
   return { problem: reasons.join("; ") };
@@ -277,6 +337,7 @@ interface Evaluation {
   via?: string;
   inspection?: InspectionEvaluation;
   suitability?: VerifiedRecord["suitability"];
+  authorizedBy?: string;
 }
 
 /**
@@ -313,11 +374,8 @@ export function evaluateRecord(history: readonly VerifiedRecord[], rec: Workflow
   if (role.problem) return deny(role.problem);
   if (!def.roles.some((r) => r.id === rec.actor.role)) return deny(`role ${rec.actor.role} is not a role of process ${def.id}`);
 
-  // Unit: one physical unit per workflow instance, within the baseline's effectivity.
+  // Unit: within the baseline's effectivity. Several units may share one ledger, each on its own track.
   if (rec.unit) {
-    const earlier = history.find((h) => h.record.unit)?.record.unit;
-    if (earlier && (earlier.serial !== rec.unit.serial || earlier.lot !== rec.unit.lot))
-      return deny(`unit ${rec.unit.serial ?? rec.unit.lot} differs from this instance's unit ${earlier.serial ?? earlier.lot}`);
     if (!unitInEffectivity(model.baseline.effectivity, rec.unit)) return deny(`unit ${rec.unit.serial ?? rec.unit.lot} is outside baseline effectivity`);
   }
 
@@ -342,33 +400,44 @@ export function evaluateRecord(history: readonly VerifiedRecord[], rec: Workflow
   // Transition.
   const t = def.transitions.find((x) => x.id === rec.action);
   if (!t) return deny(`${rec.action} is not a transition of process ${def.id}`);
-  const state = stateOf(process, history);
-  if (!t.from.includes(state)) return deny(`${t.id} is not allowed from state ${state} (needs ${t.from.join(" or ")})`);
+  if (t.requires.unit && !rec.unit) return deny(`${t.id} needs a serial or lot`);
+  // State, prerequisites and independence are judged on this unit's track (or the instance track).
+  const track = rec.unit ? trackOf(history, rec.unit) : history.filter((h) => !h.record.unit);
+  const state = stateOf(process, track);
+  const unitNote = rec.unit ? ` for ${unitLabel(rec.unit)}` : "";
+  if (!t.from.includes(state)) return deny(`${t.id} is not allowed from state ${state}${unitNote} (needs ${t.from.join(" or ")})`);
   if (t.kind !== rec.data.kind) return deny(`${t.id} records ${t.kind} data, not ${rec.data.kind}`);
   if (!(rec.outcome in t.outcomes)) return deny(`${t.id} can't have outcome ${rec.outcome} (allowed: ${Object.keys(t.outcomes).join(", ")})`);
   if (!t.roles.includes(rec.actor.role)) return deny(`${t.id} needs role ${t.roles.join(" or ")}, not ${rec.actor.role}`);
   if (t.organizations && !t.organizations.includes(rec.actor.organization)) return deny(`${t.id} is limited to ${t.organizations.join(", ")}; actor is from ${rec.actor.organization}`);
   for (const need of t.requires.actions) {
-    const done = latest(history, (r) => r.action === need.id && (!need.outcomes || need.outcomes.includes(r.outcome)));
+    const done = latest(track, (r) => r.action === need.id && (!need.outcomes || need.outcomes.includes(r.outcome)));
     if (!done) return deny(`${t.id} requires ${need.id}${need.outcomes ? ` with outcome ${need.outcomes.join(" or ")}` : ""} first`);
   }
   for (const other of t.distinctActorFrom) {
-    const h = latest(history, (r) => r.action === other);
+    const h = latest(track, (r) => r.action === other);
     if (h && h.record.actor.keyId === rec.actor.keyId) return deny(`${t.id} must be signed by someone other than whoever signed ${other}`);
   }
   for (const other of t.distinctOrganizationFrom) {
-    const h = latest(history, (r) => r.action === other);
+    const h = latest(track, (r) => r.action === other);
     if (h && h.record.actor.organization === rec.actor.organization) return deny(`${t.id} must come from a different organization than ${other} (both ${rec.actor.organization})`);
   }
-  if (t.requires.unit && !rec.unit) return deny(`${t.id} needs a serial or lot`);
+  // A known successor baseline stops new work here; units already in progress may finish.
+  const successor = ctx.successors?.[0];
+  if (successor && NEW_WORK.has(t.kind)) {
+    const why = `baseline ${model.baseline.id} is superseded by ${successor.baselineId} (package ${successor.packageId}); new work must follow the new baseline`;
+    if (mode === "create") return deny(`${t.id}: ${why}`);
+    if (Date.parse(rec.at) > Date.parse(successor.created)) held.push(`${t.id} was recorded after ${why}`);
+  }
   if (t.requires.freshAuthority) {
     // Before signing: fresh now. On verification: the record must have been made inside the window of a configuration at least this new.
     const at = mode === "create" ? ctx.now : new Date(Math.max(Date.parse(rec.at), Date.parse(authority.config.issued)));
     const stale = freshnessProblem(authority.config, at);
     if (stale) return deny(`${t.id} ${stale}`);
   }
+  let authorizedBy: string | undefined;
   if (t.requires.authorization) {
-    const who = { organization: rec.actor.organization, role: rec.actor.role, unit: rec.unit };
+    const who = { organization: rec.actor.organization, role: rec.actor.role, unit: rec.unit, transition: t.id };
     const a = findAuthorization(history, ctx, t.requires.authorization, who, rec.at);
     if (a.problem) return deny(`${t.id} is not authorized: ${a.problem}`);
     if (mode === "create") {
@@ -377,6 +446,7 @@ export function evaluateRecord(history: readonly VerifiedRecord[], rec: Workflow
     }
     if (a.cip && history.find((h) => h.record.recordId === a.cip!.recordId)?.record.actor.keyId === rec.actor.keyId)
       return deny(`${t.id}: the issuer of CIP ${a.cip.cipId} can't also perform the operation it authorizes`);
+    authorizedBy = a.cip?.cipId;
   }
 
   // Evidence: required tags present; every referenced file hash-verified.
@@ -395,10 +465,12 @@ export function evaluateRecord(history: readonly VerifiedRecord[], rec: Workflow
   }
 
   // What the record says must be consistent with the baseline and with the history.
-  return semantics(t, rec, history, ctx, mode, held, role.via!);
+  const ev = semantics(t, rec, track, history, ctx, mode, held, role.via!);
+  return ev.fatal ? ev : { ...ev, authorizedBy };
 }
 
-function semantics(t: Transition, rec: WorkflowRecord, history: readonly VerifiedRecord[], ctx: WorkflowContext, mode: "create" | "verify", held: string[], via: string): Evaluation {
+/** `history` is the unit's track; `all` is the whole ledger, for uniqueness checks. */
+function semantics(t: Transition, rec: WorkflowRecord, history: readonly VerifiedRecord[], all: readonly VerifiedRecord[], ctx: WorkflowContext, mode: "create" | "verify", held: string[], via: string): Evaluation {
   const deny = (why: string): Evaluation => ({ fatal: `${t.id}: ${why}`, held });
   const ok = (extra: Partial<Evaluation> = {}): Evaluation => ({ fatal: null, held, via, ...extra });
   const model = ctx.baseline.model;
@@ -465,12 +537,16 @@ function semantics(t: Transition, rec: WorkflowRecord, history: readonly Verifie
       if (!units.length) return deny("an authorization must name the serials or lots it applies to");
       for (const u of units) if (!unitInEffectivity(model.baseline.effectivity, u)) return deny(`unit ${u.serial ?? u.lot} is outside baseline effectivity`);
       for (const r of d.roles) if (!def.roles.some((x) => x.id === r)) return deny(`role ${r} is not a role of ${def.id}`);
-      if (history.some((h) => h.record.data.kind === "authorization" && h.record.data.cipId === d.cipId)) return deny(`CIP ${d.cipId} already issued`);
+      for (const l of d.limits ?? []) {
+        const lt = def.transitions.find((x) => x.id === l.transition);
+        if (!lt?.requires.authorization || !d.operations.includes(lt.requires.authorization)) return deny(`limit on ${l.transition}, which isn't an operation this CIP authorizes`);
+      }
+      if (all.some((h) => h.record.data.kind === "authorization" && h.record.data.cipId === d.cipId)) return deny(`CIP ${d.cipId} already issued`);
       return ok();
     }
     case "queue-entry": {
       if (!rec.evidence.some((e) => e.sha256 === d.submittedFile.sha256)) return deny("the submitted file must be attached as evidence");
-      if (history.some((h) => h.record.data.kind === "queue-entry" && h.record.data.jobId === d.jobId)) return deny(`job ${d.jobId} was already queued`);
+      if (all.some((h) => h.record.data.kind === "queue-entry" && h.record.data.jobId === d.jobId)) return deny(`job ${d.jobId} was already queued`);
       return ok();
     }
     case "build-start": {
@@ -479,7 +555,7 @@ function semantics(t: Transition, rec: WorkflowRecord, history: readonly Verifie
         const q = latest(history, (r) => r.data.kind === "queue-entry");
         if (!q || q.record.data.kind !== "queue-entry" || q.record.data.jobId !== d.jobId) return deny(`job ${d.jobId} is not the queued job`);
       }
-      if (history.some((h) => h.record.data.kind === "build-start" && h.record.data.jobId === d.jobId)) return deny(`job ${d.jobId} was already started`);
+      if (all.some((h) => h.record.data.kind === "build-start" && h.record.data.jobId === d.jobId)) return deny(`job ${d.jobId} was already started`);
       return ok();
     }
     case "build-complete": {
@@ -504,7 +580,7 @@ function semantics(t: Transition, rec: WorkflowRecord, history: readonly Verifie
       const insp = history.find((h) => h.record.recordId === d.inspectionRecord);
       if (!insp || insp.record.data.kind !== "inspection") return deny("names no inspection record in this ledger");
       if (insp.record.outcome === "accept") return deny("the inspection accepted every characteristic");
-      if (history.some((h) => h.record.data.kind === "nonconformance" && h.record.data.ncrId === d.ncrId)) return deny(`NCR ${d.ncrId} already raised`);
+      if (all.some((h) => h.record.data.kind === "nonconformance" && h.record.data.ncrId === d.ncrId)) return deny(`NCR ${d.ncrId} already raised`);
       const bad = new Set(insp.inspection?.results.filter((r) => r.result !== "accept").map((r) => r.characteristic));
       for (const c of d.characteristics) if (!bad.has(c)) return deny(`characteristic ${c} was not rejected or held by that inspection`);
       return ok();
@@ -547,9 +623,11 @@ function semantics(t: Transition, rec: WorkflowRecord, history: readonly Verifie
 export async function verifyLedger(json: string | unknown, ctx: WorkflowContext): Promise<LedgerResult> {
   const checks: LedgerCheck[] = [];
   const records: VerifiedRecord[] = [];
-  const result = (verdict: LedgerResult["verdict"], extra: Partial<LedgerResult> = {}): LedgerResult => ({
-    verdict, checks, records, state: stateOf(ctx.process, records), head: records.at(-1)?.sha256, ...extra,
-  });
+  const result = (verdict: LedgerResult["verdict"], extra: Partial<LedgerResult> = {}): LedgerResult => {
+    const units = unitsIn(ctx.process, records);
+    const instanceState = stateOf(ctx.process, records.filter((r) => !r.record.unit));
+    return { verdict, checks, records, instanceState, units, state: units.length === 1 ? units[0]!.state : instanceState, head: records.at(-1)?.sha256, ...extra };
+  };
   const fail = (id: string, message: string, extra: Partial<LedgerResult> = {}) => { checks.push({ id, status: "fail", message }); return result("rejected", extra); };
 
   let ledger: LedgerFile;
@@ -596,7 +674,7 @@ export async function verifyLedger(json: string | unknown, ctx: WorkflowContext)
     if (!(await verifyEd25519(key.publicKey, entry.signature.sig, recordSigningMessage(digest)))) return fail(cid, `${label}: signature does not verify`, { instance: inst });
     const ev = evaluateRecord(records, rec, ctx, "verify");
     if (ev.fatal) return fail(cid, `${label} by ${key.name}: denied: ${ev.fatal}`, { instance: inst });
-    records.push({ record: rec, sha256: digest, key, via: ev.via!, held: ev.held, inspection: ev.inspection, suitability: ev.suitability });
+    records.push({ record: rec, sha256: digest, key, via: ev.via!, held: ev.held, inspection: ev.inspection, suitability: ev.suitability, authorizedBy: ev.authorizedBy });
     heldAll.push(...ev.held);
     checks.push({ id: cid, status: ev.held.length ? "held" : "pass", message: `${label} by ${key.name} (${rec.actor.organization}) as ${rec.actor.role}: ${rec.outcome}${ev.held.length ? `; held: ${ev.held.join("; ")}` : ""}` });
     prev = digest;
@@ -685,76 +763,93 @@ export interface NextAction {
   blockedBy: string[];
 }
 
-export function nextActions(result: LedgerResult, ctx: WorkflowContext): NextAction[] {
+/** The unit a status or next-action question is about: the given one, the ledger's only unit, or none (instance level). */
+function scope(result: LedgerResult, unit?: PhysicalUnitRef): { unit?: PhysicalUnitRef; track: VerifiedRecord[]; state: string } {
+  const u = unit ?? (result.units.length === 1 ? result.units[0]!.unit : undefined);
+  if (!u) return { track: result.records.filter((r) => !r.record.unit), state: result.instanceState };
+  const track = trackOf(result.records, u);
+  return { unit: u, track, state: result.units.find((x) => x.key === unitKey(u))?.state ?? result.instanceState };
+}
+
+export function nextActions(result: LedgerResult, ctx: WorkflowContext, unit?: PhysicalUnitRef): NextAction[] {
   if (result.verdict === "rejected") return [];
   const def = ctx.process.definition;
-  const history = result.records;
+  const sc = scope(result, unit);
   const now = ctx.now.toISOString();
   return def.transitions
-    .filter((t) => t.from.includes(result.state))
+    .filter((t) => t.from.includes(sc.state))
     .map((t) => {
       const blockedBy: string[] = [];
       for (const need of t.requires.actions)
-        if (!latest(history, (r) => r.action === need.id && (!need.outcomes || need.outcomes.includes(r.outcome)))) blockedBy.push(`needs ${need.id} first`);
+        if (!latest(sc.track, (r) => r.action === need.id && (!need.outcomes || need.outcomes.includes(r.outcome)))) blockedBy.push(`needs ${need.id} first`);
       if (t.requires.freshAuthority) {
         const stale = freshnessProblem(ctx.authority.config, ctx.now);
         if (stale) blockedBy.push(stale);
       }
       if (Date.parse(ctx.authority.config.expires) < ctx.now.getTime()) blockedBy.push(`authority configuration expired ${ctx.authority.config.expires}`);
+      if (ctx.successors?.length && NEW_WORK.has(t.kind)) blockedBy.push(`baseline superseded by ${ctx.successors[0]!.baselineId}: new work follows the new baseline`);
       if (t.requires.authorization) {
-        const unit = history.find((h) => h.record.unit)?.record.unit;
-        const a = findAuthorization(history, ctx, t.requires.authorization, { unit }, now);
+        const a = findAuthorization(result.records, ctx, t.requires.authorization, { unit: sc.unit, transition: t.id }, now);
         if (a.problem) blockedBy.push(`not authorized: ${a.problem}`);
       }
       if (t.kind === "plan") {
         const stale = characteristicsNeedingGeometryReview(ctx.baseline.model);
         if (stale.length) blockedBy.push(`geometry review needed for ${stale.map((s) => s.id).join(", ")} (record it in the plan)`);
       }
-      return { transition: t.id, description: t.description, roles: t.roles, requiresEvidence: t.requires.evidence, blockedBy };
+      const description = t.requires.unit && !sc.unit ? `${t.description} (for a unit)` : t.description;
+      return { transition: t.id, description, roles: t.roles, requiresEvidence: t.requires.evidence, blockedBy };
     });
 }
 
 export type StatusLevel = "ok" | "warn" | "fail" | "none";
+export interface StatusLine { level: StatusLevel; text: string }
 export interface WorkflowStatus {
-  sourceRelease: { level: StatusLevel; text: string };
-  operation: { level: StatusLevel; text: string };
-  inspection: { level: StatusLevel; text: string };
-  disposition: { level: StatusLevel; text: string };
+  baseline: StatusLine;
+  sourceRelease: StatusLine;
+  operation: StatusLine;
+  inspection: StatusLine;
+  disposition: StatusLine;
 }
 
-/** Four separate answers. None of them is implied by package integrity, or by each other. */
-export function workflowStatus(result: LedgerResult, ctx: WorkflowContext): WorkflowStatus {
-  const h = result.records;
+/** Separate answers. None of them is implied by package integrity, or by each other. Scoped to one unit when given. */
+export function workflowStatus(result: LedgerResult, ctx: WorkflowContext, unit?: PhysicalUnitRef): WorkflowStatus {
+  const sc = scope(result, unit);
+  const h = sc.track;
+  const who = sc.unit ? ` (${unitLabel(sc.unit)})` : "";
+  const succ = ctx.successors?.[0];
+  const baseline: StatusLine = succ
+    ? { level: "warn", text: `Superseded by ${succ.baselineId}: no new work under ${ctx.baseline.model.baseline.id}; units in progress may be completed` }
+    : { level: "ok", text: `No newer baseline known for ${ctx.baseline.model.baseline.id} (only baselines you have loaded are known)` };
   const fixture = ctx.authority.config.fixture ? " (laboratory fixture authority, not a live PLM)" : "";
   const src = latest(h, (r) => r.data.kind === "source-release");
-  const sourceRelease = src && src.record.data.kind === "source-release"
-    ? { level: "ok" as const, text: `Source release evidence verified: ${src.record.data.system} ${src.record.data.releaseState} rev ${src.record.data.revision}${fixture}` }
-    : { level: "none" as const, text: "Source release evidence not established" };
+  const sourceRelease: StatusLine = src && src.record.data.kind === "source-release"
+    ? { level: "ok", text: `Source release evidence verified: ${src.record.data.system} ${src.record.data.releaseState} rev ${src.record.data.revision}${fixture}` }
+    : { level: "none", text: "Source release evidence not established" };
 
-  const next = result.verdict === "rejected" ? [] : nextActions(result, ctx);
+  const next = result.verdict === "rejected" ? [] : nextActions(result, ctx, sc.unit);
   const gated = next.filter((n) => ctx.process.definition.transitions.find((t) => t.id === n.transition)?.requires.authorization);
-  const operation = result.verdict === "rejected"
-    ? { level: "fail" as const, text: "Operation not authorized: ledger rejected" }
+  const operation: StatusLine = result.verdict === "rejected"
+    ? { level: "fail", text: "Operation not authorized: ledger rejected" }
     : gated.length === 0
-      ? { level: "none" as const, text: `No authorized operation pending in state ${result.state}` }
+      ? { level: "none", text: `No authorized operation pending in state ${sc.state}${who}` }
       : gated.some((g) => !g.blockedBy.length)
-        ? { level: "ok" as const, text: `Operation authorized: ${gated.filter((g) => !g.blockedBy.length).map((g) => g.transition).join(", ")}` }
-        : { level: "fail" as const, text: `Operation not authorized: ${gated[0]!.blockedBy.join("; ")}` };
+        ? { level: "ok", text: `Operation authorized${who}: ${gated.filter((g) => !g.blockedBy.length).map((g) => g.transition).join(", ")}` }
+        : { level: "fail", text: `Operation not authorized${who}: ${gated[0]!.blockedBy.join("; ")}` };
 
   const insp = latest(h, (r) => r.data.kind === "inspection");
-  const inspection = !insp
-    ? { level: "none" as const, text: "Not inspected" }
+  const inspection: StatusLine = !insp
+    ? { level: "none", text: `Not inspected${who}` }
     : insp.record.outcome === "accept"
-      ? { level: "ok" as const, text: "Inspection accepted (measurement outcome; not a disposition)" }
+      ? { level: "ok", text: `Inspection accepted${who} (measurement outcome; not a disposition)` }
       : insp.record.outcome === "reject"
-        ? { level: "fail" as const, text: "Inspection rejected one or more characteristics" }
-        : { level: "warn" as const, text: "Inspection indeterminate: held for missing or insufficient measurement evidence" };
+        ? { level: "fail", text: `Inspection rejected one or more characteristics${who}` }
+        : { level: "warn", text: `Inspection indeterminate${who}: held for missing or insufficient measurement evidence` };
 
   const disp = latest(h, (r) => r.data.kind === "disposition");
-  const disposition = disp
-    ? { level: (disp.record.outcome === "accept" || disp.record.outcome === "use-as-is" ? "ok" : "warn") as StatusLevel, text: `Dispositioned ${disp.record.outcome} by ${disp.key.name}` }
-    : { level: "none" as const, text: "No disposition" };
-  return { sourceRelease, operation, inspection, disposition };
+  const disposition: StatusLine = disp
+    ? { level: disp.record.outcome === "accept" || disp.record.outcome === "use-as-is" ? "ok" : "warn", text: `Dispositioned ${disp.record.outcome}${who} by ${disp.key.name}` }
+    : { level: "none", text: `No disposition${who}` };
+  return { baseline, sourceRelease, operation, inspection, disposition };
 }
 
 // ---- Checkpoints (detect truncation against an independently retained copy) ----

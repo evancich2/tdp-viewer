@@ -414,15 +414,21 @@
           },
           "notBefore": "2026-11-10T14:30:00.000Z",
           "notAfter": "2026-11-24T14:30:00.000Z",
-          "policyVersion": 1
+          "policyVersion": 1,
+          "limits": [
+            {
+              "transition": "dispatch-build",
+              "max": 2
+            }
+          ]
         }
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "3ceceb5af2c58cc1b1e5545fc9e8be4ac47ad0b18c91eaa64d253a7c8e78aabb",
+        "recordSha256": "df90261846a90b558b33ca640b063f01d405d0828ae62935e2957f99dba4fbd0",
         "keyId": "7a4150a457b781de8f686f0c2f5af3e0",
         "alg": "Ed25519",
-        "sig": "qKLxxgnpgfB+J958lxrRdYuyORXehbz+aPIKId5q577kqGiydXqjxIYPcHINw+57bHF3RiC8jsJ8XVIwtO1hBw=="
+        "sig": "J0I9XwCubaHucNdyforMhr8m8PKbJ15OWOMGDhNb15pNaM6vmwKbcDYENEzuMZhdKlDyTEndfBqGHJeNmyJMAg=="
       }
     },
     {
@@ -450,7 +456,7 @@
         },
         "action": "enter-queue",
         "at": "2026-11-10T14:40:00.000Z",
-        "prev": "3ceceb5af2c58cc1b1e5545fc9e8be4ac47ad0b18c91eaa64d253a7c8e78aabb",
+        "prev": "df90261846a90b558b33ca640b063f01d405d0828ae62935e2957f99dba4fbd0",
         "policy": {
           "processId": "printed-part",
           "processVersion": 1,
@@ -484,10 +490,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "3efa074049eb1d2e5a158e10b0663a36e8d6b7c9676feb7938dc6b4dc2acbd96",
+        "recordSha256": "93827409588c7cbbfec22c14a6be2be89aa0ca890925984321a4eb2adf0ad4d6",
         "keyId": "6b16af583466bc31ce992c3cff830e73",
         "alg": "Ed25519",
-        "sig": "hwP6MSRJye+F+lIcpP/OpNWjV+XY8cf6sX4YxmEYfYV4PqUvlmWcYjmTDyzcEYcUtIPCUuR9Xhhfun8AW/XYBA=="
+        "sig": "uOLQn6/WLuUGNQcm6lKXpYIVRMXUQi0YElusp4YRyzWtADn5JZlN5J8s1rdzO5lFlPsAdjgCwlv5O84TtMwlAQ=="
       }
     },
     {
@@ -515,7 +521,7 @@
         },
         "action": "dispatch-build",
         "at": "2026-11-10T14:50:00.000Z",
-        "prev": "3efa074049eb1d2e5a158e10b0663a36e8d6b7c9676feb7938dc6b4dc2acbd96",
+        "prev": "93827409588c7cbbfec22c14a6be2be89aa0ca890925984321a4eb2adf0ad4d6",
         "policy": {
           "processId": "printed-part",
           "processVersion": 1,
@@ -535,10 +541,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "38143d8675ffb7d68047c7fe2497cdbdf470d7e1cc7afbcc2a305b5a0e1197bc",
+        "recordSha256": "0bad48b604487f0bafdb11a80dceea24c8c2fc17c32569ca76343de3019d4926",
         "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
         "alg": "Ed25519",
-        "sig": "b5Bt4bQGg9Vfsaf+NMBkzpIDin1Zfo6BGSJDaOjdV8Z81TxogNnjAAQAUbrnXgUdYsAKwlijJRRefMXI3vgEBQ=="
+        "sig": "ZpVkgRLzFJvFvnDqtkn9l8vOBBOnCS8Fsy/W5N/yp3iaSDVGzy5XAvZFhLObnCrBjI9v4I/dmkj5oHLn/aMZCw=="
       }
     },
     {
@@ -566,7 +572,7 @@
         },
         "action": "complete-build",
         "at": "2026-11-10T15:20:00.000Z",
-        "prev": "38143d8675ffb7d68047c7fe2497cdbdf470d7e1cc7afbcc2a305b5a0e1197bc",
+        "prev": "0bad48b604487f0bafdb11a80dceea24c8c2fc17c32569ca76343de3019d4926",
         "policy": {
           "processId": "printed-part",
           "processVersion": 1,
@@ -602,10 +608,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "5e34daeb7e24525c05aedd5fbf7ccaeffb422fc8ddfd49f225d90351032cf58a",
+        "recordSha256": "df1d388d9b0c808e062ca6615fa6e9b316286d5cd54944ef9d221d3104c0dba6",
         "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
         "alg": "Ed25519",
-        "sig": "d0Lsxoh+VW1b4fWuqsNi1256tQgMOpWE/jp2rNGQydnsxP4JTIMksLISYp+YVgaCVnlaZt/6vz1Ii1fy9VZiCQ=="
+        "sig": "NfGGKF0SY9rWFUrankIHfIDatUaGwgOMrkafnGH6N45jnXy1R1TmOZNWiUychI43J8XiCQquqZ5zCcQNUGZoAA=="
       }
     },
     {
@@ -633,7 +639,7 @@
         },
         "action": "enter-queue",
         "at": "2026-11-10T15:30:00.000Z",
-        "prev": "5e34daeb7e24525c05aedd5fbf7ccaeffb422fc8ddfd49f225d90351032cf58a",
+        "prev": "df1d388d9b0c808e062ca6615fa6e9b316286d5cd54944ef9d221d3104c0dba6",
         "policy": {
           "processId": "printed-part",
           "processVersion": 1,
@@ -667,10 +673,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "271ae8e5e66c2659d12da5d083d686bebc3a33532a7651f49419c1c621aa3619",
+        "recordSha256": "564fe38d3a641489f933ea6dd41b9a1daf04bcdf72719e070b43a924c610f136",
         "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
         "alg": "Ed25519",
-        "sig": "zH+fRs9bl0iQg8IAJCn2sEdxVakNFLBPlXK0ubRvoUUguL1cFaPT8FExS4xRTPo8TtuDxNgqUXi6Byw9PvVvCg=="
+        "sig": "LCDwisdCBiTQTMk+owAUn5tEykqMwh+3hFCtlm8+cubtSePCbHl8LYn2cGCfS9kJZvjkC8/LK9aBrKrgyi3RAw=="
       }
     },
     {
@@ -695,7 +701,7 @@
         },
         "action": "delegate",
         "at": "2026-11-10T15:35:00.000Z",
-        "prev": "271ae8e5e66c2659d12da5d083d686bebc3a33532a7651f49419c1c621aa3619",
+        "prev": "564fe38d3a641489f933ea6dd41b9a1daf04bcdf72719e070b43a924c610f136",
         "policy": {
           "processId": "printed-part",
           "processVersion": 1,
@@ -720,10 +726,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "843faba501ac1aa18420083ce89eee2158c6232aa5bbbed828988c81f283368c",
+        "recordSha256": "14e60741ef1790cc5b369d254932baa936a9664af9c10c1aa1a5c90e91bd3524",
         "keyId": "97dd438ae178fba3c7da6f90a53a8e43",
         "alg": "Ed25519",
-        "sig": "lNu0dmhJb/65XaMXUGWJnsbjt2mIm6oyc+kAEMzAVeaPrwnsq47pw9Zf99c0MBrf3FSLxpXqfupu3wYP3bc8Bg=="
+        "sig": "sXwLkg9LsIGn/ySjcP18lMf2bMgtFIalJ/9z28LE/l/D5YtECykquH0p2vxioVoa/pZKJXd+twh8oLdp0SbtAg=="
       }
     },
     {
@@ -751,7 +757,7 @@
         },
         "action": "dispatch-build",
         "at": "2026-11-10T15:40:00.000Z",
-        "prev": "843faba501ac1aa18420083ce89eee2158c6232aa5bbbed828988c81f283368c",
+        "prev": "14e60741ef1790cc5b369d254932baa936a9664af9c10c1aa1a5c90e91bd3524",
         "policy": {
           "processId": "printed-part",
           "processVersion": 1,
@@ -771,10 +777,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "d0a16cfdabb0be07cc81a1b8d3705e5313d6f778445090afa1e444464edb26a9",
+        "recordSha256": "68f27b48104db1a65d86a121e5f78ada431c2c76015625e83311bb3e0b3b8c14",
         "keyId": "15229206595ccc5a10b436db089ffcce",
         "alg": "Ed25519",
-        "sig": "EAR31itxU0IzN22SCinCO8VuC00EQn3piqfdDhdwb9G1DWtX5lXDQG97tGnImK8oDqgSVOL7qCzJsBMuv2vxCA=="
+        "sig": "7ua0MC+YoZD0j78tSWxHXRdy9ha/736Cw1G4/ebH3ao1CoPfArc4dwezVRQvkRKBpdARdgDIz99Nplq5tzWoBw=="
       }
     },
     {
@@ -802,7 +808,7 @@
         },
         "action": "complete-build",
         "at": "2026-11-10T16:25:00.000Z",
-        "prev": "d0a16cfdabb0be07cc81a1b8d3705e5313d6f778445090afa1e444464edb26a9",
+        "prev": "68f27b48104db1a65d86a121e5f78ada431c2c76015625e83311bb3e0b3b8c14",
         "policy": {
           "processId": "printed-part",
           "processVersion": 1,
@@ -836,10 +842,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "02ec7992d54e183fd9be31e19b74736ffbb1a8fef7634851e88b42e67f010773",
+        "recordSha256": "b818dc99c70dc34a156c4cceda0cc9d9f31d801ec4c044186021a2399d651a94",
         "keyId": "15229206595ccc5a10b436db089ffcce",
         "alg": "Ed25519",
-        "sig": "usi/Aag7rH2EHzW+KxSPp/zL0Ti5E74H3lhJ0P8agD6zVE/zJxGbX7Z+GQ4xOw+khUAzJ8zBH3XCg9y9SxvmAQ=="
+        "sig": "1iyxhsdw9maiP31G8wWJRCwfeO0YdsxKtoUSQRqMruJaSWEy2SJwEJRdAim3I7zv47A6Tn9lcUNYAVN6V+hgCA=="
       }
     },
     {
@@ -867,7 +873,7 @@
         },
         "action": "inspect",
         "at": "2026-11-10T18:00:00.000Z",
-        "prev": "02ec7992d54e183fd9be31e19b74736ffbb1a8fef7634851e88b42e67f010773",
+        "prev": "b818dc99c70dc34a156c4cceda0cc9d9f31d801ec4c044186021a2399d651a94",
         "policy": {
           "processId": "printed-part",
           "processVersion": 1,
@@ -969,10 +975,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "e1a6e6962d0617d093b0685408b735d14eaaee22797a9463c19e1f541d19efe0",
+        "recordSha256": "d5fdf0eb20a8295d2f9be7478d97030b0f21203e8fbca3c0baddecd94e00d8ad",
         "keyId": "d677edaf9481f8fa54577abfc9de20ec",
         "alg": "Ed25519",
-        "sig": "uAnAQEJnnEqNSjdvUom2rYRoOIMoPo1F/O9ySPfRUVg2TyV5GpBxOXTUxrkrm1bUROuuv81ABFNcTZ9ycQmjDg=="
+        "sig": "6ammR1NfKUnURAPzn2vM0ef2VyAO7zf6tBLmhU3uSDoN2ZK3VvOxLHCZnIMgMfiahI/NSsEkvY2V5DJ5aWYeDQ=="
       }
     },
     {
@@ -1000,7 +1006,7 @@
         },
         "action": "disposition",
         "at": "2026-11-10T18:30:00.000Z",
-        "prev": "e1a6e6962d0617d093b0685408b735d14eaaee22797a9463c19e1f541d19efe0",
+        "prev": "d5fdf0eb20a8295d2f9be7478d97030b0f21203e8fbca3c0baddecd94e00d8ad",
         "policy": {
           "processId": "printed-part",
           "processVersion": 1,
@@ -1019,10 +1025,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "8138025ca0fb9afea1a2d0cd2f21f5404d9510ac9f79f9d2773a081e0a95f674",
+        "recordSha256": "a7ab450cd875adf0ca2db2f6d3f3817a87b289057f5ecbfc524df7967fac4aa8",
         "keyId": "93f1304f60266492b7ebc90b2788df0e",
         "alg": "Ed25519",
-        "sig": "VYeR7tvImZUySGPpl3hwkc6/bMEuwKp9n3nDZL9uIfZq4P9RP78oTV0SwPK0nzlDkUkFp9vynSNdRCPJt8ywBQ=="
+        "sig": "aQGN50ELwqwArIbMYiFYOwTEwLbAlLHSMxqMN0zuhd/gDS4Bx9xQXR6OJ7ma6kZUhslrhzoK5apccmgcqkR9CQ=="
       }
     },
     {
@@ -1050,7 +1056,7 @@
         },
         "action": "close-evidence",
         "at": "2026-11-10T19:00:00.000Z",
-        "prev": "8138025ca0fb9afea1a2d0cd2f21f5404d9510ac9f79f9d2773a081e0a95f674",
+        "prev": "a7ab450cd875adf0ca2db2f6d3f3817a87b289057f5ecbfc524df7967fac4aa8",
         "policy": {
           "processId": "printed-part",
           "processVersion": 1,
@@ -1072,10 +1078,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "932778502eabbef9bd4bde82412d0674d1b5aae91460fc4d8b1399c27888f399",
+        "recordSha256": "772d8b8dad3ff9ddf5ebe33a521d29e139d1f847cfbb59e1aab5144a0dd5cafb",
         "keyId": "45c74edb2764c39a76fb50033c3ac95e",
         "alg": "Ed25519",
-        "sig": "bYxVnCd6LylRTx1YPG8cs9Oqjw7fhJC65I1bqRb35USligvrd0KD9xofexieuqpAr11DSpO5WX0cH5tTJcCUBQ=="
+        "sig": "TqP6/HEFTP8NsSR8c3gZ6/Uy6RECXfxOU96KTTYWeQjczobzeq9CDVjl68SKRAwBq/yzpiea2gJealOThWgfBw=="
       }
     }
   ]

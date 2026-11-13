@@ -10,6 +10,10 @@ import {
   nextActions,
   verifyLedger,
   workflowStatus,
+  successorsOf,
+  trackOf,
+  unitLabel,
+  verifyPackage,
   AckSet,
   ProposalSet,
   type Anchors,
@@ -21,12 +25,14 @@ import {
   type PackageSession,
   type ReconciliationRow,
   type StatusLevel,
+  type Successor,
   type TrustStore,
   type WorkflowContext,
 } from "../core";
 import labAuthority from "../../samples/lab/authority.signed.json?raw";
 import labProcessA from "../../samples/lab/processes/printed-part-v1.json?raw";
 import labProcessB from "../../samples/lab/processes/printed-part-fai-v1.json?raw";
+import { RecordStepForm } from "./RecordStepForm";
 
 interface Props {
   session: PackageSession;
@@ -61,7 +67,9 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
   const [processes, setProcesses] = useState<LoadedProcess[]>([]);
   const [evidence, setEvidence] = useState<{ store: EvidenceStore; count: number } | null>(null);
   const [ledger, setLedger] = useState<{ name: string; raw: unknown; result: LedgerResult; ctx: WorkflowContext } | null>(null);
-  const [sync, setSync] = useState<{ rows: ReconciliationRow[]; problems: string[]; changeRequests: number } | null>(null);
+  const [sync, setSync] = useState<{ rows: ReconciliationRow[]; problems: string[]; changeRequests: number; signedBy?: string } | null>(null);
+  const [successors, setSuccessors] = useState<Successor[]>([]);
+  const [selUnit, setSelUnit] = useState("");
   const [proposals, setProposals] = useState<ProposalSet | null>(null);
   const [error, setError] = useState<string | null>(null);
   const eng = session.engineering;
@@ -118,7 +126,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
     const process = processes.find((p) => p.definition.id === processId);
     if (!process) return setError(`No loaded process definition for ${processId ?? "this ledger"}.`);
     try {
-      const ctx: WorkflowContext = { baseline: baselineFrom(session.result), authority, process, trustStore, now: new Date(), skewMs: session.policy.clockSkewMs, evidence: evidence?.store };
+      const ctx: WorkflowContext = { baseline: baselineFrom(session.result), authority, process, trustStore, now: new Date(), skewMs: session.policy.clockSkewMs, evidence: evidence?.store, successors };
       const result = await verifyLedger(raw, ctx);
       setLedger({ name, raw, result, ctx });
       setError(null);
@@ -132,13 +140,26 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
   // Re-verify when evidence or configuration changes: verification is never cached.
   useEffect(() => {
     if (ledger) void verify(ledger.name, ledger.raw);
-  }, [evidence, authority, processes]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [evidence, authority, processes, successors]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function loadNewer(fileList: FileList) {
+    const files = [...fileList];
+    const results = await Promise.all(files.map(async (f) => verifyPackage(await read(f), trustStore, session.policy)));
+    const found = successorsOf(baselineFrom(session.result), results);
+    setSuccessors(found);
+    await audit.append("load", "newer baselines", `${files.length} package(s) checked; ${found.length ? `superseded by ${found.map((x) => x.baselineId).join(", ")}` : "none supersedes this baseline"}`);
+    onAudit();
+    if (!found.length) setError(`None of ${files.map((f) => f.name).join(", ")} is a trusted baseline that supersedes ${m?.baseline.id}.`);
+  }
 
   async function loadAcks(f: File) {
     if (!proposals) return setError("Load the proposals file first.");
     try {
-      const r = await importAcknowledgements(proposals, AckSet.parse(JSON.parse(await f.text())));
-      setSync({ rows: r.rows, problems: r.problems, changeRequests: r.changeRequests.length });
+      // With an authority loaded, acknowledgements must carry a signature by the source system's configured key.
+      const trust = authority ? { trustStore, authority: authority.config } : undefined;
+      const r = await importAcknowledgements(proposals, AckSet.parse(JSON.parse(await f.text())), trust);
+      if (!trust) r.problems.push("no authority loaded: acknowledgement signatures were not checked");
+      setSync({ rows: r.rows, problems: r.problems, changeRequests: r.changeRequests.length, signedBy: r.signedBy });
       await audit.append("load", f.name, `${r.rows.length} acknowledgements imported; baseline unchanged`);
       onAudit();
     } catch (e) {
@@ -157,10 +178,13 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
   }
 
   const r = ledger?.result;
-  const st = r && ledger ? workflowStatus(r, ledger.ctx) : null;
-  const next = r && ledger ? nextActions(r, ledger.ctx) : [];
+  const unit = r?.units.find((u) => u.key === selUnit)?.unit ?? (r?.units.length === 1 ? r.units[0]!.unit : undefined);
+  const track = r ? trackOf(r.records, unit) : [];
+  const unitState = unit ? r?.units.find((u) => unitLabel(u.unit) === unitLabel(unit))?.state : r?.units.length ? r.instanceState : r?.state;
+  const st = r && ledger ? workflowStatus(r, ledger.ctx, unit) : null;
+  const next = r && ledger ? nextActions(r, ledger.ctx, unit) : [];
   const stale = characteristicsNeedingGeometryReview(m);
-  const inspection = r?.records.filter((v) => v.record.data.kind === "inspection").at(-1);
+  const inspection = track.filter((v) => v.record.data.kind === "inspection").at(-1);
   const plan = r?.records.filter((v) => v.record.data.kind === "plan").at(-1);
   const process = ledger?.ctx.process.definition;
 
@@ -171,6 +195,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
 
       <div className="status-strip" aria-label="Status">
         <Badge label="Package integrity" level="ok" text={`Verified: signatures, digests and engineering model (${session.manifest?.schema})`} />
+        <Badge label="Baseline" level={successors.length ? "warn" : "ok"} text={successors.length ? `Superseded by ${successors[0]!.baselineId}: no new work; units in progress may finish` : "No newer baseline loaded (only loaded baselines are known)"} />
         <Badge label="Source release" level={st?.sourceRelease.level ?? "none"} text={st?.sourceRelease.text ?? "Not established: load a ledger with source release evidence"} />
         <Badge label="Operation authorized" level={st?.operation.level ?? "none"} text={st?.operation.text ?? "Not authorized: possessing a package grants nothing"} />
         <Badge label="Inspection" level={st?.inspection.level ?? "none"} text={st?.inspection.text ?? "Not inspected"} />
@@ -191,8 +216,9 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
 
       <div className="row">
         <button onClick={() => void useLabConfig()}>Use lab authority and processes</button>
-        <label className="button">Load authority…<input type="file" accept=".json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void loadAuthorityFile(f); e.target.value = ""; }} /></label>
-        <label className="button">Load process definitions…<input type="file" accept=".json" multiple hidden onChange={(e) => { if (e.target.files?.length) void loadProcessFiles(e.target.files); e.target.value = ""; }} /></label>
+        <label className="button">Load newer baselines…<input type="file" accept=".tdp,.zip" multiple className="file-input" onChange={(e) => { if (e.target.files?.length) void loadNewer(e.target.files); e.target.value = ""; }} /></label>
+        <label className="button">Load authority…<input type="file" accept=".json" className="file-input" onChange={(e) => { const f = e.target.files?.[0]; if (f) void loadAuthorityFile(f); e.target.value = ""; }} /></label>
+        <label className="button">Load process definitions…<input type="file" accept=".json" multiple className="file-input" onChange={(e) => { if (e.target.files?.length) void loadProcessFiles(e.target.files); e.target.value = ""; }} /></label>
       </div>
       {authority && (
         <p className={authority.config.fixture ? "muted" : ""}>
@@ -230,8 +256,8 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
       <h3>Signed workflow records</h3>
       <p className="muted">Signed records travel in a ledger file beside the package, never inside it. They are separate from this viewer's local audit log below, which records only what this browser did.</p>
       <div className="row">
-        <label className={`button ${authority ? "" : "disabled"}`}>Open ledger…<input type="file" accept=".json" hidden disabled={!authority} onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { await verify(f.name, JSON.parse(await f.text())); } catch (err) { setError(`Ledger unreadable: ${(err as Error).message}`); } } }} /></label>
-        <label className="button">Add evidence files…<input type="file" multiple hidden onChange={(e) => { if (e.target.files?.length) void loadEvidence(e.target.files); e.target.value = ""; }} /></label>
+        <label className={`button ${authority ? "" : "disabled"}`}>Open ledger…<input type="file" accept=".json" className="file-input" disabled={!authority} onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { await verify(f.name, JSON.parse(await f.text())); } catch (err) { setError(`Ledger unreadable: ${(err as Error).message}`); } } }} /></label>
+        <label className="button">Add evidence files…<input type="file" multiple className="file-input" onChange={(e) => { if (e.target.files?.length) void loadEvidence(e.target.files); e.target.value = ""; }} /></label>
         {evidence && <span className="muted">{evidence.count} evidence files hashed</span>}
       </div>
       {error && <div className="banner fail">{error}</div>}
@@ -246,8 +272,16 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
           {process && (
             <>
               <h3>Workflow state: {process.title} v{process.version}</h3>
+              {r.units.length > 1 && (
+                <label className="row">Unit
+                  <select value={unit ? r.units.find((u) => unitLabel(u.unit) === unitLabel(unit))!.key : ""} onChange={(e) => setSelUnit(e.target.value)} aria-label="Unit">
+                    <option value="">Instance level (shared steps)</option>
+                    {r.units.map((u) => <option key={u.key} value={u.key}>{unitLabel(u.unit)}: {u.state}</option>)}
+                  </select>
+                </label>
+              )}
               <ol className="states" aria-label="Workflow states">
-                {process.states.map((s) => <li key={s} className={s === r.state ? "current" : r.records.some((v) => process.transitions.find((t) => t.id === v.record.action)?.outcomes[v.record.outcome] === s) ? "done" : ""} aria-current={s === r.state ? "step" : undefined}>{s.replace(/-/g, " ")}</li>)}
+                {process.states.map((s) => <li key={s} className={s === unitState ? "current" : track.some((v) => process.transitions.find((t) => t.id === v.record.action)?.outcomes[v.record.outcome] === s) ? "done" : ""} aria-current={s === unitState ? "step" : undefined}>{s.replace(/-/g, " ")}</li>)}
               </ol>
               {r.verdict !== "rejected" && (
                 <table className="next">
@@ -261,9 +295,12 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
                         <td>{n.blockedBy.length ? <>BLOCKED: {n.blockedBy.join("; ")}</> : "met (an authorized actor may take it)"}</td>
                       </tr>
                     ))}
-                    {!next.length && <tr><td colSpan={4} className="muted">No further steps from {r.state}.</td></tr>}
+                    {!next.length && <tr><td colSpan={4} className="muted">No further steps from {unitState}.</td></tr>}
                   </tbody>
                 </table>
+              )}
+              {r.verdict !== "rejected" && next.length > 0 && (
+                <RecordStepForm ledgerName={ledger.name} raw={ledger.raw} result={r} ctx={ledger.ctx} unit={unit} audit={audit} onRecorded={(name, raw) => { void verify(name, raw); onAudit(); }} />
               )}
             </>
           )}
@@ -303,8 +340,8 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
       <h3>Synchronization proposals</h3>
       <p className="muted">Proposed transactions for a source system, and its acknowledgements, exchanged as files. Importing them never changes this package or its ledger; nothing is sent from this browser.</p>
       <div className="row">
-        <label className="button">Open proposals…<input type="file" accept=".json" hidden onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { setProposals(ProposalSet.parse(JSON.parse(await f.text()))); setSync(null); } catch (err) { setError(`Proposals rejected: ${(err as Error).message}`); } } }} /></label>
-        <label className={`button ${proposals ? "" : "disabled"}`}>Import acknowledgements…<input type="file" accept=".json" hidden disabled={!proposals} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void loadAcks(f); }} /></label>
+        <label className="button">Open proposals…<input type="file" accept=".json" className="file-input" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { setProposals(ProposalSet.parse(JSON.parse(await f.text()))); setSync(null); } catch (err) { setError(`Proposals rejected: ${(err as Error).message}`); } } }} /></label>
+        <label className={`button ${proposals ? "" : "disabled"}`}>Import acknowledgements…<input type="file" accept=".json" className="file-input" disabled={!proposals} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void loadAcks(f); }} /></label>
       </div>
       {proposals && (
         <table className="sync">
@@ -322,6 +359,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
           </tbody>
         </table>
       )}
+      {sync?.signedBy && <p className="signed">✓ Acknowledgements signed by {sync.signedBy}, a key the authority names for this source system</p>}
       {sync?.problems.map((p) => <div key={p} className="banner fail">{p}</div>)}
       {sync && sync.changeRequests > 0 && <p className="muted">{sync.changeRequests} change request(s) accepted for review at the source. The released baseline is unchanged; an approved change takes a newly published baseline.</p>}
     </section>

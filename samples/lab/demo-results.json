@@ -59,21 +59,21 @@
     "id": "P03-a",
     "scenario": "SN-0001 measured within limits (guard-banded / simple acceptance) → accept; disposition is a separate signed decision",
     "expected": "inspection accepted; dispositioned accept",
-    "actual": "Inspection accepted (measurement outcome; not a disposition); Dispositioned accept by Mel Disposition Authority (demo)",
+    "actual": "Inspection accepted (SN-0001) (measurement outcome; not a disposition); Dispositioned accept (SN-0001) by Mel Disposition Authority (demo)",
     "pass": true
   },
   {
     "id": "P03-b",
     "scenario": "SN-0002 tab 6.25 mm > 6.20 mm + U → reject → NCR → scrap",
     "expected": "rejected; NCR-0001; scrap",
-    "actual": "Inspection rejected one or more characteristics; Dispositioned scrap by Mel Disposition Authority (demo); state closed",
+    "actual": "Inspection rejected one or more characteristics (SN-0002); Dispositioned scrap (SN-0002) by Mel Disposition Authority (demo); state closed",
     "pass": true
   },
   {
     "id": "P03-c",
     "scenario": "SN-0003 tab 6.198 mm is within U of the upper limit → indeterminate, held (never an automatic pass)",
     "expected": "indeterminate; state inspection-held",
-    "actual": "Inspection indeterminate: held for missing or insufficient measurement evidence; state inspection-held",
+    "actual": "Inspection indeterminate (SN-0003): held for missing or insufficient measurement evidence; state inspection-held",
     "pass": true
   },
   {
@@ -87,14 +87,14 @@
     "id": "P03-e",
     "scenario": "Disposition authority tries to 'accept' a held (indeterminate) inspection directly",
     "expected": "DENIED: a held inspection needs an NCR before any disposition",
-    "actual": "DENIED: disposition is not allowed from state inspection-held (needs inspected or nonconforming)",
+    "actual": "DENIED: disposition is not allowed from state inspection-held for SN-0003 (needs inspected or nonconforming)",
     "pass": true
   },
   {
     "id": "P04-a",
     "scenario": "A validly signed build start that skips suitability, planning and authorization",
     "expected": "ledger rejected: not allowed from state source-released",
-    "actual": "record 3 (dispatch-build) by Oli Operator (demo): denied: dispatch-build is not allowed from state source-released (needs queued)",
+    "actual": "record 3 (dispatch-build) by Oli Operator (demo): denied: dispatch-build is not allowed from state source-released for SN-0001 (needs queued)",
     "pass": true
   },
   {
@@ -220,7 +220,7 @@
     "id": "P06-f",
     "scenario": "Recovery: re-verifying the retained ledger and evidence from scratch",
     "expected": "verified, same head as the checkpoint",
-    "actual": "verified, head 932778502eabbef9…",
+    "actual": "verified, head 772d8b8dad3ff9dd…",
     "pass": true
   },
   {
@@ -266,10 +266,52 @@
     "pass": true
   },
   {
+    "id": "P07-g",
+    "scenario": "Acknowledgements are signed by the source system's configured key; an edited ack, or one signed by another trusted key, is refused",
+    "expected": "signed ack accepted; both forgeries refused and nothing is marked synchronized",
+    "actual": "signed by Lab Fixture PLM acknowledgement key (demo); edited: acknowledgement signature does not verify; other key: key 2dc8491a0f7ba77d37908452fc002f1c is not configured to acknowledge for lab-fixture; versions kept: 0",
+    "pass": true
+  },
+  {
+    "id": "P01-f",
+    "scenario": "Once rev B (which supersedes rev A) is known, new work under rev A is refused, but a unit in progress may still be re-inspected",
+    "expected": "queue DENIED as superseded; re-inspection ALLOWED; baseline status warns",
+    "actual": "DENIED: enter-queue: baseline BL-SYN-PH-2000-A is superseded by BL-SYN-PH-2000-B (package 7258e9e3-a724-4cef-9c4c-a7b1b6…; re-inspect: ALLOWED; status: Superseded by BL-SYN-PH-2000-B: no new work under BL-SYN-PH-…",
+    "pass": true
+  },
+  {
+    "id": "P05-i",
+    "scenario": "A CIP that allows at most two dispatches: a third attempt needs a new authorization",
+    "expected": "DENIED: at most 2 dispatch-build, 2 already used",
+    "actual": "DENIED: dispatch-build is not authorized: CIP CIP-SN-0001 allows at most 2 dispatch-build record(s), and 2 already used it",
+    "pass": true
+  },
+  {
+    "id": "P02-d",
+    "scenario": "A lot of two serials in one ledger: shared approvals and CIP, separate unit tracks (one accepted and incorporated, one scrapped)",
+    "expected": "SN-0004 closed, SN-0005 scrapped; statuses per unit",
+    "actual": "verified; SN-0004=closed, SN-0005=scrapped; Dispositioned accept (SN-0004) by Mel Disposition Authority (demo); Dispositioned scrap (SN-0005) by Mel Disposition Authority (demo)",
+    "pass": true
+  },
+  {
+    "id": "P03-f",
+    "scenario": "Dispositioning SN-0005 by citing SN-0004's accepted inspection",
+    "expected": "DENIED: a unit is dispositioned against its own latest inspection",
+    "actual": "DENIED: disposition: must disposition the latest inspection",
+    "pass": true
+  },
+  {
     "id": "P08-a",
     "scenario": "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)",
     "expected": "measurements recorded",
-    "actual": "package verification (rev A, 6 files): 1.63 ms; ledger verification (SN-0001, 16 records): 6.1 ms; ledger verification per record: 0.38 ms; ledger size: 27550 bytes",
+    "actual": "package verification (rev A, 6 files): 1.93 ms; ledger verification (SN-0001, 16 records): 5.99 ms; ledger verification per record: 0.37 ms; ledger size: 27601 bytes",
+    "pass": true
+  },
+  {
+    "id": "P06-g",
+    "scenario": "Signed evidence bundle: verifies as exported, fails after any edit",
+    "expected": "valid; altered copy refused",
+    "actual": "signed by Casey Configuration Manager (demo); altered: signature does not verify (bundle altered?)",
     "pass": true
   }
 ]

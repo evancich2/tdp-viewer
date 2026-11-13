@@ -16,13 +16,14 @@
 //   tdp record add <ledger.json> --package <package.tdp> --key <key.json> --action <transition> --role <workflow-role> --outcome <outcome> --reason "..." --data <data.json> [--serial SN] [--lot L] [--evidence ID=TAG=PATH ...] [--synthetic] <context>
 //   tdp record verify <ledger.json> --package <package.tdp> [--checkpoint <checkpoint.json>] <context>
 //   tdp record checkpoint <ledger.json> --package <package.tdp> --out <checkpoint.json> <context>
-//   tdp evidence export <ledger.json> --package <package.tdp> --out <bundle.json> [--proposals <p.json> --acks <a.json>] <context>
+//   tdp evidence export <ledger.json> --package <package.tdp> --out <bundle.json> [--key <key.json>] [--proposals <p.json> --acks <a.json>] <context>
+//   tdp evidence verify <bundle.signed.json> --trust <trust-store.json> [--anchors <anchors.json>]
 //   tdp sync export <ledger.json> --package <package.tdp> --recipe <recipe.json> --fixture <fixture.json> --out <proposals.json> [--known-proposals <p.json> --known-acks <a.json>] <context>
-//   tdp sync apply-fixture <proposals.json> --fixture <fixture.json> --out <acks.json>     (local fixture adapter; updates the fixture file)
-//   tdp sync import <proposals.json> <acks.json>
+//   tdp sync apply-fixture <proposals.json> --fixture <fixture.json> --out <acks.json> [--key <ack-key.json>]   (local fixture adapter; updates the fixture file)
+//   tdp sync import <proposals.json> <acks.json> [--trust <trust-store> --authority <authority> [--anchors <anchors.json>]]   (with trust: acks must be signed)
 //   tdp sync check-publication --package <package.tdp> --fixture <fixture.json> <context>
 //
-//   <context> = --trust <trust-store> --authority <authority> --process <process.json> [--anchors <anchors.json>] [--evidence-dir <dir>] [--at <ISO time>]
+//   <context> = --trust <trust-store> --authority <authority> --process <process.json> [--anchors <anchors.json>] [--evidence-dir <dir>] [--successor <newer.tdp> ...] [--at <ISO time>]
 //
 // Passphrases come from the TDP_PASSPHRASE environment variable or an interactive prompt.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -35,7 +36,8 @@ import { TrustStore } from "../src/core/schema";
 import { Anchors, loadAnchors, loadTrustStoreFile, signTrustStore } from "../src/core/truststore";
 import { verifyPackage } from "../src/core/verify";
 import { addToTrustStore, pack, revokeInTrustStore, sign } from "./commands";
-import { signConfig, AuthorityConfig } from "../src/core/authority";
+import { signConfig, AuthorityConfig, loadAuthority } from "../src/core/authority";
+import { signEvidenceBundle, verifySignedEvidence } from "../src/core/evidence";
 import { TransitionDenied as RecordDenied, verifyLedger } from "../src/core/records";
 import { utf8 } from "../src/core/bytes";
 import * as wf from "./workflow-commands";
@@ -131,6 +133,7 @@ const { values, positionals } = parseArgs({
     acks: { type: "string" },
     "known-proposals": { type: "string" },
     "known-acks": { type: "string" },
+    successor: { type: "string", multiple: true },
   },
 });
 
@@ -138,7 +141,7 @@ const { values, positionals } = parseArgs({
 async function workflowContext() {
   if (!values.package || !values.trust || !values.authority || !values.process)
     die("needs --package, --trust, --authority and --process (plus --anchors for signed files, --evidence-dir to hash-check evidence)");
-  const c = await wf.loadContext({ package: values.package, trust: values.trust, authority: values.authority, process: values.process, anchors: values.anchors, evidenceDir: values["evidence-dir"], at: values.at });
+  const c = await wf.loadContext({ package: values.package, trust: values.trust, authority: values.authority, process: values.process, anchors: values.anchors, evidenceDir: values["evidence-dir"], at: values.at, successors: values.successor });
   for (const n of c.notes) console.log(n);
   return c;
 }
@@ -312,10 +315,22 @@ switch (command) {
   }
   case "evidence": {
     const [action, file] = positionals;
-    if (action !== "export" || !file || !values.out) die("usage: tdp evidence export <ledger.json> --package <tdp> --out <bundle.json> <context>");
+    if (action === "verify") {
+      if (!file || !values.trust) die("usage: tdp evidence verify <bundle.signed.json> --trust <trust-store.json> [--anchors <anchors.json>]");
+      const store = await trustStoreFromArgs();
+      const r = await verifySignedEvidence(JSON.parse(readFileSync(file, "utf8")), store);
+      if (r.problem) { console.log(`FAIL  ${r.problem}`); process.exit(1); }
+      console.log(`PASS  evidence bundle signed by ${r.signer}, sha256 ${r.sha256} (the signature says who exported it, not that its contents are true)`);
+      break;
+    }
+    if (action !== "export" || !file || !values.out) die("usage: tdp evidence export <ledger.json> --package <tdp> --out <bundle.json> [--key <key.json>] <context>");
     const c = await workflowContext();
     const bundle = await wf.exportEvidence(readFileSync(file, "utf8"), c, { proposals: values.proposals, acks: values.acks });
-    writeJson(values.out, bundle);
+    if (values.key) {
+      const key = await unlockKey(readFileSync(values.key, "utf8"), await passphrase(false));
+      writeJson(values.out, await signEvidenceBundle(bundle, key, c.ctx.now));
+      console.log(`signed by ${key.name}`);
+    } else writeJson(values.out, bundle);
     console.log(`evidence bundle ${values.out}: ledger ${bundle.ledger.verdict}, ${bundle.records.length} records, ${bundle.records.reduce((n, r) => n + r.evidence.length, 0)} evidence references (no keys or secrets included)`);
     for (const [k, v] of Object.entries(bundle.status)) console.log(`  ${k}: ${v}`);
     break;
@@ -336,7 +351,9 @@ switch (command) {
     }
     if (action === "apply-fixture") {
       if (!a1 || !values.fixture || !values.out) die("usage: tdp sync apply-fixture <proposals.json> --fixture <fixture.json> --out <acks.json>");
-      const { acks, state } = await wf.syncApplyFixture(readFileSync(a1, "utf8"), readFileSync(values.fixture, "utf8"));
+      const signer = values.key ? await unlockKey(readFileSync(values.key, "utf8"), await passphrase(false)) : undefined;
+      const { acks, state } = await wf.syncApplyFixture(readFileSync(a1, "utf8"), readFileSync(values.fixture, "utf8"), new Date(), signer);
+      if (signer) console.log(`acknowledgements signed by ${signer.name}`);
       writeJson(values.out, acks);
       writeJson(values.fixture, state);
       for (const a of acks.acks) console.log(`  ${a.status.padEnd(11)} ${a.txId} ${a.objectType}/${a.objectId}${a.sourceVersion ? ` v${a.sourceVersion}` : ""}: ${a.reason}`);
@@ -345,7 +362,14 @@ switch (command) {
     }
     if (action === "import") {
       if (!a1 || !a2) die("usage: tdp sync import <proposals.json> <acks.json>");
-      const r = await wf.syncImport(readFileSync(a1, "utf8"), readFileSync(a2, "utf8"));
+      let trust;
+      if (values.trust || values.authority) {
+        if (!values.trust || !values.authority) die("sync import: give both --trust and --authority to check the acknowledgement signature");
+        const anchors = values.anchors ? await loadAnchors(readFileSync(values.anchors, "utf8")) : undefined;
+        trust = { trustStore: await trustStoreFromArgs(), authority: (await loadAuthority(readFileSync(values.authority, "utf8"), { anchors })).config };
+      } else console.log("NOTE  no --trust/--authority: acknowledgement signatures not checked");
+      const r = await wf.syncImport(readFileSync(a1, "utf8"), readFileSync(a2, "utf8"), trust);
+      if (r.signedBy) console.log(`acknowledgements signed by ${r.signedBy}`);
       for (const row of r.rows) console.log(`  ${row.state.padEnd(11)} ${row.tx.txId} ${row.tx.target.objectType}/${row.tx.target.objectId}${row.ack ? `: ${row.ack.reason}` : ""}`);
       for (const t of r.changeRequests) console.log(`  NOTE  ${t.target.objectType}/${t.target.objectId}: approval at the source needs a newly published baseline; no baseline was changed`);
       for (const p of r.problems) console.log(`FAIL  ${p}`);

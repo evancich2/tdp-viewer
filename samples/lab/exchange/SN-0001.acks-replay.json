@@ -5,7 +5,7 @@
     "label": "Laboratory fixture PLM (synthetic, file-backed)",
     "fixture": true
   },
-  "proposalSetSha256": "ce40f4ed7ce7676786a5634ec1c5f7500ada5412dce106b65c39933398d8203a",
+  "proposalSetSha256": "da731e2c2f51b031df89e12e638271365400dea406786a3b5d8123266c8f11de",
   "acknowledgedAt": "2026-11-12T13:00:00.000Z",
   "acks": [
     {
@@ -31,8 +31,8 @@
       "originalStatus": "unsupported"
     },
     {
-      "txId": "tx-044a448abefd1c34beb73289cf4bc0fa",
-      "contentSha256": "a468cdce5231082bd9778a97ac750bf79db86f37b8342a74da6efea3e9afed56",
+      "txId": "tx-0e3fe2046ff1b616d291f3881e5bf840",
+      "contentSha256": "51c3d640fbcfa63e83f9b224af711ea9caec2553947d3979debce6cf54bb542f",
       "objectType": "AsBuiltUnit",
       "objectId": "SYN-PH-2001:SN-0001",
       "requiresNewBaseline": false,
@@ -42,8 +42,8 @@
       "originalStatus": "accepted"
     },
     {
-      "txId": "tx-66d53bffda73b140fb86be051d046e90",
-      "contentSha256": "968c87bc181a1eb01e927621c48e4c90417b7884c9f580aeb70c2dc8d20f3c39",
+      "txId": "tx-4401c27803398baeaa2dea99b1683c20",
+      "contentSha256": "d6e48acb87daccc43b32ef84c6f2966bef29cce7bb9a5e1032a031297e25930c",
       "objectType": "AsBuiltUnit",
       "objectId": "SYN-PH-2001:SN-0001",
       "requiresNewBaseline": false,
@@ -53,8 +53,8 @@
       "originalStatus": "accepted"
     },
     {
-      "txId": "tx-e611a1aecf060f682d13bcaf580f291e",
-      "contentSha256": "6dbf930eb3620eb97e8a01604e7a129843660f778f2cc7353eb37b236511649f",
+      "txId": "tx-77a96741fb5b2f5620ad8caeaa7b2e07",
+      "contentSha256": "8102c266c91dd2fdfb72920ebed3df28539aa0a887b91245795d92b02fea6a64",
       "objectType": "InspectionResult",
       "objectId": "fed8a23d-ce6f-41d9-8f91-1357b6210a77",
       "requiresNewBaseline": false,
@@ -64,8 +64,8 @@
       "originalStatus": "accepted"
     },
     {
-      "txId": "tx-fad85cb363c1826c3812e6b1c7bdb622",
-      "contentSha256": "afd2adb25a3229407235cb8c64bf2d99dd365a3ee8537589a37f1bb109339039",
+      "txId": "tx-25eb7720f98c759e9d6a2825239451ae",
+      "contentSha256": "6df825d7d1fc22d500354533cfe1b83fd5d0d20ba1a086e21ed87159b3b4a3fb",
       "objectType": "AsBuiltUnit",
       "objectId": "SYN-PH-2001:SN-0001",
       "requiresNewBaseline": false,
@@ -74,5 +74,11 @@
       "reason": "already applied; replay changed nothing",
       "originalStatus": "accepted"
     }
-  ]
+  ],
+  "signature": {
+    "keyId": "9aca58a636765f866453faab14a0952d",
+    "alg": "Ed25519",
+    "signedAt": "2026-11-12T13:00:00.000Z",
+    "sig": "bQyP2x0/LajYDBAoS+EK7IwkTUw7O/IhWdG8Q7dOqRPF9L94tyKxbrjpt2Y9AqIXWWwfzitLxETnnfzORLKZDw=="
+  }
 }

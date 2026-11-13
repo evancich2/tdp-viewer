@@ -68,5 +68,11 @@
       "sourceVersion": 1,
       "reason": "an earlier transaction for this object in the same set was not applied; resolve it first"
     }
-  ]
+  ],
+  "signature": {
+    "keyId": "9aca58a636765f866453faab14a0952d",
+    "alg": "Ed25519",
+    "signedAt": "2026-11-12T13:00:00.000Z",
+    "sig": "9a/mw3Uz65dQ3lNSBan7nEhHvOAgvWpYzAtOGkvTn2E0cUGKx7z63qLZOHdZVLkpzeAEvepdvZcwiDC/4DUEDQ=="
+  }
 }

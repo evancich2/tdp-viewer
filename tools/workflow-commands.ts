@@ -3,7 +3,8 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 import { sha256Hex, utf8 } from "../src/core/bytes";
 import { canonicalSha256 } from "../src/core/canonical";
-import { loadAuthority } from "../src/core/authority";
+import { loadAuthority, type AuthorityConfig } from "../src/core/authority";
+import type { TrustStore } from "../src/core/schema";
 import { buildEvidenceBundle } from "../src/core/evidence";
 import { AckSet, FixtureState, LocalFixtureAdapter, ProposalSet, PublishingRecipe, buildProposals, importAcknowledgements } from "../src/core/exchange";
 import { loadProcess } from "../src/core/process";
@@ -16,6 +17,8 @@ import {
   baselineFrom,
   checkCheckpoint,
   evidenceStoreFrom,
+  successorsOf,
+  unitLabel,
   makeCheckpoint,
   newLedger,
   nextActions,
@@ -36,6 +39,8 @@ export interface ContextArgs {
   anchors?: string;
   evidenceDir?: string;
   at?: string;
+  /** Other packages to check for baselines that supersede this one. */
+  successors?: string[];
 }
 
 export interface LoadedContext {
@@ -71,8 +76,13 @@ export async function loadContext(a: ContextArgs): Promise<LoadedContext> {
   notes.push(`package: ${verify.manifest!.package.partNumber} rev ${verify.manifest!.package.revision}, ${verify.manifest!.schema}, integrity verified`);
   const evidence = a.evidenceDir ? await evidenceStoreFrom(listFiles(a.evidenceDir).map((f) => ({ name: basename(f), bytes: new Uint8Array(readFileSync(f)) }))) : undefined;
   if (evidence) notes.push(`evidence: ${evidence.size} files hashed from ${a.evidenceDir}`);
+  const baseline = baselineFrom(verify);
+  const others = await Promise.all((a.successors ?? []).map((f) => verifyPackage(new Uint8Array(readFileSync(f)), trust.store, defaultPolicy, now)));
+  for (const [i, r] of others.entries()) if (r.verdict !== "trusted") throw new Error(`--successor ${a.successors![i]} is not trusted`);
+  const successors = successorsOf(baseline, others);
+  if (a.successors?.length) notes.push(successors.length ? `superseded by: ${successors.map((s) => s.baselineId).join(", ")}` : "no loaded package supersedes this baseline");
   return {
-    ctx: { baseline: baselineFrom(verify), authority, process, trustStore: trust.store, now, skewMs: defaultPolicy.clockSkewMs, evidence },
+    ctx: { baseline, authority, process, trustStore: trust.store, now, skewMs: defaultPolicy.clockSkewMs, evidence, successors },
     verify,
     trustStoreSha256: await sha256Hex(utf8.encode(trustJson)),
     notes,
@@ -114,16 +124,25 @@ export async function addRecord(
 export function formatLedger(r: LedgerResult, c: LoadedContext): string[] {
   const lines: string[] = [];
   for (const ch of r.checks) lines.push(`${ch.status.toUpperCase().padEnd(4)}  ${ch.id}  ${ch.message}`);
-  const st = workflowStatus(r, c.ctx);
   lines.push("status (each established separately):");
   lines.push(`  package integrity  ${c.verify.verdict === "trusted" ? "verified" : "REJECTED"}`);
-  lines.push(`  source release     ${st.sourceRelease.text}`);
-  lines.push(`  operation          ${st.operation.text}`);
-  lines.push(`  inspection         ${st.inspection.text}`);
-  lines.push(`  disposition        ${st.disposition.text}`);
-  if (r.verdict !== "rejected") {
-    lines.push(`state: ${r.state}`);
-    for (const n of nextActions(r, c.ctx)) lines.push(`  next: ${n.transition} (${n.roles.join(" or ")})${n.requiresEvidence.length ? ` evidence ${n.requiresEvidence.join(", ")}` : ""}${n.blockedBy.length ? `  BLOCKED: ${n.blockedBy.join("; ")}` : ""}`);
+  const scopes = r.units.length > 1 ? [undefined, ...r.units.map((u) => u.unit)] : [undefined];
+  for (const unit of scopes) {
+    const st = workflowStatus(r, c.ctx, unit);
+    if (unit) lines.push(`unit ${unitLabel(unit)}:`);
+    if (!unit) {
+      lines.push(`  baseline           ${st.baseline.text}`);
+      lines.push(`  source release     ${st.sourceRelease.text}`);
+    }
+    if (unit || r.units.length <= 1) {
+      lines.push(`  operation          ${st.operation.text}`);
+      lines.push(`  inspection         ${st.inspection.text}`);
+      lines.push(`  disposition        ${st.disposition.text}`);
+    }
+    if (r.verdict === "rejected") continue;
+    const state = unit ? r.units.find((u) => unitLabel(u.unit) === unitLabel(unit))!.state : r.units.length > 1 ? r.instanceState : r.state;
+    lines.push(`  state: ${state}${!unit && r.units.length > 1 ? " (instance level)" : ""}`);
+    for (const n of nextActions(r, c.ctx, unit)) lines.push(`    next: ${n.transition} (${n.roles.join(" or ")})${n.requiresEvidence.length ? ` evidence ${n.requiresEvidence.join(", ")}` : ""}${n.blockedBy.length ? `  BLOCKED: ${n.blockedBy.join("; ")}` : ""}`);
   }
   return lines;
 }
@@ -155,14 +174,14 @@ export async function syncExport(ledgerJson: string, c: LoadedContext, recipeJso
   return buildProposals(PublishingRecipe.parse(JSON.parse(recipeJson)), c.ctx.baseline, r, adapter.describe(), { now: c.ctx.now, knownVersions: known });
 }
 
-export async function syncApplyFixture(proposalsJson: string, fixtureJson: string, now = new Date()) {
-  const adapter = new LocalFixtureAdapter(FixtureState.parse(JSON.parse(fixtureJson)));
+export async function syncApplyFixture(proposalsJson: string, fixtureJson: string, now = new Date(), signer?: { keyId: string; privateKey: CryptoKey }) {
+  const adapter = new LocalFixtureAdapter(FixtureState.parse(JSON.parse(fixtureJson)), signer);
   const acks = await adapter.reconcile(ProposalSet.parse(JSON.parse(proposalsJson)), now);
   return { acks, state: adapter.state };
 }
 
-export async function syncImport(proposalsJson: string, acksJson: string) {
-  return importAcknowledgements(ProposalSet.parse(JSON.parse(proposalsJson)), AckSet.parse(JSON.parse(acksJson)));
+export async function syncImport(proposalsJson: string, acksJson: string, trust?: { trustStore: TrustStore; authority: AuthorityConfig; now?: Date }) {
+  return importAcknowledgements(ProposalSet.parse(JSON.parse(proposalsJson)), AckSet.parse(JSON.parse(acksJson)), trust);
 }
 
 export function checkPublication(c: LoadedContext, fixtureJson: string) {

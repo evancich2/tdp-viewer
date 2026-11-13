@@ -12,7 +12,7 @@
   "ledger": {
     "instance": "a1e8949d-57e9-42b4-be91-19d4182f0b2b",
     "count": 16,
-    "head": "932778502eabbef9bd4bde82412d0674d1b5aae91460fc4d8b1399c27888f399"
+    "head": "772d8b8dad3ff9ddf5ebe33a521d29e139d1f847cfbb59e1aab5144a0dd5cafb"
   },
   "generatedAt": "2026-11-12T13:00:00.000Z",
   "transactions": [
@@ -67,8 +67,8 @@
       "changesDefinition": false
     },
     {
-      "txId": "tx-044a448abefd1c34beb73289cf4bc0fa",
-      "contentSha256": "a468cdce5231082bd9778a97ac750bf79db86f37b8342a74da6efea3e9afed56",
+      "txId": "tx-0e3fe2046ff1b616d291f3881e5bf840",
+      "contentSha256": "51c3d640fbcfa63e83f9b224af711ea9caec2553947d3979debce6cf54bb542f",
       "operation": "create",
       "target": {
         "system": "lab-fixture",
@@ -87,7 +87,7 @@
       },
       "source": {
         "recordId": "a5ebbca2-0f27-4b1f-ba13-fe4499655e57",
-        "recordSha256": "5e34daeb7e24525c05aedd5fbf7ccaeffb422fc8ddfd49f225d90351032cf58a",
+        "recordSha256": "df1d388d9b0c808e062ca6615fa6e9b316286d5cd54944ef9d221d3104c0dba6",
         "kind": "build-complete"
       },
       "lossy": [],
@@ -95,8 +95,8 @@
       "changesDefinition": false
     },
     {
-      "txId": "tx-66d53bffda73b140fb86be051d046e90",
-      "contentSha256": "968c87bc181a1eb01e927621c48e4c90417b7884c9f580aeb70c2dc8d20f3c39",
+      "txId": "tx-4401c27803398baeaa2dea99b1683c20",
+      "contentSha256": "d6e48acb87daccc43b32ef84c6f2966bef29cce7bb9a5e1032a031297e25930c",
       "operation": "update",
       "target": {
         "system": "lab-fixture",
@@ -115,7 +115,7 @@
       },
       "source": {
         "recordId": "a2f31d5d-2281-400a-96f5-374a5062f73f",
-        "recordSha256": "02ec7992d54e183fd9be31e19b74736ffbb1a8fef7634851e88b42e67f010773",
+        "recordSha256": "b818dc99c70dc34a156c4cceda0cc9d9f31d801ec4c044186021a2399d651a94",
         "kind": "build-complete"
       },
       "lossy": [],
@@ -123,8 +123,8 @@
       "changesDefinition": false
     },
     {
-      "txId": "tx-e611a1aecf060f682d13bcaf580f291e",
-      "contentSha256": "6dbf930eb3620eb97e8a01604e7a129843660f778f2cc7353eb37b236511649f",
+      "txId": "tx-77a96741fb5b2f5620ad8caeaa7b2e07",
+      "contentSha256": "8102c266c91dd2fdfb72920ebed3df28539aa0a887b91245795d92b02fea6a64",
       "operation": "create",
       "target": {
         "system": "lab-fixture",
@@ -142,7 +142,7 @@
       },
       "source": {
         "recordId": "fed8a23d-ce6f-41d9-8f91-1357b6210a77",
-        "recordSha256": "e1a6e6962d0617d093b0685408b735d14eaaee22797a9463c19e1f541d19efe0",
+        "recordSha256": "d5fdf0eb20a8295d2f9be7478d97030b0f21203e8fbca3c0baddecd94e00d8ad",
         "kind": "inspection"
       },
       "lossy": [
@@ -155,8 +155,8 @@
       "changesDefinition": false
     },
     {
-      "txId": "tx-fad85cb363c1826c3812e6b1c7bdb622",
-      "contentSha256": "afd2adb25a3229407235cb8c64bf2d99dd365a3ee8537589a37f1bb109339039",
+      "txId": "tx-25eb7720f98c759e9d6a2825239451ae",
+      "contentSha256": "6df825d7d1fc22d500354533cfe1b83fd5d0d20ba1a086e21ed87159b3b4a3fb",
       "operation": "update",
       "target": {
         "system": "lab-fixture",
@@ -174,7 +174,7 @@
       },
       "source": {
         "recordId": "8a143808-775b-4f68-a959-b3fcce76ea02",
-        "recordSha256": "8138025ca0fb9afea1a2d0cd2f21f5404d9510ac9f79f9d2773a081e0a95f674",
+        "recordSha256": "a7ab450cd875adf0ca2db2f6d3f3817a87b289057f5ecbfc524df7967fac4aa8",
         "kind": "disposition"
       },
       "lossy": [],

@@ -36,6 +36,7 @@ writeFileSync(`${OUT}/exchange/SN-0001.acks-replay.json`, json(exchange.replay))
 writeFileSync(`${OUT}/exchange/SN-0002.proposals.json`, json(exchange.proposals2));
 writeFileSync(`${OUT}/exchange/SN-0002.acks.json`, json(exchange.acks2));
 writeFileSync(`${OUT}/evidence-bundle-SN-0001.json`, json(run.bundle));
+writeFileSync(`${OUT}/evidence-bundle-SN-0001.signed.json`, json(run.signedBundle));
 writeFileSync(`${OUT}/demo-results.json`, json(run.demonstrations));
 
 // Encrypted CLI key files for the walkthrough in docs/laboratory-demo.md. *.key.json is gitignored.

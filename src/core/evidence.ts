@@ -1,4 +1,9 @@
+import { z } from "zod";
+import { utf8 } from "./bytes";
+import { canonicalSha256 } from "./canonical";
 import { DECISION_RULES_ID } from "./inspection";
+import type { TrustStore } from "./schema";
+import { signEd25519, verifyEd25519 } from "./signing";
 import type { ProposalSet, ReconciliationRow } from "./exchange";
 import { workflowStatus, type LedgerResult, type WorkflowContext } from "./records";
 import type { VerifyResult } from "./verify";
@@ -80,6 +85,7 @@ export function buildEvidenceBundle(i: EvidenceBundleInput) {
     label: model.label,
     status: {
       packageIntegrity: i.verify.verdict === "trusted" ? "Package integrity verified" : "Package rejected",
+      baseline: statuses.baseline.text,
       sourceRelease: statuses.sourceRelease.text,
       operation: statuses.operation.text,
       inspection: statuses.inspection.text,
@@ -116,3 +122,38 @@ export function buildEvidenceBundle(i: EvidenceBundleInput) {
   };
 }
 export type EvidenceBundle = ReturnType<typeof buildEvidenceBundle>;
+
+// ---- Signed bundles: a reviewer can check the bundle without the tool's run ----
+
+export const SignedEvidence = z
+  .object({
+    schema: z.literal("tdp-signed-evidence/0.1"),
+    bundle: z.record(z.string(), z.unknown()),
+    signature: z.object({ keyId: z.string().regex(/^[0-9a-f]{32}$/), alg: z.literal("Ed25519"), signedAt: z.string().datetime({ offset: true }), sig: z.string().min(1).max(200) }).strict(),
+  })
+  .strict();
+export type SignedEvidence = z.infer<typeof SignedEvidence>;
+
+export const evidenceSigningMessage = (digest: string, signedAt: string) => utf8.encode(`tdp-evidence-signature/0.1\n${signedAt}\n${digest}`);
+
+/** Signs the bundle (as canonical JSON). The signature says who exported it, not that its contents are true. */
+export async function signEvidenceBundle(bundle: EvidenceBundle, signer: { keyId: string; privateKey: CryptoKey }, now = new Date()): Promise<SignedEvidence> {
+  const plain = JSON.parse(JSON.stringify(bundle)) as Record<string, unknown>;
+  const signedAt = now.toISOString();
+  const sig = await signEd25519(signer.privateKey, evidenceSigningMessage(await canonicalSha256(plain), signedAt));
+  return { schema: "tdp-signed-evidence/0.1", bundle: plain, signature: { keyId: signer.keyId, alg: "Ed25519", signedAt, sig } };
+}
+
+export async function verifySignedEvidence(raw: unknown, trustStore: TrustStore): Promise<{ signer?: string; sha256?: string; problem?: string }> {
+  const parsed = SignedEvidence.safeParse(raw);
+  if (!parsed.success) return { problem: `not a signed evidence bundle: ${parsed.error.message}` };
+  const { bundle, signature } = parsed.data;
+  const key = trustStore.keys.find((k) => k.keyId === signature.keyId);
+  if (!key) return { problem: "signer is not in the trust store" };
+  if (key.revoked) return { problem: `${key.name}'s key is revoked` };
+  const t = Date.parse(signature.signedAt);
+  if (t < Date.parse(key.notBefore) || t > Date.parse(key.notAfter)) return { problem: `${key.name}'s key was not valid at ${signature.signedAt}` };
+  const digest = await canonicalSha256(bundle);
+  if (!(await verifyEd25519(key.publicKey, signature.sig, evidenceSigningMessage(digest, signature.signedAt)))) return { problem: "signature does not verify (bundle altered?)" };
+  return { signer: key.name, sha256: digest };
+}

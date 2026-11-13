@@ -39,13 +39,13 @@ beforeAll(async () => {
 
 describe("laboratory demonstrations P01–P08", () => {
   it("all pass, with the expected outcome recorded for each", () => {
-    expect(run.demonstrations.length).toBeGreaterThanOrEqual(39);
+    expect(run.demonstrations.length).toBeGreaterThanOrEqual(45);
     for (const d of run.demonstrations) expect(d.pass, `${d.id}: ${d.scenario}\n expected ${d.expected}\n actual   ${d.actual}`).toBe(true);
     for (const p of ["P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08"]) expect(run.demonstrations.some((d) => d.id.startsWith(p))).toBe(true);
   });
 
   it("verifies every generated ledger, and the second process runs on the same engine", () => {
-    for (const name of ["SN-0001", "SN-0002", "SN-0003", "FAI-SN-0010"]) expect(run.results[name]!.verdict, name).toBe("verified");
+    for (const name of ["SN-0001", "SN-0002", "SN-0003", "LOT-0004", "FAI-SN-0010"]) expect(run.results[name]!.verdict, name).toBe("verified");
     expect(run.results["FAI-SN-0010"]!.state).toBe("closed");
     expect(run.results["FAI-SN-0010"]!.records.filter((r) => r.record.data.kind === "inspection").map((r) => r.key.name)).toHaveLength(2);
   });
@@ -291,7 +291,7 @@ describe("exchange", () => {
 describe("evidence bundle", () => {
   it("keeps the four statuses separate and contains no key material", () => {
     const b = run.bundle;
-    expect(Object.keys(b.status)).toEqual(["packageIntegrity", "sourceRelease", "operation", "inspection", "disposition"]);
+    expect(Object.keys(b.status)).toEqual(["packageIntegrity", "baseline", "sourceRelease", "operation", "inspection", "disposition"]);
     expect(b.status.sourceRelease).toMatch(/laboratory fixture/);
     expect(b.limitations.join(" ")).toMatch(/not when/);
     const text = JSON.stringify(b);

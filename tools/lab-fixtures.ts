@@ -67,6 +67,7 @@ export const ORG = {
   design: "Lab Design Authority (synthetic)",
   cell: "Lab Print Cell (synthetic)",
   lab: "Lab Inspection (synthetic)",
+  plm: "Lab Fixture PLM (synthetic)",
 };
 
 /** Who's who. `signing` = package-signing roles; workflow roles are granted in the authority fixture. */
@@ -88,6 +89,8 @@ export const PEOPLE: { id: string; name: string; org: string; signing: SignerRol
   { id: "inspector", name: "Ines Inspector (demo)", org: ORG.lab, signing: [], workflow: ["inspector"] },
   { id: "inspector2", name: "Ivo Second Inspector (demo)", org: ORG.lab, signing: [], workflow: ["inspector"] },
   { id: "quality", name: "Quinn Quality Engineer (demo)", org: ORG.lab, signing: [], workflow: ["quality-engineer"] },
+  // Signs acknowledgements for the fixture source system; holds no workflow role.
+  { id: "source-plm", name: "Lab Fixture PLM acknowledgement key (demo)", org: ORG.plm, signing: [], workflow: [] },
 ];
 
 // ---- Geometry and package ----
@@ -312,7 +315,7 @@ export async function buildWorld(opts: { processes?: ProcessDefinition[]; author
     offlineValidityHours: 168,
     organizations: Object.values(ORG).map((name) => ({ name })),
     sources: [
-      { id: "lab-fixture-plm", system: "lab-fixture", label: "Laboratory fixture PLM (synthetic)", authoritativeFor: [PART, ASSY], integration: "file-exchange", releasedStates: ["Released"] },
+      { id: "lab-fixture-plm", system: "lab-fixture", label: "Laboratory fixture PLM (synthetic)", authoritativeFor: [PART, ASSY], integration: "file-exchange", releasedStates: ["Released"], acknowledgementKeys: [keys["source-plm"]!.keyId] },
     ],
     processes: await Promise.all(processes.map(async (p) => ({ id: p.definition.id, version: p.definition.version, sha256: await sha256Hex(p.bytes) }))),
     grants: PEOPLE.filter((p) => p.workflow.length).map((p) => ({

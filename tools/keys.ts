@@ -1,7 +1,6 @@
 // Signing-key files for the CLI. Private keys are only ever written encrypted:
 // PKCS#8 bytes sealed with AES-256-GCM under a key derived from a passphrase with scrypt.
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
-import { z } from "zod";
 import { fromBase64, toBase64 } from "../src/core/bytes";
 import { Organization, SignerRole, TrustedKey } from "../src/core/schema";
 import type { RootKey } from "../src/core/truststore";
@@ -10,26 +9,8 @@ import { generateKeyPair, keyIdFor } from "../src/core/signing";
 export const MIN_PASSPHRASE = 12;
 const SCRYPT = { N: 1 << 17, r: 8, p: 1 };
 
-/**
- * A key is a package signer (author, checker, approver, release), an organization root that signs
- * trust stores and configuration, or, with no roles at all, a workflow-record signer whose workflow
- * roles come from the authority configuration rather than from the key.
- */
-export const KeyRole = z.union([SignerRole, z.literal("root")]);
-export type KeyRole = z.infer<typeof KeyRole>;
-
-export const KeyFile = z
-  .object({
-    schema: z.literal("tdp-key/0.1"),
-    keyId: z.string(),
-    name: z.string(),
-    roles: z.array(KeyRole).max(8),
-    publicKey: z.string(),
-    kdf: z.object({ alg: z.literal("scrypt"), N: z.number(), r: z.number(), p: z.number(), salt: z.string() }).strict(),
-    cipher: z.object({ alg: z.literal("AES-256-GCM"), iv: z.string(), tag: z.string(), data: z.string() }).strict(),
-  })
-  .strict();
-export type KeyFile = z.infer<typeof KeyFile>;
+import { KeyFile, KeyRole } from "../src/core/keyfile";
+export { KeyFile, KeyRole };
 
 function deriveKey(passphrase: string, salt: Uint8Array, kdf: { N: number; r: number; p: number }): Buffer {
   return scryptSync(passphrase.normalize("NFC"), salt, 32, { ...kdf, maxmem: 256 * kdf.N * kdf.r });

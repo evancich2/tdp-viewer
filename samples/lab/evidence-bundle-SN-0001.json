@@ -6,10 +6,11 @@
   "label": "SYNTHETIC SURROGATE: not the controlled design. Demonstration data only; dimensions, limits, approvals, builds and measurements are invented.",
   "status": {
     "packageIntegrity": "Package integrity verified",
+    "baseline": "No newer baseline known for BL-SYN-PH-2000-A (only baselines you have loaded are known)",
     "sourceRelease": "Source release evidence verified: lab-fixture Released rev A (laboratory fixture authority, not a live PLM)",
-    "operation": "No authorized operation pending in state closed",
-    "inspection": "Inspection accepted (measurement outcome; not a disposition)",
-    "disposition": "Dispositioned accept by Mel Disposition Authority (demo)"
+    "operation": "No authorized operation pending in state closed (SN-0001)",
+    "inspection": "Inspection accepted (SN-0001) (measurement outcome; not a disposition)",
+    "disposition": "Dispositioned accept (SN-0001) by Mel Disposition Authority (demo)"
   },
   "package": {
     "id": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
@@ -110,11 +111,11 @@
     ]
   },
   "configuration": {
-    "trustStoreSha256": "1fe4fa4ba89a037197f7b29e25989e314a5ad272074531913836ee6381bca2c9",
+    "trustStoreSha256": "51a73329b7ab24f5e9ada4bb65076396a1a29d79161270aff008dc9be3ddeba9",
     "authority": {
       "id": "lab-authority",
       "serial": 1,
-      "sha256": "c7266dbda0cfe2fed3c5119102ed8cd1da571b0c2272dabe8f60865d15789cec",
+      "sha256": "cab6c9d07852adbd8614bfcdf44c8207e442267d8f7e5130d698c4dc522b1288",
       "fixture": true,
       "label": "LOCAL LABORATORY AUTHORITY FIXTURE: stands in for the source PLM's release authority and the program's role assignments. Not Onshape, not Windchill.",
       "signedBy": "Lab Authority Root (demo key, public seed)",
@@ -130,12 +131,12 @@
     "evaluatedAt": "2026-11-12T13:00:00.000Z"
   },
   "ledger": {
-    "sha256": "339f63a1555731d3575f3a4556852b8081cb9445c2e5456361eee8e95871e34e",
+    "sha256": "9e0c8cd75f733cd1cb32c032ee16a7ecb2b788c4f248ec6687f99735b99d33af",
     "instance": "a1e8949d-57e9-42b4-be91-19d4182f0b2b",
     "verdict": "verified",
     "state": "closed",
     "records": 16,
-    "head": "932778502eabbef9bd4bde82412d0674d1b5aae91460fc4d8b1399c27888f399",
+    "head": "772d8b8dad3ff9ddf5ebe33a521d29e139d1f847cfbb59e1aab5144a0dd5cafb",
     "checks": [
       {
         "id": "ledger",
@@ -351,7 +352,7 @@
     {
       "seq": 6,
       "recordId": "2618e621-a2bd-437d-a5cb-561501c5513a",
-      "sha256": "3ceceb5af2c58cc1b1e5545fc9e8be4ac47ad0b18c91eaa64d253a7c8e78aabb",
+      "sha256": "df90261846a90b558b33ca640b063f01d405d0828ae62935e2957f99dba4fbd0",
       "action": "authorize-manufacture",
       "kind": "authorization",
       "outcome": "issued",
@@ -370,7 +371,7 @@
     {
       "seq": 7,
       "recordId": "764dc7f2-a227-4893-9979-74c1fc46904f",
-      "sha256": "3efa074049eb1d2e5a158e10b0663a36e8d6b7c9676feb7938dc6b4dc2acbd96",
+      "sha256": "93827409588c7cbbfec22c14a6be2be89aa0ca890925984321a4eb2adf0ad4d6",
       "action": "enter-queue",
       "kind": "queue-entry",
       "outcome": "queued",
@@ -399,7 +400,7 @@
     {
       "seq": 8,
       "recordId": "77c8945c-b0ed-40b6-8538-4fcf7afbe27c",
-      "sha256": "38143d8675ffb7d68047c7fe2497cdbdf470d7e1cc7afbcc2a305b5a0e1197bc",
+      "sha256": "0bad48b604487f0bafdb11a80dceea24c8c2fc17c32569ca76343de3019d4926",
       "action": "dispatch-build",
       "kind": "build-start",
       "outcome": "started",
@@ -420,7 +421,7 @@
     {
       "seq": 9,
       "recordId": "a5ebbca2-0f27-4b1f-ba13-fe4499655e57",
-      "sha256": "5e34daeb7e24525c05aedd5fbf7ccaeffb422fc8ddfd49f225d90351032cf58a",
+      "sha256": "df1d388d9b0c808e062ca6615fa6e9b316286d5cd54944ef9d221d3104c0dba6",
       "action": "complete-build",
       "kind": "build-complete",
       "outcome": "failed",
@@ -449,7 +450,7 @@
     {
       "seq": 10,
       "recordId": "53f7496b-6526-4938-b367-218a4ee80ab0",
-      "sha256": "271ae8e5e66c2659d12da5d083d686bebc3a33532a7651f49419c1c621aa3619",
+      "sha256": "564fe38d3a641489f933ea6dd41b9a1daf04bcdf72719e070b43a924c610f136",
       "action": "enter-queue",
       "kind": "queue-entry",
       "outcome": "queued",
@@ -478,7 +479,7 @@
     {
       "seq": 11,
       "recordId": "40fe54e2-66c1-4ca7-a131-031b00aad3b1",
-      "sha256": "843faba501ac1aa18420083ce89eee2158c6232aa5bbbed828988c81f283368c",
+      "sha256": "14e60741ef1790cc5b369d254932baa936a9664af9c10c1aa1a5c90e91bd3524",
       "action": "delegate",
       "kind": "delegation",
       "outcome": "issued",
@@ -497,7 +498,7 @@
     {
       "seq": 12,
       "recordId": "da039157-a5d3-4199-97c0-45a3b096912d",
-      "sha256": "d0a16cfdabb0be07cc81a1b8d3705e5313d6f778445090afa1e444464edb26a9",
+      "sha256": "68f27b48104db1a65d86a121e5f78ada431c2c76015625e83311bb3e0b3b8c14",
       "action": "dispatch-build",
       "kind": "build-start",
       "outcome": "started",
@@ -518,7 +519,7 @@
     {
       "seq": 13,
       "recordId": "a2f31d5d-2281-400a-96f5-374a5062f73f",
-      "sha256": "02ec7992d54e183fd9be31e19b74736ffbb1a8fef7634851e88b42e67f010773",
+      "sha256": "b818dc99c70dc34a156c4cceda0cc9d9f31d801ec4c044186021a2399d651a94",
       "action": "complete-build",
       "kind": "build-complete",
       "outcome": "completed",
@@ -547,7 +548,7 @@
     {
       "seq": 14,
       "recordId": "fed8a23d-ce6f-41d9-8f91-1357b6210a77",
-      "sha256": "e1a6e6962d0617d093b0685408b735d14eaaee22797a9463c19e1f541d19efe0",
+      "sha256": "d5fdf0eb20a8295d2f9be7478d97030b0f21203e8fbca3c0baddecd94e00d8ad",
       "action": "inspect",
       "kind": "inspection",
       "outcome": "accept",
@@ -590,7 +591,7 @@
     {
       "seq": 15,
       "recordId": "8a143808-775b-4f68-a959-b3fcce76ea02",
-      "sha256": "8138025ca0fb9afea1a2d0cd2f21f5404d9510ac9f79f9d2773a081e0a95f674",
+      "sha256": "a7ab450cd875adf0ca2db2f6d3f3817a87b289057f5ecbfc524df7967fac4aa8",
       "action": "disposition",
       "kind": "disposition",
       "outcome": "accept",
@@ -611,7 +612,7 @@
     {
       "seq": 16,
       "recordId": "23820af0-67ec-4c0b-b189-1740f05ff54c",
-      "sha256": "932778502eabbef9bd4bde82412d0674d1b5aae91460fc4d8b1399c27888f399",
+      "sha256": "772d8b8dad3ff9ddf5ebe33a521d29e139d1f847cfbb59e1aab5144a0dd5cafb",
       "action": "close-evidence",
       "kind": "closure",
       "outcome": "closed",
@@ -734,8 +735,8 @@
         }
       },
       {
-        "txId": "tx-044a448abefd1c34beb73289cf4bc0fa",
-        "contentSha256": "a468cdce5231082bd9778a97ac750bf79db86f37b8342a74da6efea3e9afed56",
+        "txId": "tx-0e3fe2046ff1b616d291f3881e5bf840",
+        "contentSha256": "51c3d640fbcfa63e83f9b224af711ea9caec2553947d3979debce6cf54bb542f",
         "operation": "create",
         "target": {
           "system": "lab-fixture",
@@ -746,8 +747,8 @@
         "status": "proposed",
         "lossy": [],
         "ack": {
-          "txId": "tx-044a448abefd1c34beb73289cf4bc0fa",
-          "contentSha256": "a468cdce5231082bd9778a97ac750bf79db86f37b8342a74da6efea3e9afed56",
+          "txId": "tx-0e3fe2046ff1b616d291f3881e5bf840",
+          "contentSha256": "51c3d640fbcfa63e83f9b224af711ea9caec2553947d3979debce6cf54bb542f",
           "status": "accepted",
           "objectType": "AsBuiltUnit",
           "objectId": "SYN-PH-2001:SN-0001",
@@ -757,8 +758,8 @@
         }
       },
       {
-        "txId": "tx-66d53bffda73b140fb86be051d046e90",
-        "contentSha256": "968c87bc181a1eb01e927621c48e4c90417b7884c9f580aeb70c2dc8d20f3c39",
+        "txId": "tx-4401c27803398baeaa2dea99b1683c20",
+        "contentSha256": "d6e48acb87daccc43b32ef84c6f2966bef29cce7bb9a5e1032a031297e25930c",
         "operation": "update",
         "target": {
           "system": "lab-fixture",
@@ -769,8 +770,8 @@
         "status": "proposed",
         "lossy": [],
         "ack": {
-          "txId": "tx-66d53bffda73b140fb86be051d046e90",
-          "contentSha256": "968c87bc181a1eb01e927621c48e4c90417b7884c9f580aeb70c2dc8d20f3c39",
+          "txId": "tx-4401c27803398baeaa2dea99b1683c20",
+          "contentSha256": "d6e48acb87daccc43b32ef84c6f2966bef29cce7bb9a5e1032a031297e25930c",
           "status": "accepted",
           "objectType": "AsBuiltUnit",
           "objectId": "SYN-PH-2001:SN-0001",
@@ -780,8 +781,8 @@
         }
       },
       {
-        "txId": "tx-e611a1aecf060f682d13bcaf580f291e",
-        "contentSha256": "6dbf930eb3620eb97e8a01604e7a129843660f778f2cc7353eb37b236511649f",
+        "txId": "tx-77a96741fb5b2f5620ad8caeaa7b2e07",
+        "contentSha256": "8102c266c91dd2fdfb72920ebed3df28539aa0a887b91245795d92b02fea6a64",
         "operation": "create",
         "target": {
           "system": "lab-fixture",
@@ -797,8 +798,8 @@
           }
         ],
         "ack": {
-          "txId": "tx-e611a1aecf060f682d13bcaf580f291e",
-          "contentSha256": "6dbf930eb3620eb97e8a01604e7a129843660f778f2cc7353eb37b236511649f",
+          "txId": "tx-77a96741fb5b2f5620ad8caeaa7b2e07",
+          "contentSha256": "8102c266c91dd2fdfb72920ebed3df28539aa0a887b91245795d92b02fea6a64",
           "status": "accepted",
           "objectType": "InspectionResult",
           "objectId": "fed8a23d-ce6f-41d9-8f91-1357b6210a77",
@@ -808,8 +809,8 @@
         }
       },
       {
-        "txId": "tx-fad85cb363c1826c3812e6b1c7bdb622",
-        "contentSha256": "afd2adb25a3229407235cb8c64bf2d99dd365a3ee8537589a37f1bb109339039",
+        "txId": "tx-25eb7720f98c759e9d6a2825239451ae",
+        "contentSha256": "6df825d7d1fc22d500354533cfe1b83fd5d0d20ba1a086e21ed87159b3b4a3fb",
         "operation": "update",
         "target": {
           "system": "lab-fixture",
@@ -820,8 +821,8 @@
         "status": "proposed",
         "lossy": [],
         "ack": {
-          "txId": "tx-fad85cb363c1826c3812e6b1c7bdb622",
-          "contentSha256": "afd2adb25a3229407235cb8c64bf2d99dd365a3ee8537589a37f1bb109339039",
+          "txId": "tx-25eb7720f98c759e9d6a2825239451ae",
+          "contentSha256": "6df825d7d1fc22d500354533cfe1b83fd5d0d20ba1a086e21ed87159b3b4a3fb",
           "status": "accepted",
           "objectType": "AsBuiltUnit",
           "objectId": "SYN-PH-2001:SN-0001",
@@ -945,21 +946,21 @@
       "id": "P03-a",
       "scenario": "SN-0001 measured within limits (guard-banded / simple acceptance) → accept; disposition is a separate signed decision",
       "expected": "inspection accepted; dispositioned accept",
-      "actual": "Inspection accepted (measurement outcome; not a disposition); Dispositioned accept by Mel Disposition Authority (demo)",
+      "actual": "Inspection accepted (SN-0001) (measurement outcome; not a disposition); Dispositioned accept (SN-0001) by Mel Disposition Authority (demo)",
       "pass": true
     },
     {
       "id": "P03-b",
       "scenario": "SN-0002 tab 6.25 mm > 6.20 mm + U → reject → NCR → scrap",
       "expected": "rejected; NCR-0001; scrap",
-      "actual": "Inspection rejected one or more characteristics; Dispositioned scrap by Mel Disposition Authority (demo); state closed",
+      "actual": "Inspection rejected one or more characteristics (SN-0002); Dispositioned scrap (SN-0002) by Mel Disposition Authority (demo); state closed",
       "pass": true
     },
     {
       "id": "P03-c",
       "scenario": "SN-0003 tab 6.198 mm is within U of the upper limit → indeterminate, held (never an automatic pass)",
       "expected": "indeterminate; state inspection-held",
-      "actual": "Inspection indeterminate: held for missing or insufficient measurement evidence; state inspection-held",
+      "actual": "Inspection indeterminate (SN-0003): held for missing or insufficient measurement evidence; state inspection-held",
       "pass": true
     },
     {
@@ -973,14 +974,14 @@
       "id": "P03-e",
       "scenario": "Disposition authority tries to 'accept' a held (indeterminate) inspection directly",
       "expected": "DENIED: a held inspection needs an NCR before any disposition",
-      "actual": "DENIED: disposition is not allowed from state inspection-held (needs inspected or nonconforming)",
+      "actual": "DENIED: disposition is not allowed from state inspection-held for SN-0003 (needs inspected or nonconforming)",
       "pass": true
     },
     {
       "id": "P04-a",
       "scenario": "A validly signed build start that skips suitability, planning and authorization",
       "expected": "ledger rejected: not allowed from state source-released",
-      "actual": "record 3 (dispatch-build) by Oli Operator (demo): denied: dispatch-build is not allowed from state source-released (needs queued)",
+      "actual": "record 3 (dispatch-build) by Oli Operator (demo): denied: dispatch-build is not allowed from state source-released for SN-0001 (needs queued)",
       "pass": true
     },
     {
@@ -1106,7 +1107,7 @@
       "id": "P06-f",
       "scenario": "Recovery: re-verifying the retained ledger and evidence from scratch",
       "expected": "verified, same head as the checkpoint",
-      "actual": "verified, head 932778502eabbef9…",
+      "actual": "verified, head 772d8b8dad3ff9dd…",
       "pass": true
     },
     {
@@ -1152,35 +1153,77 @@
       "pass": true
     },
     {
+      "id": "P07-g",
+      "scenario": "Acknowledgements are signed by the source system's configured key; an edited ack, or one signed by another trusted key, is refused",
+      "expected": "signed ack accepted; both forgeries refused and nothing is marked synchronized",
+      "actual": "signed by Lab Fixture PLM acknowledgement key (demo); edited: acknowledgement signature does not verify; other key: key 2dc8491a0f7ba77d37908452fc002f1c is not configured to acknowledge for lab-fixture; versions kept: 0",
+      "pass": true
+    },
+    {
+      "id": "P01-f",
+      "scenario": "Once rev B (which supersedes rev A) is known, new work under rev A is refused, but a unit in progress may still be re-inspected",
+      "expected": "queue DENIED as superseded; re-inspection ALLOWED; baseline status warns",
+      "actual": "DENIED: enter-queue: baseline BL-SYN-PH-2000-A is superseded by BL-SYN-PH-2000-B (package 7258e9e3-a724-4cef-9c4c-a7b1b6…; re-inspect: ALLOWED; status: Superseded by BL-SYN-PH-2000-B: no new work under BL-SYN-PH-…",
+      "pass": true
+    },
+    {
+      "id": "P05-i",
+      "scenario": "A CIP that allows at most two dispatches: a third attempt needs a new authorization",
+      "expected": "DENIED: at most 2 dispatch-build, 2 already used",
+      "actual": "DENIED: dispatch-build is not authorized: CIP CIP-SN-0001 allows at most 2 dispatch-build record(s), and 2 already used it",
+      "pass": true
+    },
+    {
+      "id": "P02-d",
+      "scenario": "A lot of two serials in one ledger: shared approvals and CIP, separate unit tracks (one accepted and incorporated, one scrapped)",
+      "expected": "SN-0004 closed, SN-0005 scrapped; statuses per unit",
+      "actual": "verified; SN-0004=closed, SN-0005=scrapped; Dispositioned accept (SN-0004) by Mel Disposition Authority (demo); Dispositioned scrap (SN-0005) by Mel Disposition Authority (demo)",
+      "pass": true
+    },
+    {
+      "id": "P03-f",
+      "scenario": "Dispositioning SN-0005 by citing SN-0004's accepted inspection",
+      "expected": "DENIED: a unit is dispositioned against its own latest inspection",
+      "actual": "DENIED: disposition: must disposition the latest inspection",
+      "pass": true
+    },
+    {
       "id": "P08-a",
       "scenario": "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)",
       "expected": "measurements recorded",
-      "actual": "package verification (rev A, 6 files): 1.63 ms; ledger verification (SN-0001, 16 records): 6.1 ms; ledger verification per record: 0.38 ms; ledger size: 27550 bytes",
+      "actual": "package verification (rev A, 6 files): 1.93 ms; ledger verification (SN-0001, 16 records): 5.99 ms; ledger verification per record: 0.37 ms; ledger size: 27601 bytes",
+      "pass": true
+    },
+    {
+      "id": "P06-g",
+      "scenario": "Signed evidence bundle: verifies as exported, fails after any edit",
+      "expected": "valid; altered copy refused",
+      "actual": "signed by Casey Configuration Manager (demo); altered: signature does not verify (bundle altered?)",
       "pass": true
     }
   ],
   "performance": [
     {
       "metric": "package verification (rev A, 6 files)",
-      "value": 1.63,
+      "value": 1.93,
       "unit": "ms",
       "note": "mean of 5, this machine"
     },
     {
       "metric": "ledger verification (SN-0001, 16 records)",
-      "value": 6.1,
+      "value": 5.99,
       "unit": "ms",
       "note": "mean of 5, includes every gate re-evaluation"
     },
     {
       "metric": "ledger verification per record",
-      "value": 0.38,
+      "value": 0.37,
       "unit": "ms",
       "note": "full chain re-verified from genesis"
     },
     {
       "metric": "ledger size",
-      "value": 27550,
+      "value": 27601,
       "unit": "bytes",
       "note": "16 signed records"
     }

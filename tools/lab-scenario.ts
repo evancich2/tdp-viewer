@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { sha256Hex, utf8 } from "../src/core/bytes";
 import { canonicalSha256 } from "../src/core/canonical";
 import { loadAuthority, type LoadedAuthority } from "../src/core/authority";
-import { buildEvidenceBundle, type Demonstration } from "../src/core/evidence";
+import { buildEvidenceBundle, signEvidenceBundle, verifySignedEvidence, type Demonstration, type SignedEvidence } from "../src/core/evidence";
 import {
   LocalFixtureAdapter,
   PublishingRecipe,
@@ -28,6 +28,8 @@ import {
   evidenceStoreFrom,
   makeCheckpoint,
   newLedger,
+  successorsOf,
+  unitLabel,
   verifyLedger,
   workflowStatus,
   type EvidenceStore,
@@ -118,7 +120,7 @@ const measurementsFor = (values: [number, number, number], instruments = { mic: 
 };
 
 /** Steps 1–6 of the reference process for one unit: approvals, release evidence, suitability, plan, authorization. */
-async function prelude(lab: Lab, name: string, pkg: LabPackage & { result: VerifyResult }, serials: string[], opts: { firmware?: string | null; process?: string; geometryReview?: { link: string; resolution: string }[]; offset?: number } = {}) {
+async function prelude(lab: Lab, name: string, pkg: LabPackage & { result: VerifyResult }, serials: string[], opts: { firmware?: string | null; process?: string; geometryReview?: { link: string; resolution: string }[]; offset?: number; limits?: { transition: string; max: number }[] } = {}) {
   const processId = opts.process ?? "printed-part";
   const o = opts.offset ?? 0;
   const fai = processId === "printed-part-fai";
@@ -152,7 +154,7 @@ async function prelude(lab: Lab, name: string, pkg: LabPackage & { result: Verif
   });
   await s("mfg-authority", 90, {
     action: fai ? "authorize-first-article" : "authorize-manufacture", role: "manufacturing-authority", outcome: "issued", reason: "Bounded CIP for laboratory build of the listed units (synthetic)",
-    data: { kind: "authorization", cipId: `CIP-${name}`, operations: fai ? ["build"] : ["queue", "build"], organizations: [ORG.cell], roles: ["planner", "operator"], units: { serials }, notBefore: iso(90 + o), notAfter: iso(90 + o + 14 * 24 * 60), policyVersion: 1 },
+    data: { kind: "authorization", cipId: `CIP-${name}`, operations: fai ? ["build"] : ["queue", "build"], organizations: [ORG.cell], roles: ["planner", "operator"], units: { serials }, notBefore: iso(90 + o), notAfter: iso(90 + o + 14 * 24 * 60), policyVersion: 1, ...(opts.limits ? { limits: opts.limits } : {}) },
   });
   return { get: () => L, s };
 }
@@ -163,7 +165,7 @@ export async function buildLedgers(lab: Lab): Promise<void> {
 
   // SN-0001: full path, including a failed build, a delegation, acceptance and closure.
   {
-    const p = await prelude(lab, "SN-0001", lab.revA, ["SN-0001", "SN-0002", "SN-0003"]);
+    const p = await prelude(lab, "SN-0001", lab.revA, ["SN-0001", "SN-0002", "SN-0003"], { limits: [{ transition: "dispatch-build", max: 2 }] });
     const { s } = p;
     await s("planner", 100, { action: "enter-queue", role: "planner", outcome: "queued", unit: sn("SN-0001"), reason: "Queued by hand (manual queue)", data: { kind: "queue-entry", jobId: "J-0001", submittedFile: { name: "job-J-0001.txt", sha256: await sha256Hex(lab.evidence["job-J-0001.txt"]!.bytes) }, settings: { profile: "PETG 0.20 mm lab profile (synthetic)" } }, evidence: [await ev("job-J-0001.txt", "EV-JOB")] });
     await s("operator", 110, { action: "dispatch-build", role: "operator", outcome: "started", unit: sn("SN-0001"), reason: "Sent to H2C-LAB-01 from Bambu Studio by hand", data: { kind: "build-start", jobId: "J-0001", resource: "H2C-LAB-01", startedAt: iso(110) } });
@@ -205,6 +207,34 @@ export async function buildLedgers(lab: Lab): Promise<void> {
     await s("operator", 160, { action: "complete-build", role: "operator", outcome: "completed", unit: sn("SN-0003"), reason: "Completed", data: { kind: "build-complete", jobId: "J-0201", submittedFileSha256: await sha256Hex(job.bytes), startedAt: iso(110), completedAt: iso(155), errors: [], settings: {} }, evidence: [await ev("build-log-J-0101.txt", "EV-LOG")] });
     await s("inspector", 200, { action: "inspect", role: "inspector", outcome: "indeterminate", unit: sn("SN-0003"), reason: "Measured per plan (synthetic values)", data: { kind: "inspection", decisionRules: "core/decision-rules/0.1", measurements: measurementsFor([6.198, 40.01, 20.02], undefined, 200) }, evidence: [await ev("measurements-SN-0003.csv", "EV-MEAS"), await ev("micrometer-MIC-07-cal.txt", "EV-MIC"), await ev("caliper-CAL-12-cal.txt", "EV-CAL")] });
     lab.ledgers["SN-0003"] = p.get();
+  }
+
+  // A lot of two serials in one ledger: shared approvals and CIP, then each unit on its own track.
+  {
+    const p = await prelude(lab, "LOT-0004", lab.revA, ["SN-0004", "SN-0005"]);
+    const { s } = p;
+    const job = lab.evidence["job-J-0101.txt"]!;
+    const jobSha = await sha256Hex(job.bytes);
+    for (const [i, serial] of (["SN-0004", "SN-0005"] as const).entries()) {
+      const jobId = `J-04${i}1`;
+      await s("planner", 100 + i, { action: "enter-queue", role: "planner", outcome: "queued", unit: sn(serial), reason: "Queued (plate shared by two units)", data: { kind: "queue-entry", jobId, submittedFile: { name: job.name, sha256: jobSha }, settings: {} }, evidence: [await ev(job.name, "EV-JOB")] });
+    }
+    for (const [i, serial] of (["SN-0004", "SN-0005"] as const).entries())
+      await s("operator", 110 + i, { action: "dispatch-build", role: "operator", outcome: "started", unit: sn(serial), reason: "Dispatched by hand", data: { kind: "build-start", jobId: `J-04${i}1`, resource: "H2C-LAB-01", startedAt: iso(110 + i) } });
+    for (const [i, serial] of (["SN-0004", "SN-0005"] as const).entries()) {
+      const jobId = `J-04${i}1`;
+      await s("operator", 160 + i, { action: "complete-build", role: "operator", outcome: "completed", unit: sn(serial), reason: "Completed", data: { kind: "build-complete", jobId, submittedFileSha256: jobSha, startedAt: iso(110 + i), completedAt: iso(158), errors: [], settings: {} }, evidence: [await ev("build-log-J-0101.txt", "EV-LOG")] });
+    }
+    const insEv = async (csv: string) => [await ev(csv, "EV-MEAS"), await ev("micrometer-MIC-07-cal.txt", "EV-MIC"), await ev("caliper-CAL-12-cal.txt", "EV-CAL")];
+    await s("inspector", 200, { action: "inspect", role: "inspector", outcome: "accept", unit: sn("SN-0004"), reason: "Measured (synthetic values)", data: { kind: "inspection", decisionRules: "core/decision-rules/0.1", measurements: measurementsFor([6.03, 40.02, 19.97], undefined, 200) }, evidence: await insEv("measurements-SN-0001.csv") });
+    await s("inspector", 205, { action: "inspect", role: "inspector", outcome: "reject", unit: sn("SN-0005"), reason: "Measured (synthetic values)", data: { kind: "inspection", decisionRules: "core/decision-rules/0.1", measurements: measurementsFor([6.25, 40.05, 19.95], undefined, 205) }, evidence: await insEv("measurements-SN-0002.csv") });
+    const inspOf = async (n: number) => uuidFor(`LOT-0004/${n}`);
+    // Records: 1–6 prelude, 7–8 queue, 9–10 dispatch, 11–12 complete, 13 inspect SN-0004, 14 inspect SN-0005.
+    await s("inspector", 210, { action: "raise-nonconformance", role: "inspector", outcome: "raised", unit: sn("SN-0005"), reason: "Tab over maximum", data: { kind: "nonconformance", ncrId: "NCR-0004", inspectionRecord: await inspOf(14), characteristics: ["CH-001"], description: "CH-001 6.25 mm > 6.20 mm + U (synthetic)" } });
+    await s("mrb", 230, { action: "disposition", role: "disposition-authority", outcome: "accept", unit: sn("SN-0004"), reason: "Conforming (synthetic)", data: { kind: "disposition", inspectionRecord: await inspOf(13), rationale: "All characteristics accepted" } });
+    await s("mrb", 240, { action: "disposition", role: "disposition-authority", outcome: "scrap", unit: sn("SN-0005"), reason: "Scrap (synthetic)", data: { kind: "disposition", inspectionRecord: await inspOf(14), ncrId: "NCR-0004", rationale: "Oversize tab (synthetic)" } });
+    await s("config-mgr", 260, { action: "close-evidence", role: "configuration-manager", outcome: "closed", unit: sn("SN-0004"), reason: "Closed; fitted as the right latch", data: { kind: "closure", incorporation: { occurrence: "OCC-2000-LATCH-R", parentUnit: "SYNTH-ASSY-0001" }, summary: "SN-0004 accepted and incorporated (synthetic)" } });
+    lab.ledgers["LOT-0004"] = p.get();
   }
 
   // Second process configuration, same engine: first-article, two independent inspections.
@@ -275,6 +305,7 @@ export interface LabRun {
   invalid: Record<string, LedgerFile>;
   performance: { metric: string; value: number; unit: string; note: string }[];
   bundle: ReturnType<typeof buildEvidenceBundle>;
+  signedBundle: SignedEvidence;
 }
 
 const failures = (r: { checks: { status: string; message: string }[] }) => r.checks.filter((c) => c.status === "fail").map((c) => c.message).join("; ");
@@ -445,11 +476,12 @@ export async function runLab(opts: { legacySample?: { tdp: Uint8Array; trustJson
   const ledgerHashBefore = await canonicalSha256(lab.ledgers["SN-0002"]);
   const recipe = await labRecipe(lab);
   const initial = fixtureSource(lab);
-  const adapter = new LocalFixtureAdapter(JSON.parse(JSON.stringify(initial)));
+  const plmKey = lab.world.keys["source-plm"]!;
+  const adapter = new LocalFixtureAdapter(JSON.parse(JSON.stringify(initial)), plmKey);
   const baselineA = baselineFrom(lab.revA.result);
   const proposals = await buildProposals(recipe, baselineA, results["SN-0001"]!, adapter.describe(), { now: LAB_NOW });
   const acks = await adapter.reconcile(proposals, LAB_NOW);
-  const imported = await importAcknowledgements(proposals, acks);
+  const imported = await importAcknowledgements(proposals, acks, { trustStore: lab.trustStore, authority: lab.authority.config, now: LAB_NOW });
   const objectsAfter = JSON.stringify(adapter.state.objects);
   const replay = await adapter.reconcile(proposals, LAB_NOW);
   const objectsAfterReplay = JSON.stringify(adapter.state.objects);
@@ -475,6 +507,44 @@ export async function runLab(opts: { legacySample?: { tdp: Uint8Array; trustJson
     const moved = new LocalFixtureAdapter({ ...JSON.parse(JSON.stringify(initial)), sourceItems: { ...initial.sourceItems, [PART]: { ...initial.sourceItems[PART]!, revision: "B" } } });
     const pub = moved.checkPublication(lab.revA.model).find((c) => c.source.startsWith(PART))!;
     demo("P07-f", "Publication version check after the source moves to rev B", "rev A reported superseded", pub.message, pub.status === "superseded");
+    const tamperedAcks = JSON.parse(JSON.stringify(acks)) as AckSet;
+    tamperedAcks.acks.find((a) => a.status === "unsupported")!.status = "accepted";
+    const t1 = await importAcknowledgements(proposals, tamperedAcks, { trustStore: lab.trustStore, authority: lab.authority.config, now: LAB_NOW });
+    const wrongKey = await new LocalFixtureAdapter(JSON.parse(JSON.stringify(initial)), k.operator!).reconcile(proposals, LAB_NOW);
+    const t2 = await importAcknowledgements(proposals, wrongKey, { trustStore: lab.trustStore, authority: lab.authority.config, now: LAB_NOW });
+    demo("P07-g", "Acknowledgements are signed by the source system's configured key; an edited ack, or one signed by another trusted key, is refused", "signed ack accepted; both forgeries refused and nothing is marked synchronized", `signed by ${imported.signedBy}; edited: ${t1.problems.join("; ")}; other key: ${t2.problems.join("; ")}; versions kept: ${Object.keys(t1.versions).length + Object.keys(t2.versions).length}`, !!imported.signedBy && /does not verify/.test(t1.problems.join()) && /not configured to acknowledge/.test(t2.problems.join()) && Object.keys(t1.versions).length === 0);
+  }
+
+  // Increment 2: supersession, CIP limits, multi-unit lots, signed acknowledgements and bundles.
+  {
+    const L = lab.ledgers["SN-0001"]!;
+    const successors = successorsOf(baselineFrom(lab.revA.result), [lab.revB.result, lab.revA.result]);
+    const withSucc = (m: number) => ({ ...lab.ctx("printed-part", lab.revA, at(m)), successors });
+    const authorized = { ...L, entries: L.entries.slice(0, 6) };
+    const job = lab.evidence["job-J-0001.txt"]!;
+    const queue = await denied(async () => appendRecord(authorized, withSucc(100), k.planner!, { action: "enter-queue", role: "planner", outcome: "queued", unit: { serial: "SN-0001" }, reason: "try", data: { kind: "queue-entry", jobId: "J-NEW", submittedFile: { name: job.name, sha256: await sha256Hex(job.bytes) }, settings: {} }, evidence: [await E(lab, job.name, "EV-JOB")] }));
+    const held3 = lab.ledgers["SN-0003"]!;
+    const reinspect = await denied(async () => appendRecord(held3, withSucc(400), k.inspector!, { action: "inspect", role: "inspector", outcome: "accept", unit: { serial: "SN-0003" }, reason: "Re-measured with the micrometer at 20 °C (synthetic)", data: { kind: "inspection", decisionRules: "core/decision-rules/0.1", measurements: measurementsFor([6.15, 40.01, 20.02], undefined, 400) }, evidence: [await E(lab, "measurements-SN-0003.csv", "EV-MEAS"), await E(lab, "micrometer-MIC-07-cal.txt", "EV-MIC"), await E(lab, "caliper-CAL-12-cal.txt", "EV-CAL")] }));
+    const st = workflowStatus(await verifyLedger(L, withSucc(400)), withSucc(400));
+    demo("P01-f", "Once rev B (which supersedes rev A) is known, new work under rev A is refused, but a unit in progress may still be re-inspected", "queue DENIED as superseded; re-inspection ALLOWED; baseline status warns", `${queue.slice(0, 120)}…; re-inspect: ${reinspect}; status: ${st.baseline.text.slice(0, 60)}…`, /superseded by BL-SYN-PH-2000-B/.test(queue) && reinspect === "ALLOWED" && st.baseline.level === "warn");
+
+    // CIP limit: dispatch-build at most twice. SN-0001's CIP has been used twice (J-0001 failed, J-0002).
+    let X: LedgerFile = { ...L, entries: L.entries.slice(0, 12) }; // through dispatch J-0002
+    const ctxM = (m: number) => lab.ctx("printed-part", lab.revA, at(m));
+    X = (await appendRecord(X, ctxM(205), k.operator2!, { action: "complete-build", role: "operator", outcome: "failed", unit: { serial: "SN-0001" }, reason: "Second failure (synthetic, for the limit demonstration)", data: { kind: "build-complete", jobId: "J-0002", submittedFileSha256: await sha256Hex(lab.evidence["job-J-0002.txt"]!.bytes), startedAt: iso(160), completedAt: iso(200), errors: ["warping (synthetic)"], settings: {} }, evidence: [await E(lab, "build-log-J-0002.txt", "EV-LOG")] })).ledger;
+    X = (await appendRecord(X, ctxM(210), k.operator!, { action: "enter-queue", role: "operator", outcome: "queued", unit: { serial: "SN-0001" }, reason: "Third attempt", data: { kind: "queue-entry", jobId: "J-0003", submittedFile: { name: job.name, sha256: await sha256Hex(job.bytes) }, settings: {} }, evidence: [await E(lab, job.name, "EV-JOB")] })).ledger;
+    const third = await denied(() => appendRecord(X, ctxM(215), k.operator!, { action: "dispatch-build", role: "operator", outcome: "started", unit: { serial: "SN-0001" }, reason: "try", data: { kind: "build-start", jobId: "J-0003", resource: "H2C-LAB-01", startedAt: iso(215) } }));
+    demo("P05-i", "A CIP that allows at most two dispatches: a third attempt needs a new authorization", "DENIED: at most 2 dispatch-build, 2 already used", third, /at most 2 dispatch-build record\(s\), and 2 already used/.test(third));
+
+    const lot = await verifyLedger(lab.ledgers["LOT-0004"]!, lab.ctx("printed-part", lab.revA));
+    const states = lot.units.map((u) => `${unitLabel(u.unit)}=${u.state}`).join(", ");
+    const s4 = workflowStatus(lot, lab.ctx("printed-part", lab.revA), { serial: "SN-0004" });
+    const s5 = workflowStatus(lot, lab.ctx("printed-part", lab.revA), { serial: "SN-0005" });
+    demo("P02-d", "A lot of two serials in one ledger: shared approvals and CIP, separate unit tracks (one accepted and incorporated, one scrapped)", "SN-0004 closed, SN-0005 scrapped; statuses per unit", `${lot.verdict}; ${states}; ${s4.disposition.text}; ${s5.disposition.text}`, lot.verdict === "verified" && /SN-0004=closed/.test(states) && /SN-0005=scrapped/.test(states));
+    // After SN-0005's NCR, before its disposition: try to use-as-is it by citing SN-0004's accepted inspection.
+    const beforeDisp = { ...lab.ledgers["LOT-0004"]!, entries: lab.ledgers["LOT-0004"]!.entries.slice(0, 15) };
+    const crossed = await denied(async () => appendRecord(beforeDisp, lab.ctx("printed-part", lab.revA, at(270)), k.mrb!, { action: "disposition", role: "disposition-authority", outcome: "use-as-is", unit: { serial: "SN-0005" }, reason: "try", data: { kind: "disposition", inspectionRecord: await uuidFor("LOT-0004/13"), ncrId: "NCR-0004", rationale: "citing SN-0004's inspection" } }));
+    demo("P03-f", "Dispositioning SN-0005 by citing SN-0004's accepted inspection", "DENIED: a unit is dispositioned against its own latest inspection", crossed, /must disposition the latest inspection/.test(crossed));
   }
 
   // P08 measured performance (software only)
@@ -506,7 +576,15 @@ export async function runLab(opts: { legacySample?: { tdp: Uint8Array; trustJson
     performance,
     now: LAB_NOW,
   });
-  return { lab, demonstrations: demos, results, exchange: { recipe, initial, after: adapter.state, proposals, acks, replay, proposals2, acks2 }, checkpoint, invalid, performance, bundle };
+  const signedBundle = await signEvidenceBundle(bundle, lab.world.keys["config-mgr"]!, LAB_NOW);
+  const good = await verifySignedEvidence(JSON.parse(JSON.stringify(signedBundle)), lab.trustStore);
+  const altered = JSON.parse(JSON.stringify(signedBundle));
+  altered.bundle.status.inspection = "Inspection accepted (edited)";
+  const bad = await verifySignedEvidence(altered, lab.trustStore);
+  demos.push({ id: "P06-g", scenario: "Signed evidence bundle: verifies as exported, fails after any edit", expected: "valid; altered copy refused", actual: `signed by ${good.signer}; altered: ${bad.problem}`, pass: !!good.signer && /does not verify/.test(bad.problem ?? "") });
+  bundle.demonstrations = demos;
+  const finalSigned = await signEvidenceBundle(bundle, lab.world.keys["config-mgr"]!, LAB_NOW);
+  return { lab, demonstrations: demos, results, signedBundle: finalSigned, exchange: { recipe, initial, after: adapter.state, proposals, acks, replay, proposals2, acks2 }, checkpoint, invalid, performance, bundle };
 }
 
 const performance_now = () => globalThis.performance.now();
