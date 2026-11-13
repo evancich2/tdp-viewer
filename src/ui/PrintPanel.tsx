@@ -61,6 +61,7 @@ export function PrintPanel({ session, file, onAccess }: { session: PackageSessio
       {printer.buildVolume.every(Number.isFinite) && (
         <p className="muted">
           Build volume checked: {printer.buildVolume.join(" × ")} mm. {printer.note}
+          {printer.firmware && <> Lab printer firmware: <code>{printer.firmware}</code>.</>}
         </p>
       )}
       {state.kind === "error" && <div className="banner fail">{state.message}</div>}

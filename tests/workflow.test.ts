@@ -221,6 +221,19 @@ describe("process suitability", () => {
     expect(evaluateSuitability(lab.revA.model, sn1.item, { ...base, resource: { ...base.resource, buildVolumeMm: [30, 30, 30] } }, sn1.at, ids).outcome).toBe("not-suitable");
     expect(evaluateSuitability(lab.revA.model, sn1.item, { ...base, capabilities: [] }, sn1.at, ids).outcome).toBe("review-required");
   });
+
+  it("passes the firmware check for the first article, which records the H2C's firmware 01.03.00.00", () => {
+    const fai = run.results["FAI-SN-0010"]!;
+    expect(fai.verdict).toBe("verified");
+    const suit = fai.records.find((r) => r.record.data.kind === "suitability")!;
+    if (suit.record.data.kind !== "suitability") throw new Error();
+    expect(suit.record.data.input.resource.firmware).toBe("01.03.00.00");
+    expect(suit.record.outcome).toBe("suitable");
+    expect(suit.suitability!.checks.find((c) => c.id === "firmware")).toEqual({ id: "firmware", result: "pass", message: "firmware 01.03.00.00 recorded" });
+    const ids = new Set(suit.record.evidence.map((e) => e.id));
+    const noFw = { ...suit.record.data.input, resource: { ...suit.record.data.input.resource, firmware: null } };
+    expect(evaluateSuitability(lab.revA.model, suit.record.item, noFw, suit.record.at, ids).outcome).toBe("review-required");
+  });
 });
 
 describe("ledger integrity", () => {

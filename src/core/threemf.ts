@@ -13,6 +13,7 @@ export interface Provenance {
   sourceSha256: string;
   exportedAt: string;
   targetPrinter?: string;
+  targetPrinterFirmware?: string;
 }
 
 const xml = (s: string) =>
@@ -48,6 +49,7 @@ export function write3mf(meshes: Mesh[], provenance: Provenance): Uint8Array {
     ["tdp:SourcePath", p.sourcePath],
     ["tdp:SourceSha256", p.sourceSha256],
     ...(p.targetPrinter ? [["tdp:TargetPrinter", p.targetPrinter] as [string, string]] : []),
+    ...(p.targetPrinter && p.targetPrinterFirmware ? [["tdp:TargetPrinterFirmware", p.targetPrinterFirmware] as [string, string]] : []),
   ];
 
   const model = `<?xml version="1.0" encoding="UTF-8"?>

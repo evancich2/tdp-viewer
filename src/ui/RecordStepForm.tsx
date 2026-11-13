@@ -15,6 +15,7 @@ import {
   type UnlockedKey,
   type WorkflowContext,
 } from "../core";
+import { PRINTERS } from "../core/printers";
 
 /** Starting points for each record kind's data. The gate, not this form, decides what is acceptable. */
 function template(kind: RecordKind, ctx: WorkflowContext, result: LedgerResult): unknown {
@@ -25,7 +26,7 @@ function template(kind: RecordKind, ctx: WorkflowContext, result: LedgerResult):
   switch (kind) {
     case "requirements-approval": return { kind, requirements: m.requirements.filter((r) => r.appliesTo.itemId === item.itemId).map((r) => ({ id: r.id, version: r.version })) };
     case "source-release": { const it = m.items.find((i) => i.itemId === item.itemId); const src = m.sources.find((s) => s.id === it?.source); return { kind, source: src?.id ?? "", system: src?.system ?? "lab-fixture", reference: src?.reference ?? {}, revision: item.revision, releaseState: src?.declaredReleaseState ?? "", attestation: src?.system === "lab-fixture" ? "lab-fixture" : "manual-transcription" }; }
-    case "suitability": return { kind, input: { resource: { id: "", model: "", firmware: null, buildVolumeMm: [300, 320, 320] }, material: { name: "" }, profile: { name: "" }, orientation: "", scope: "", capabilities: [], calibration: [], declaredGaps: [] } };
+    case "suitability": { const p = PRINTERS[0]!; return { kind, input: { resource: { id: "", model: p.name, firmware: p.firmware ?? null, buildVolumeMm: p.buildVolume }, material: { name: "" }, profile: { name: "" }, orientation: "", scope: "", capabilities: [], calibration: [], declaredGaps: [] } }; }
     case "suitability-review": return { kind, suitabilityRecord: last("suitability"), acceptedGaps: [], rationale: "" };
     case "plan": return { kind, buildPlanId: "", settings: {}, inspectionPlan: m.characteristics.filter((c) => c.item.itemId === item.itemId).map((c) => ({ characteristic: c.id, method: "", instrumentClass: "" })), geometryReview: [] };
     case "authorization": return { kind, cipId: "", operations: ctx.process.definition.operations, organizations: [], roles: [], units: { serials: [] }, notBefore: now, notAfter: now, policyVersion: ctx.process.definition.version };

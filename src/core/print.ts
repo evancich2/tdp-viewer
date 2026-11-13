@@ -59,6 +59,7 @@ export async function exportForPrint(
   if (print.requireWatertight && leaky.length) return deny(`not watertight: ${leaky.map((m) => m.name).join(", ")}`);
 
   const pkg = session.manifest!.package;
+  const sized = printer.buildVolume.every(Number.isFinite);
   const out = write3mf(meshes, {
     title: pkg.title,
     partNumber: file.partNumber ?? pkg.partNumber,
@@ -68,12 +69,14 @@ export async function exportForPrint(
     sourcePath: file.path,
     sourceSha256: file.sha256,
     exportedAt: now.toISOString(),
-    targetPrinter: printer.buildVolume.every(Number.isFinite) ? printer.name : undefined,
+    targetPrinter: sized ? printer.name : undefined,
+    targetPrinterFirmware: sized ? printer.firmware : undefined,
   });
   const sha256 = await sha256Hex(out);
   const base = file.path.split("/").pop()!.replace(/\.[^.]+$/, "");
   const fileName = `${base}.3mf`;
-  const fitNote = fits ? `fits ${printer.name}` : `TOO LARGE for ${printer.name}`;
+  const target = printer.firmware ? `${printer.name} (firmware ${printer.firmware})` : printer.name;
+  const fitNote = fits ? `fits ${target}` : `TOO LARGE for ${target}`;
   await session.audit.append("export", path, `3MF for printing, ${triangles} triangles, ${fitNote}, sha256 ${sha256}`);
   return { fileName, bytes: out, sha256, meshes: stats, printer, fits };
 }

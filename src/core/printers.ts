@@ -4,6 +4,8 @@ export interface PrinterProfile {
   name: string;
   /** Usable build volume, X × Y × Z. */
   buildVolume: [number, number, number];
+  /** Firmware the lab's printer runs, as the printer reports it (Bambu Lab: XX.XX.XX.XX). */
+  firmware?: string;
   note?: string;
 }
 
@@ -15,6 +17,8 @@ export const PRINTERS: PrinterProfile[] = [
     // about 300 × 320 × 325 mm using both nozzles, up to 325 × 320 × 325 mm single-nozzle.
     // Use the smallest envelope reported so a "fits" answer holds in every mode.
     buildVolume: [300, 320, 320],
+    // Read from the lab's H2C on 2026-11-13. Update it here when the printer is updated.
+    firmware: "01.03.00.00",
     note: "Conservative envelope valid for both nozzles; single-nozzle printing allows a little more width.",
   },
   { id: "generic", name: "Other printer (no size check)", buildVolume: [Infinity, Infinity, Infinity] },

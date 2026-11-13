@@ -27,7 +27,8 @@ Decided: the source PLM governs release (Onshape first, Windchill preferred late
 ### Needs real inputs (not to be fabricated)
 - [ ] The controlled design of the demo part and its real requirement set and tolerances
 - [ ] Onshape source references for it; decision on Windchill access
-- [ ] Printer identity and firmware, capability study, calibration and instrument certificates
+- [x] Printer firmware: the lab H2C runs 01.03.00.00 (recorded 2026-11-13 in the H2C profile and the first-article suitability record)
+- [ ] Printer identity (serial), capability study, calibration and instrument certificates
 - [ ] Actual builds on the H2C and real measurements, run through the workflow and kept as evidence
 - [ ] Named people, keys and organizations for each workflow role
 
@@ -69,7 +70,7 @@ Decided: the source PLM governs release (Onshape first, Windchill preferred late
 ## 3D printing
 - [x] Printer profiles with a build-volume fit check (Bambu Lab H2C)
 - [ ] Print settings carried in the package (material, infill, orientation) and written into the 3MF
-- [ ] Bambu LAN print bridge for the H2C: a separate local CLI that uploads a sliced `.gcode.3mf` over FTPS (port 990) and starts it over MQTT (port 8883) with the printer's access code; likely needs LAN-only mode plus Developer Mode on the printer; kept out of the browser app so the viewer stays network-free
+- [ ] Bambu LAN print bridge for the H2C: a separate local CLI that uploads a sliced `.gcode.3mf` over FTPS (port 990) and starts it over MQTT (port 8883) with the printer's access code; kept out of the browser app so the viewer stays network-free. API notes for H2C firmware 01.03.00.00 (from public sources, not yet tried on our printer): Bambu publishes no LAN API, and Developer Mode is unsupported by them. Since the January 2025 authorization firmware, print and control commands over MQTT need LAN-only mode **plus** Developer Mode (otherwise only Bambu Connect may send them). Read-only status over MQTT is reported to work on H2-series printers with just the IP and access code. One user reports Bambu Studio and Home Assistant working on 01.03.00.00 with LAN-only and Developer Mode on. The update may change the LAN access code (and reportedly the serial shown on screen), so re-read both from the printer after updating. Bambu's H2C/H2D notes for 01.03.00.00 list starting LAN prints without a USB drive, which would remove a storage requirement on the upload path. Check each of these on the printer before building the bridge.
 - [ ] Slicing through the Bambu Studio CLI from the bridge
 - [ ] STL export for other slicers
 - [ ] Rebuild occt-import-js with `-sDYNAMIC_EXECUTION=0` to drop the STEP worker's `unsafe-eval`

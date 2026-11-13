@@ -936,6 +936,13 @@
       "pass": true
     },
     {
+      "id": "P02-f",
+      "scenario": "First-article suitability records the H2C's firmware (01.03.00.00), so firmware is no longer a gap",
+      "expected": "firmware pass: firmware 01.03.00.00 recorded; suitable",
+      "actual": "firmware pass: firmware 01.03.00.00 recorded; suitable",
+      "pass": true
+    },
+    {
       "id": "P02-c",
       "scenario": "Operator authority via a verified delegation from a configured key with mayDelegate",
       "expected": "dispatch by delegated operator verifies",
@@ -1212,14 +1219,14 @@
       "id": "P08-b",
       "scenario": "A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately",
       "expected": "verified; 45 units closed",
-      "actual": "verified; 45 units closed; 242 ms",
+      "actual": "verified; 45 units closed; 240.28 ms",
       "pass": true
     },
     {
       "id": "P08-a",
       "scenario": "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)",
       "expected": "measurements recorded",
-      "actual": "package verification (rev A, 6 files): 1.6 ms; ledger verification (SN-0001, 16 records): 4.94 ms; ledger verification per record: 0.31 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 242 ms; large ledger verification per record: 0.36 ms",
+      "actual": "package verification (rev A, 6 files): 1.57 ms; ledger verification (SN-0001, 16 records): 4.75 ms; ledger verification per record: 0.3 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 240.28 ms; large ledger verification per record: 0.35 ms",
       "pass": true
     },
     {
@@ -1233,19 +1240,19 @@
   "performance": [
     {
       "metric": "package verification (rev A, 6 files)",
-      "value": 1.6,
+      "value": 1.57,
       "unit": "ms",
       "note": "mean of 5, this machine"
     },
     {
       "metric": "ledger verification (SN-0001, 16 records)",
-      "value": 4.94,
+      "value": 4.75,
       "unit": "ms",
       "note": "mean of 5, includes every gate re-evaluation"
     },
     {
       "metric": "ledger verification per record",
-      "value": 0.31,
+      "value": 0.3,
       "unit": "ms",
       "note": "full chain re-verified from genesis"
     },
@@ -1257,13 +1264,13 @@
     },
     {
       "metric": "large ledger verification (45 units, 681 records)",
-      "value": 242,
+      "value": 240.28,
       "unit": "ms",
       "note": "one lot, 3 failed builds per unit before success; single run"
     },
     {
       "metric": "large ledger verification per record",
-      "value": 0.36,
+      "value": 0.35,
       "unit": "ms",
       "note": "scales linearly in this range"
     }

@@ -14,6 +14,7 @@ source-system release is represented; see docs/laboratory-demo.md for the eviden
 | P01-e | New baseline rev B supersedes rev A; rev A and its evidence are preserved and still verify | rev B trusted with supersedes link; rev A bytes unchanged; rev A ledger verified; rev A ledger rejected against rev B | rev B trusted, supersedes BL-SYN-PH-2000-A; rev A unchanged; rev A ledger verified; against rev B: rejected (wrong baseline: ledger is for package 2a395545-a7ca-42e0-b927-a8dfa9af4752 basel…) | PASS |
 | P02-a | Suitability: build-volume fit passes, but missing firmware is a gap, so the result is review-required (fit alone isn't capability) | review-required with gap 'printer firmware not recorded'; fit pass | review-required; fit pass; gaps: printer firmware not recorded | PASS |
 | P02-b | Manual queue/build records: a failed job is recorded with its errors and the unit is requeued under the same CIP | J-0001 failed with errors; J-0002 completed; state closed | first-layer adhesion failure at layer 3 (synthetic); final state closed | PASS |
+| P02-f | First-article suitability records the H2C's firmware (01.03.00.00), so firmware is no longer a gap | firmware pass: firmware 01.03.00.00 recorded; suitable | firmware pass: firmware 01.03.00.00 recorded; suitable | PASS |
 | P02-c | Operator authority via a verified delegation from a configured key with mayDelegate | dispatch by delegated operator verifies | dispatch by Jo Second-Shift Operator (demo, delegated only) via delegation 40fe54e2-66c1… | PASS |
 | P03-a | SN-0001 measured within limits (guard-banded / simple acceptance) → accept; disposition is a separate signed decision | inspection accepted; dispositioned accept | Inspection accepted (SN-0001) (measurement outcome; not a disposition); Dispositioned accept (SN-0001) by Mel Disposition Authority (demo) | PASS |
 | P03-b | SN-0002 tab 6.25 mm > 6.20 mm + U → reject → NCR → scrap | rejected; NCR-0001; scrap | Inspection rejected one or more characteristics (SN-0002); Dispositioned scrap (SN-0002) by Mel Disposition Authority (demo); state closed | PASS |
@@ -53,19 +54,19 @@ source-system release is represented; see docs/laboratory-demo.md for the eviden
 | P05-i | A CIP that allows at most two dispatches: a third attempt needs a new authorization | DENIED: at most 2 dispatch-build, 2 already used | DENIED: dispatch-build is not authorized: CIP CIP-SN-0001 allows at most 2 dispatch-build record(s), and 2 already used it | PASS |
 | P02-d | A lot of two serials in one ledger: shared approvals and CIP, separate unit tracks (one accepted and incorporated, one scrapped) | SN-0004 closed, SN-0005 scrapped; statuses per unit | verified; SN-0004=closed, SN-0005=scrapped; Dispositioned accept (SN-0004) by Mel Disposition Authority (demo); Dispositioned scrap (SN-0005) by Mel Disposition Authority (demo) | PASS |
 | P03-f | Dispositioning SN-0005 by citing SN-0004's accepted inspection | DENIED: a unit is dispositioned against its own latest inspection | DENIED: disposition: must disposition the latest inspection | PASS |
-| P08-b | A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately | verified; 45 units closed | verified; 45 units closed; 242 ms | PASS |
-| P08-a | Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed) | measurements recorded | package verification (rev A, 6 files): 1.6 ms; ledger verification (SN-0001, 16 records): 4.94 ms; ledger verification per record: 0.31 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 242 ms; large ledger verification per recor | PASS |
+| P08-b | A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately | verified; 45 units closed | verified; 45 units closed; 240.28 ms | PASS |
+| P08-a | Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed) | measurements recorded | package verification (rev A, 6 files): 1.57 ms; ledger verification (SN-0001, 16 records): 4.75 ms; ledger verification per record: 0.3 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 240.28 ms; large ledger verification per re | PASS |
 | P06-g | Signed evidence bundle: verifies as exported, fails after any edit | valid; altered copy refused | signed by Casey Configuration Manager (demo); altered: signature does not verify (bundle altered?) | PASS |
 
 ## Measured software performance (this machine)
 
 | Metric | Value | Note |
 |---|---|---|
-| package verification (rev A, 6 files) | 1.6 ms | mean of 5, this machine |
-| ledger verification (SN-0001, 16 records) | 4.94 ms | mean of 5, includes every gate re-evaluation |
-| ledger verification per record | 0.31 ms | full chain re-verified from genesis |
+| package verification (rev A, 6 files) | 1.57 ms | mean of 5, this machine |
+| ledger verification (SN-0001, 16 records) | 4.75 ms | mean of 5, includes every gate re-evaluation |
+| ledger verification per record | 0.3 ms | full chain re-verified from genesis |
 | ledger size | 27601 bytes | 16 signed records |
-| large ledger verification (45 units, 681 records) | 242 ms | one lot, 3 failed builds per unit before success; single run |
-| large ledger verification per record | 0.36 ms | scales linearly in this range |
+| large ledger verification (45 units, 681 records) | 240.28 ms | one lot, 3 failed builds per unit before success; single run |
+| large ledger verification per record | 0.35 ms | scales linearly in this range |
 
-49 of 49 demonstrations passed.
+50 of 50 demonstrations passed.

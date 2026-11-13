@@ -87,6 +87,23 @@ describe("exportForPrint", () => {
     expect(out.printer.name).toBe("Bambu Lab H2C");
     expect(out.fits).toBe(true);
     expect(model).toContain('<metadata name="tdp:TargetPrinter">Bambu Lab H2C</metadata>');
+    expect(model).toContain('<metadata name="tdp:TargetPrinterFirmware">01.03.00.00</metadata>');
+    expect(log.at(-1)!.detail).toContain("fits Bambu Lab H2C (firmware 01.03.00.00)");
+  });
+
+  it("leaves printer and firmware out of the 3MF when no printer is targeted", async () => {
+    const generic = PRINTERS.find((p) => p.id === "generic")!;
+    const out = await exportForPrint(await open(), "models/SMP-1000_B.stp", nodeMesher, { now, printer: generic });
+    const model = utf8.decode(unzipSync(out.bytes)["3D/3dmodel.model"]!);
+    expect(model).not.toContain("tdp:TargetPrinter");
+  });
+
+  it("omits the firmware for a printer profile that doesn't record one", async () => {
+    const other = { id: "o", name: "Other", buildVolume: [500, 500, 500] as [number, number, number] };
+    const out = await exportForPrint(await open(), "models/SMP-1000_B.stp", nodeMesher, { now, printer: other });
+    const model = utf8.decode(unzipSync(out.bytes)["3D/3dmodel.model"]!);
+    expect(model).toContain('<metadata name="tdp:TargetPrinter">Other</metadata>');
+    expect(model).not.toContain("tdp:TargetPrinterFirmware");
   });
 
   it("flags parts too large for the target printer", async () => {
@@ -124,6 +141,10 @@ describe("exportForPrint", () => {
 
 describe("checkFit", () => {
   const h2c = PRINTERS.find((p) => p.id === "bambu-h2c")!;
+  it("records the H2C's firmware in Bambu's XX.XX.XX.XX form", () => {
+    expect(h2c.firmware).toBe("01.03.00.00");
+    expect(h2c.firmware).toMatch(/^\d{2}\.\d{2}\.\d{2}\.\d{2}$/);
+  });
   it("lets the slicer rotate the part", () => {
     expect(checkFit([319, 10, 10], h2c).fits).toBe(true); // longest side along Y
     expect(checkFit([321, 321, 10], h2c).fits).toBe(false);

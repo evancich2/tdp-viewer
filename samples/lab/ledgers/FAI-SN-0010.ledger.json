@@ -193,7 +193,7 @@
               "id": "H2C-LAB-01",
               "model": "Bambu Lab H2C",
               "serial": "SYNTH-H2C-0001",
-              "firmware": "01.02.00.00 (synthetic)",
+              "firmware": "01.03.00.00",
               "buildVolumeMm": [
                 300,
                 320,
@@ -232,10 +232,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "f14002e334b45db6ed17eecb89936557e8323ac0f88d6a83c4676ba0bd95aedb",
+        "recordSha256": "0b532700af1700b305059d1200cb8c31ec859d71e971bb63a2024e63bea07602",
         "keyId": "a5c3dc9adf529103a67bbffd6259c4cc",
         "alg": "Ed25519",
-        "sig": "iOo8/Y4vZqdc6unWFMBepHj7idKtNKm3ZJ0Ul11xXI0FHRcCDBMq3sJDOyxX0Fu7YKHfI6lX7J5VE6UgNvLuAg=="
+        "sig": "8M2jfhVEFxeIul9Mfyp3awwJQ9McfbR8AYxWRBT1ABr3y1s/lkjWisg5J+TVPUVmBeE+xLJqPGTxeElp9RiqDQ=="
       }
     },
     {
@@ -260,7 +260,7 @@
         },
         "action": "plan-first-article",
         "at": "2026-11-10T14:00:00.000Z",
-        "prev": "f14002e334b45db6ed17eecb89936557e8323ac0f88d6a83c4676ba0bd95aedb",
+        "prev": "0b532700af1700b305059d1200cb8c31ec859d71e971bb63a2024e63bea07602",
         "policy": {
           "processId": "printed-part-fai",
           "processVersion": 1,
@@ -302,10 +302,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "51dbbedee711225d9fe4480e4e4a0e2aacadf1b27bdb96e67c59b5461f307092",
+        "recordSha256": "0663541e527c18409f187d3a386f613784f61beb2d0ab100fb6424d2d2dfef6b",
         "keyId": "6b16af583466bc31ce992c3cff830e73",
         "alg": "Ed25519",
-        "sig": "AhDRvPj6DepXciLq888MU0KJeBSY47H7BMOcGoMCVr4pnNZd2eS6t6opC17JnlbyV2CQFNsP0TMQ91iEtfW0Bw=="
+        "sig": "WyASaNEjsxZx4lGVCWthWn4qXsbfmx/qbAnFD/d4ZtQ1LPlhFvNebuMOvbxzBmg+1feu9rm67D+mrwm6NYxAAw=="
       }
     },
     {
@@ -330,7 +330,7 @@
         },
         "action": "authorize-first-article",
         "at": "2026-11-10T14:30:00.000Z",
-        "prev": "51dbbedee711225d9fe4480e4e4a0e2aacadf1b27bdb96e67c59b5461f307092",
+        "prev": "0663541e527c18409f187d3a386f613784f61beb2d0ab100fb6424d2d2dfef6b",
         "policy": {
           "processId": "printed-part-fai",
           "processVersion": 1,
@@ -366,10 +366,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "70040dd44453eeba9e2271864651fc287c882f69dbe321d9202332adfe93a073",
+        "recordSha256": "3a3027fd87f5e42b0f3537003beca4e5b53cc3fc94e3eedf732afb478b3664b2",
         "keyId": "7a4150a457b781de8f686f0c2f5af3e0",
         "alg": "Ed25519",
-        "sig": "m4AIUJA+1KleJLtKdCkpRrL6jt5Ih3XyE/obno0C5vTKgm4ae1lMK6uUaKmKXSvsZEHoO+cs7G2hxfVqO4kpCw=="
+        "sig": "Ei79e2fBlZHVmHRyuPimmWaZOR8buFytqLq1HHTMMT0hCbKp3hbaU1UIerlti+tpZhhwSLFyY93dVwRBduxODg=="
       }
     },
     {
@@ -397,7 +397,7 @@
         },
         "action": "build",
         "at": "2026-11-10T14:50:00.000Z",
-        "prev": "70040dd44453eeba9e2271864651fc287c882f69dbe321d9202332adfe93a073",
+        "prev": "3a3027fd87f5e42b0f3537003beca4e5b53cc3fc94e3eedf732afb478b3664b2",
         "policy": {
           "processId": "printed-part-fai",
           "processVersion": 1,
@@ -417,10 +417,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "8f6645800c603306967fd300863735169588abab0618d8bf1163a9885b627b2e",
+        "recordSha256": "d8c28916556e10822803fb4ce4331d58ddeab4a19d91fbd48017390233b2fa4f",
         "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
         "alg": "Ed25519",
-        "sig": "xZb5SEoS1naM/lTpP73YVm+FrDbAy5MlZv5aldOsopwRjBQTrgo9Orw9lquQxZhNA2v1XI5HeqHs26Q8mNfqCg=="
+        "sig": "fwKAueFNGV41e6trKaBUoY2Eyhk5KfQ612nU763BQhq9wwZGpl2C/BwClOI7LYkGQzgFKfyKtLtmJT3EajzHCA=="
       }
     },
     {
@@ -448,7 +448,7 @@
         },
         "action": "finish",
         "at": "2026-11-10T15:40:00.000Z",
-        "prev": "8f6645800c603306967fd300863735169588abab0618d8bf1163a9885b627b2e",
+        "prev": "d8c28916556e10822803fb4ce4331d58ddeab4a19d91fbd48017390233b2fa4f",
         "policy": {
           "processId": "printed-part-fai",
           "processVersion": 1,
@@ -480,10 +480,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "e3c2554ce084ff8d58bea066a867232146351799199a5a2d2b3d67d52cf2280f",
+        "recordSha256": "2a3d3f62a7307ab45183601291e33328e2b8ebffe58d778f1a25832983bab62d",
         "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
         "alg": "Ed25519",
-        "sig": "seFXmiyn8SuSDF+iUN9/buYW4jdyL18JNu9qjqwsMcAOFNIkJdron67cyXYnfLHEFMhg2fIClWMIvehXqNKDCw=="
+        "sig": "1vB8radC3Fpabd00hE08c5v71DQk7t93nHBP1s/6/kOd5Zn1kyDjRTMJk0fB2Ve+UTnFEcz+WLXm4LUxRV8JDA=="
       }
     },
     {
@@ -511,7 +511,7 @@
         },
         "action": "first-inspection",
         "at": "2026-11-10T16:20:00.000Z",
-        "prev": "e3c2554ce084ff8d58bea066a867232146351799199a5a2d2b3d67d52cf2280f",
+        "prev": "2a3d3f62a7307ab45183601291e33328e2b8ebffe58d778f1a25832983bab62d",
         "policy": {
           "processId": "printed-part-fai",
           "processVersion": 1,
@@ -613,10 +613,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "3a75e5e31c0154b64a2150bde525e971d2fc8783646acfd7f0ef66b443166460",
+        "recordSha256": "ca16f9b1363d04c172980eca38ea6ca016cadfde90ce7c336f46242edcd338a0",
         "keyId": "d677edaf9481f8fa54577abfc9de20ec",
         "alg": "Ed25519",
-        "sig": "PS8iajBhAU6+VlYYtfY3GAqzT+mTM2seq+kJG5wgrHBsypJqC8tfd2kFxuGTA3XJVRcePqlNvVQu3PCaDxjCBw=="
+        "sig": "+VQfMrxYkaI4JXvevyw6kg0IK8H7K6lfTy+eY2BB45/+EIC9rVcz63yr6pAcqlskxefg+x8hOktJgiDcPufhCw=="
       }
     },
     {
@@ -644,7 +644,7 @@
         },
         "action": "second-inspection",
         "at": "2026-11-10T16:50:00.000Z",
-        "prev": "3a75e5e31c0154b64a2150bde525e971d2fc8783646acfd7f0ef66b443166460",
+        "prev": "ca16f9b1363d04c172980eca38ea6ca016cadfde90ce7c336f46242edcd338a0",
         "policy": {
           "processId": "printed-part-fai",
           "processVersion": 1,
@@ -746,10 +746,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "c30d059652be60c1a1cd8b8f357d10c47a0c7157bcfce56dac46291cca2d01dd",
+        "recordSha256": "8108ede63e88d17143a40fe6f00c3597b19568738008499f7914671a08e7d4f5",
         "keyId": "3ffd72cd5ee00a510b05869188a0bfb4",
         "alg": "Ed25519",
-        "sig": "4mcCLl1zLzEgj5G9OiB4AcNcR4878LvxwFFY9cwOjiVBq0pCRbEsKR/e6ADwzYILGXNdGpomXjgzUTAOuXIZDw=="
+        "sig": "aHPYpCxreRCvdFpsb9UAlUScqpaA9qXW55pqvva23YmlOClL8PWDhWB6/EH6jF6UcWPpg2M+VPRweNdRQ1ttCA=="
       }
     },
     {
@@ -777,7 +777,7 @@
         },
         "action": "fai-disposition",
         "at": "2026-11-10T17:20:00.000Z",
-        "prev": "c30d059652be60c1a1cd8b8f357d10c47a0c7157bcfce56dac46291cca2d01dd",
+        "prev": "8108ede63e88d17143a40fe6f00c3597b19568738008499f7914671a08e7d4f5",
         "policy": {
           "processId": "printed-part-fai",
           "processVersion": 1,
@@ -796,10 +796,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "47cb48be4f9dd32f657f5a716a0294019903b4f2043cb9ee7ffcea113c6c092e",
+        "recordSha256": "68920b16f12211af692d4d7ba6d90e6185a2221a925915fdb6dd927b3b610990",
         "keyId": "0e33e41d7697201e31ec5d9a00bc8dd6",
         "alg": "Ed25519",
-        "sig": "OSQeNekFwitzH6nS1uNz7puZlt7/9PayR37CqC5v7DRhxNWUq/kCOSIxN/Vgo/volMC1GLSey8sRh/ND3cxRAw=="
+        "sig": "snWzqJOGOEVLsDDh1EXCMZeejhuu0lYdnKTuqW1rLeYkEIg5pWcOk39K6uqy8V4tBXtCbNxd6vedhcWn1VZDCA=="
       }
     },
     {
@@ -827,7 +827,7 @@
         },
         "action": "close",
         "at": "2026-11-10T17:40:00.000Z",
-        "prev": "47cb48be4f9dd32f657f5a716a0294019903b4f2043cb9ee7ffcea113c6c092e",
+        "prev": "68920b16f12211af692d4d7ba6d90e6185a2221a925915fdb6dd927b3b610990",
         "policy": {
           "processId": "printed-part-fai",
           "processVersion": 1,
@@ -845,10 +845,10 @@
       },
       "signature": {
         "schema": "tdp-record-signature/0.1",
-        "recordSha256": "ea77795ef6ad3e197adc136a0664bb1873c3fd3fb082af7d74149025af03d7fc",
+        "recordSha256": "b65a2f10a31cfb0b8e7fc5f2fe64b47dec96c6c6ec1849efe86192caecea975e",
         "keyId": "45c74edb2764c39a76fb50033c3ac95e",
         "alg": "Ed25519",
-        "sig": "p8adjT3Nztj1kKHVrYCz5Q9SsSsmncx4wMM33NVl6awKSId1VeP38M9tjNSLZQnktXIb2yIFxe8kPfL5N8HgDQ=="
+        "sig": "qd3ElOJTvILxPIuv948TE5FjTpVQ0KRuJYpL8iSst0K1rjp620sMgHupsk6xGKZYI0B0HqCr81N8AF4uBERuCg=="
       }
     }
   ]

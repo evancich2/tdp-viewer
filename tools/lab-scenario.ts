@@ -21,6 +21,7 @@ import {
 import { evaluateInspection, type Measurement } from "../src/core/inspection";
 import { loadProcess, type LoadedProcess } from "../src/core/process";
 import { defaultPolicy } from "../src/core/policy";
+import { PRINTERS } from "../src/core/printers";
 import {
   TransitionDenied,
   appendRecord,
@@ -101,6 +102,8 @@ export async function setupLab(): Promise<Lab> {
 }
 
 const E = (lab: Lab, name: string, id?: string) => ref(lab.evidence[name]!, id);
+/** The firmware the lab's H2C actually runs (real, not synthetic): taken from the printer profile. */
+const H2C_FIRMWARE = PRINTERS.find((p) => p.id === "bambu-h2c")!.firmware!;
 
 /** One step through the gate, at scenario minute `m`. */
 async function step(lab: Lab, name: string, ledger: LedgerFile, processId: string, pkg: { result: VerifyResult }, who: string, m: number, input: RecordInput): Promise<LedgerFile> {
@@ -240,7 +243,7 @@ export async function buildLedgers(lab: Lab): Promise<void> {
 
   // Second process configuration, same engine: first-article, two independent inspections.
   {
-    const p = await prelude(lab, "FAI-SN-0010", lab.revA, ["SN-0010"], { process: "printed-part-fai", firmware: "01.02.00.00 (synthetic)" });
+    const p = await prelude(lab, "FAI-SN-0010", lab.revA, ["SN-0010"], { process: "printed-part-fai", firmware: H2C_FIRMWARE });
     const { s } = p;
     await s("operator", 110, { action: "build", role: "operator", outcome: "started", unit: sn("SN-0010"), reason: "First article dispatched by hand", data: { kind: "build-start", jobId: "J-0301", resource: "H2C-LAB-01", startedAt: iso(110) } });
     await s("operator", 160, { action: "finish", role: "operator", outcome: "completed", unit: sn("SN-0010"), reason: "Completed", data: { kind: "build-complete", jobId: "J-0301", submittedFileSha256: await sha256Hex(lab.evidence["job-J-0101.txt"]!.bytes), startedAt: iso(110), completedAt: iso(158), errors: [], settings: {} }, evidence: [await ev("build-log-J-0101.txt", "EV-LOG")] });
@@ -354,6 +357,9 @@ export async function runLab(opts: { legacySample?: { tdp: Uint8Array; trustJson
     demo("P02-a", "Suitability: build-volume fit passes, but missing firmware is a gap, so the result is review-required (fit alone isn't capability)", "review-required with gap 'printer firmware not recorded'; fit pass", `${suit.record.outcome}; fit ${fit.result}; gaps: ${suit.suitability!.checks.filter((c) => c.result === "gap").map((c) => c.message).join(", ")}`, suit.record.outcome === "review-required" && fit.result === "pass");
     const failed = r.records.find((v) => v.record.data.kind === "build-complete" && v.record.outcome === "failed")!;
     demo("P02-b", "Manual queue/build records: a failed job is recorded with its errors and the unit is requeued under the same CIP", "J-0001 failed with errors; J-0002 completed; state closed", `${failed.record.data.kind === "build-complete" ? failed.record.data.errors.join("; ") : ""}; final state ${r.state}`, r.state === "closed" && r.verdict === "verified");
+    const fai = results["FAI-SN-0010"]!.records.find((v) => v.record.data.kind === "suitability")!;
+    const fw = fai.suitability!.checks.find((c) => c.id === "firmware")!;
+    demo("P02-f", `First-article suitability records the H2C's firmware (${H2C_FIRMWARE}), so firmware is no longer a gap`, `firmware pass: firmware ${H2C_FIRMWARE} recorded; suitable`, `firmware ${fw.result}: ${fw.message}; ${fai.record.outcome}`, fw.result === "pass" && fw.message === `firmware ${H2C_FIRMWARE} recorded` && fai.record.outcome === "suitable");
     const deleg = r.records.find((v) => v.record.action === "dispatch-build" && v.via.startsWith("delegation"));
     demo("P02-c", "Operator authority via a verified delegation from a configured key with mayDelegate", "dispatch by delegated operator verifies", deleg ? `dispatch by ${deleg.key.name} via ${deleg.via.slice(0, 24)}…` : "no delegated dispatch", !!deleg);
   }
