@@ -18,6 +18,11 @@ Decided: the source PLM governs release (Onshape first, Windchill preferred late
 - [x] Manual queue and build records; inspection with documented decision rules, units and uncertainty; NCR; disposition; closure with incorporation
 - [x] Publishing recipe, adapter interface, local fixture adapter, idempotent transactions, acknowledgements
 - [x] CLI `record`, `evidence export`, `sync`, `authority sign`; viewer workflow panels; evidence bundle
+- [x] Supersession stops new work on an old baseline; CIP use limits; several units per ledger
+- [x] Signed acknowledgements and signed evidence bundles
+- [x] Record steps in the viewer (key unlocked in memory; same gate as the CLI)
+- [x] Read-only Onshape adapter in the CLI (publication check, reference capture); fake-transport tested only
+- [x] Workflow panel code-split; keyboard-reachable file pickers; large-ledger performance measured
 
 ### Needs real inputs (not to be fabricated)
 - [ ] The controlled design of the demo part and its real requirement set and tolerances
@@ -27,7 +32,7 @@ Decided: the source PLM governs release (Onshape first, Windchill preferred late
 - [ ] Named people, keys and organizations for each workflow role
 
 ### Next in software
-- [ ] Onshape adapter (read release state and versions through the `SourceAdapter` interface), then Windchill
+- [ ] Run the Onshape adapter against a live account and settle its revision-field handling; then Windchill
 - [ ] Merkle custody log with exchanged tree heads (replaces checkpoints as the truncation defense); RFC 3161 time-stamps
 - [ ] Bambu LAN bridge as a separate CLI producing automated build records (needs LAN-only and Developer Mode decisions)
 - [ ] Allow 3MF as a process-input artifact class in packages; print settings carried into the 3MF

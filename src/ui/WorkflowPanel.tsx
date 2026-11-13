@@ -51,7 +51,7 @@ function Badge({ label, level, text }: { label: string; level: StatusLevel; text
   const mark = level === "ok" ? "✓" : level === "fail" ? "✗" : level === "warn" ? "!" : "–";
   return (
     <div className={`badge ${level}`} data-status={label}>
-      <span className="mark">{mark}</span>
+      <span className="mark" aria-hidden="true">{mark}</span>
       <div><strong>{label}</strong><div className="small">{text}</div></div>
     </div>
   );
@@ -193,7 +193,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
       <h2>Engineering workflow</h2>
       {m.synthetic && <div className="banner info synthetic"><strong>SYNTHETIC</strong> {m.label}</div>}
 
-      <div className="status-strip" aria-label="Status">
+      <div className="status-strip" role="status" aria-live="polite" aria-label="Workflow status">
         <Badge label="Package integrity" level="ok" text={`Verified: signatures, digests and engineering model (${session.manifest?.schema})`} />
         <Badge label="Baseline" level={successors.length ? "warn" : "ok"} text={successors.length ? `Superseded by ${successors[0]!.baselineId}: no new work; units in progress may finish` : "No newer baseline loaded (only loaded baselines are known)"} />
         <Badge label="Source release" level={st?.sourceRelease.level ?? "none"} text={st?.sourceRelease.text ?? "Not established: load a ledger with source release evidence"} />
@@ -260,10 +260,10 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
         <label className="button">Add evidence files…<input type="file" multiple className="file-input" onChange={(e) => { if (e.target.files?.length) void loadEvidence(e.target.files); e.target.value = ""; }} /></label>
         {evidence && <span className="muted">{evidence.count} evidence files hashed</span>}
       </div>
-      {error && <div className="banner fail">{error}</div>}
+      {error && <div className="banner fail" role="alert">{error}</div>}
       {r && ledger && (
         <>
-          <div className={`banner ${r.verdict === "verified" ? "pass" : r.verdict === "held" ? "info" : "fail"}`} data-ledger-verdict={r.verdict}>
+          <div className={`banner ${r.verdict === "verified" ? "pass" : r.verdict === "held" ? "info" : "fail"}`} data-ledger-verdict={r.verdict} role="status" aria-live="polite">
             <strong>LEDGER {r.verdict.toUpperCase()}</strong> {ledger.name}: {r.records.length} records{r.verdict === "held" ? " (some evidence not hash-checked: add the evidence files)" : ""}
           </div>
           <ul className="checks">

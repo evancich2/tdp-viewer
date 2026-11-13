@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { utf8 } from "../core/bytes";
-import type { ManifestFile, PackageSession } from "../core";
+import type { ManifestFile } from "../core/schema";
+import type { PackageSession } from "../core/session";
 import { PrintPanel } from "./PrintPanel";
 
 // pdf.js and three.js are loaded only when a drawing or model is opened.

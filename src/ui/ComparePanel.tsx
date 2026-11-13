@@ -1,5 +1,8 @@
 import { Suspense, lazy, useState } from "react";
-import { PackageSession, diffManifests, type AuditLog, type PackageDiff, type TrustStore } from "../core";
+import type { AuditLog } from "../core/audit";
+import { diffManifests, type PackageDiff } from "../core/diff";
+import type { TrustStore } from "../core/schema";
+import { PackageSession } from "../core/session";
 import { defaultPolicy } from "../core/policy";
 
 const DrawingCompare = lazy(() => import("./DrawingCompare").then((m) => ({ default: m.DrawingCompare })));
@@ -44,7 +47,7 @@ export function ComparePanel({
       <h2>Compare revisions</h2>
       <label className="button">
         Compare with another package…
-        <input type="file" accept=".tdp,.zip" hidden
+        <input type="file" accept=".tdp,.zip" className="file-input"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) void compare(f); e.target.value = ""; }} />
       </label>
 

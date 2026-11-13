@@ -26,6 +26,18 @@ npm run e2e        # real Chrome, production CSP: drives the lab workflow in the
 5. Try `invalid-skip.ledger.json` (rejected with the reason), `SN-0002` (reject → NCR → scrap), `SN-0003` (indeterminate, held) and, with the FAI process, `FAI-SN-0010`.
 6. **Open proposals…** `samples/lab/exchange/SN-0002.proposals.json`, then **Import acknowledgements…** `SN-0002.acks.json`.
 7. Open `SYN-PH-2000_B.tdp` to see the stale geometry link hold planning.
+8. **Record a step:** with `SN-0003` open and the evidence loaded, open `samples/lab/keys/inspector.key.json` (written by `npm run lab`), enter the passphrase `lab-demo-passphrase (public, demo only)`, choose `raise-nonconformance`, and sign. A wrong characteristic is refused with nothing signed. Download the updated ledger.
+9. Open `LOT-0004.ledger.json` and switch **Unit** between SN-0004 and SN-0005. Then **Load newer baselines…** with `SYN-PH-2000_B.tdp` to mark rev A superseded.
+
+### Onshape (needs your API keys; read-only)
+
+```sh
+export ONSHAPE_ACCESS_KEY=… ONSHAPE_SECRET_KEY=…        # never written to any file
+npm run -s tdp -- source onshape-ref --id SRC-PART --document <did> --version <vid> --element <eid> --part-number <pn> --revision A --out ref.json
+npm run -s tdp -- sync check-publication --package part.tdp --onshape $CTX
+```
+
+Not yet run against a live account. Expect to adjust field handling once real responses are seen.
 
 ### With the CLI
 
@@ -47,13 +59,17 @@ npm run -s tdp -- record add /tmp/demo.ledger.json --package $L/SYN-PH-2000_A.td
 npm run -s tdp -- record add /tmp/demo.ledger.json --package $L/SYN-PH-2000_A.tdp --key $L/keys/outsider.key.json \
   --action approve-requirements --role requirement-owner --outcome approved --reason "x" --data /tmp/req.json $CTX                      # DENIED, nothing signed
 
-# Evidence bundle and exchange
-npm run -s tdp -- evidence export $L/ledgers/SN-0001.ledger.json --package $L/SYN-PH-2000_A.tdp --out /tmp/bundle.json $CTX
+# A lot ledger (two units on separate tracks), checked against the newer rev B baseline
+npm run -s tdp -- record verify $L/ledgers/LOT-0004.ledger.json --package $L/SYN-PH-2000_A.tdp $CTX --successor $L/SYN-PH-2000_B.tdp
+
+# Evidence bundle (signed) and exchange (acknowledgements signed by the fixture PLM key)
+npm run -s tdp -- evidence export $L/ledgers/SN-0001.ledger.json --package $L/SYN-PH-2000_A.tdp --out /tmp/bundle.json --key $L/keys/config-mgr.key.json $CTX
+npm run -s tdp -- evidence verify /tmp/bundle.json --trust $L/trust-store.signed.json --anchors $L/anchors.json
 cp $L/exchange/fixture-source.initial.json /tmp/fixture.json
 npm run -s tdp -- sync export $L/ledgers/SN-0001.ledger.json --package $L/SYN-PH-2000_A.tdp --recipe $L/exchange/recipe.json --fixture /tmp/fixture.json --out /tmp/p.json $CTX
-npm run -s tdp -- sync apply-fixture /tmp/p.json --fixture /tmp/fixture.json --out /tmp/a.json     # local fixture adapter only
+npm run -s tdp -- sync apply-fixture /tmp/p.json --fixture /tmp/fixture.json --out /tmp/a.json --key $L/keys/source-plm.key.json   # local fixture adapter only
 npm run -s tdp -- sync apply-fixture /tmp/p.json --fixture /tmp/fixture.json --out /tmp/a2.json    # replay: all duplicate
-npm run -s tdp -- sync import /tmp/p.json /tmp/a.json
+npm run -s tdp -- sync import /tmp/p.json /tmp/a.json --trust $L/trust-store.signed.json --anchors $L/anchors.json --authority $L/authority.signed.json
 npm run -s tdp -- sync check-publication --package $L/SYN-PH-2000_A.tdp --fixture /tmp/fixture.json $CTX
 ```
 
@@ -78,14 +94,14 @@ Legend: **Software**, implemented behavior verified by tests. **Simulated**, dem
 
 | | Software (implemented, tested) | Simulated (synthetic fixtures) | External dependency (not fabricated) |
 |---|---|---|---|
-| **P01 Identity and release** | `tdp-manifest/0.2` + engineering model with strict cross-checks; 0.1 packages unchanged; item vs occurrence identity; baseline, revision, effectivity, release declared separately; source-release record gated by authority `sources`; new baseline with `supersedes`, prior baseline and ledgers preserved; possession ≠ authorization | Lab fixture PLM as release authority; Onshape-shaped surrogate references | The controlled design (Khaled); real Onshape document/version/release ids; confirmed Windchill access; who holds release authority |
-| **P02 Process and build** | Suitability evaluation (fit, material, firmware, calibration, capability per characteristic) recomputed from inputs; gap review; manual queue/dispatch/complete records with file hash, settings, errors; failed build → requeue; 3MF export unchanged | H2C-LAB-01 capability ±0.15 mm, calibration records, firmware, job files and build logs are invented | Actual H2C (or other) runs, firmware version, a real capability study, real sliced `.gcode.3mf` and logs |
+| **P01 Identity and release** | `tdp-manifest/0.2` + engineering model with strict cross-checks; 0.1 packages unchanged; item vs occurrence identity; baseline, revision, effectivity, release declared separately; source-release record gated by authority `sources`; new baseline with `supersedes`, prior baseline and ledgers preserved; a known successor stops new work on the old baseline; possession ≠ authorization | Lab fixture PLM as release authority; Onshape-shaped surrogate references | The controlled design (Khaled); real Onshape document/version/release ids; confirmed Windchill access; who holds release authority |
+| **P02 Process and build** | Suitability evaluation (fit, material, firmware, calibration, capability per characteristic) recomputed from inputs; gap review; manual queue/dispatch/complete records with file hash, settings, errors; failed build → requeue; several units per ledger on separate tracks; records signed from the CLI or the browser; 3MF export unchanged | H2C-LAB-01 capability ±0.15 mm, calibration records, firmware, job files and build logs are invented | Actual H2C (or other) runs, firmware version, a real capability study, real sliced `.gcode.3mf` and logs |
 | **P03 Inspection and disposition** | Units, limits, guard-banded and simple-acceptance rules, uncertainty, TUR; indeterminate on missing or incompatible evidence; NCR; disposition separate from measurement, by an independent authorized role; closure with incorporation into an occurrence | All measurements, instruments, uncertainty budgets and calibration certificates | Real tolerances from the design; calibrated instruments and certificates; real measurements; an approved decision rule for the program |
 | **P04 Invalid transitions** | Gate denies before signing (CLI exit 1) and rejects validly signed forbidden records on verification; skipped steps, missing evidence, false outcome claims, stale geometry | Invalid ledgers built on purpose | None |
-| **P05 Authorization** | Workflow grants separate from signing roles; organization binding; delegation (one level, never self); revoked keys; expired authority; process pinned by digest; bounded CIP (operation, org, role, units, window, policy version); offline freshness window | Lab authority fixture, demo keys with public seeds | Real role assignments and delegations; the program's authority (PLM/IdP); hardware-backed keys; an agreed offline validity window |
-| **P06 Integrity and recovery** | Edited, removed and reordered records detected; truncation and fork detected against a retained checkpoint; altered evidence → held; tampered baseline → no binding; full re-verification from retained files | | An independent checkpoint keeper (receiving org or custody log); trusted timestamps if wall-clock time matters |
-| **P07 Exchange boundary** | Recipe, adapter interface, local fixture adapter: create, update with expected version, no-change, conflict, unsupported, held lossy, duplicate replay, id reuse rejected, publication version check; acknowledgements never alter baselines | Fixture source system and its objects | Onshape and Windchill adapters (not implemented: no connectivity is claimed), their object models and credentials |
-| **P08 Measured performance** | Verification timings measured each run (`demo-results.md`) | | Physical build time, cycle time, dimensional capability and yield from real runs |
+| **P05 Authorization** | Workflow grants separate from signing roles; organization binding; delegation (one level, never self); revoked keys; expired authority; process pinned by digest; bounded CIP (operation, org, role, units, window, policy version, use limits); offline freshness window | Lab authority fixture, demo keys with public seeds | Real role assignments and delegations; the program's authority (PLM/IdP); hardware-backed keys; an agreed offline validity window |
+| **P06 Integrity and recovery** | Edited, removed and reordered records detected; truncation and fork detected against a retained checkpoint; altered evidence → held; tampered baseline → no binding; full re-verification from retained files; signed evidence bundles fail after any edit | | An independent checkpoint keeper (receiving org or custody log); trusted timestamps if wall-clock time matters |
+| **P07 Exchange boundary** | Recipe, adapter interface, local fixture adapter: create, update with expected version, no-change, conflict (and dependent updates refused), unsupported, held lossy, duplicate replay, id reuse rejected, publication version check; signed acknowledgements; acknowledgements never alter baselines. Read-only Onshape adapter (CLI): request signing, publication check, reference capture, tested against a fake transport | Fixture source system and its objects | Running the Onshape adapter against a live account (needs API keys and a real document); Windchill adapter (not implemented); write-back to any source system |
+| **P08 Measured performance** | Verification timings measured each run (`demo-results.md`), including a 681-record, 45-unit ledger (about 0.4 ms per record, linear) | | Physical build time, cycle time, dimensional capability and yield from real runs |
 
 ## Remaining dependencies
 

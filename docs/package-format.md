@@ -113,6 +113,6 @@ All are strict JSON; unknown fields are rejected. Details in [engineering-workfl
 | `tdp-ledger/0.1` with `tdp-record/0.1` entries | `<unit>.ledger.json`, beside the package | workflow participants, one signed record each |
 | `tdp-checkpoint/0.1` | count + head digest of a ledger | whoever must later detect truncation |
 | `tdp-recipe/0.1`, `tdp-sync-proposals/0.1`, `tdp-sync-acks/0.1`, `tdp-fixture-source/0.1` | exchange files | publisher, proposer, source adapter |
-| `tdp-evidence-bundle/0.1` | exported evidence | `tdp evidence export` |
+| `tdp-evidence-bundle/0.1`, optionally wrapped in `tdp-signed-evidence/0.1` | exported evidence | `tdp evidence export [--key]` |
 
-A record's signature is Ed25519 over `tdp-record-signature/0.1\n<sha256 of the record as canonical JSON>`, where canonical JSON means keys sorted and no whitespace. A signed configuration is signed over `tdp-config-signature/0.1\n<payloadSchema>\n<signedAt>\n<sha256 of payload bytes>`.
+A record's signature is Ed25519 over `tdp-record-signature/0.1\n<sha256 of the record as canonical JSON>`, where canonical JSON means keys sorted and no whitespace. An acknowledgement set may carry `signature`, Ed25519 over `tdp-sync-acks-signature/0.1\n<signedAt>\n<sha256 of the set without its signature, canonical JSON>`, by a key listed in the authority's `sources[].acknowledgementKeys`. A signed evidence bundle is signed over `tdp-evidence-signature/0.1\n<signedAt>\n<sha256 of the bundle, canonical JSON>`; the signature says who exported it, not that its contents are true. A signed configuration is signed over `tdp-config-signature/0.1\n<payloadSchema>\n<signedAt>\n<sha256 of payload bytes>`.

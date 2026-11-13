@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { PRINTERS, exportForPrint, type ManifestFile, type PackageSession, type PrintExport } from "../core";
+import { PRINTERS } from "../core/printers";
+import { exportForPrint, type PrintExport } from "../core/print";
+import type { ManifestFile } from "../core/schema";
+import type { PackageSession } from "../core/session";
 import { workerMesher } from "../mesh/client";
 
 type State = { kind: "idle" } | { kind: "working" } | { kind: "done"; out: PrintExport } | { kind: "error"; message: string };

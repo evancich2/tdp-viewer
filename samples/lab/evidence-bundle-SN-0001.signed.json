@@ -1190,10 +1190,17 @@
         "pass": true
       },
       {
+        "id": "P08-b",
+        "scenario": "A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately",
+        "expected": "verified; 45 units closed",
+        "actual": "verified; 45 units closed; 301.78 ms",
+        "pass": true
+      },
+      {
         "id": "P08-a",
         "scenario": "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)",
         "expected": "measurements recorded",
-        "actual": "package verification (rev A, 6 files): 1.85 ms; ledger verification (SN-0001, 16 records): 4.94 ms; ledger verification per record: 0.31 ms; ledger size: 27601 bytes",
+        "actual": "package verification (rev A, 6 files): 2.03 ms; ledger verification (SN-0001, 16 records): 6.06 ms; ledger verification per record: 0.38 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 301.78 ms; large ledger verification per record: 0.44 ms",
         "pass": true
       },
       {
@@ -1207,19 +1214,19 @@
     "performance": [
       {
         "metric": "package verification (rev A, 6 files)",
-        "value": 1.85,
+        "value": 2.03,
         "unit": "ms",
         "note": "mean of 5, this machine"
       },
       {
         "metric": "ledger verification (SN-0001, 16 records)",
-        "value": 4.94,
+        "value": 6.06,
         "unit": "ms",
         "note": "mean of 5, includes every gate re-evaluation"
       },
       {
         "metric": "ledger verification per record",
-        "value": 0.31,
+        "value": 0.38,
         "unit": "ms",
         "note": "full chain re-verified from genesis"
       },
@@ -1228,6 +1235,18 @@
         "value": 27601,
         "unit": "bytes",
         "note": "16 signed records"
+      },
+      {
+        "metric": "large ledger verification (45 units, 681 records)",
+        "value": 301.78,
+        "unit": "ms",
+        "note": "one lot, 3 failed builds per unit before success; single run"
+      },
+      {
+        "metric": "large ledger verification per record",
+        "value": 0.44,
+        "unit": "ms",
+        "note": "scales linearly in this range"
       }
     ],
     "limitations": [
@@ -1243,6 +1262,6 @@
     "keyId": "45c74edb2764c39a76fb50033c3ac95e",
     "alg": "Ed25519",
     "signedAt": "2026-11-12T13:00:00.000Z",
-    "sig": "aYz+TuNFuNDv4KKBaJ0sriacXkkDJ01zArzSY6gXVdmJYkpfel2XtVTYK/6xBKTBOGLBjy//D2A1oltwnMgXCQ=="
+    "sig": "6OIdW0WVgR4fcQLv/EMuqy0WlCYQQ+e5MWEE3y33AiaC0yZu3dTzPDJYJzYZyDO/JZ6LXoHSeE+qjsveK2JqDA=="
   }
 }

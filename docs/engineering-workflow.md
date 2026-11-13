@@ -48,6 +48,10 @@ Released content stays immutable: downstream records are stored in a **ledger fi
 
 The record is hashed as canonical JSON, and the signature is Ed25519 over `tdp-record-signature/0.1\n<sha256>`. Verification (`verifyLedger`) checks, for every record in order: the chain, the signature, trusted identity and organization binding, baseline and item binding, policy binding, role resolution, the transition gate, required evidence (hash-checked against supplied files), and payload semantics. It stops at the first failure. Missing evidence files give **held**, not verified.
 
+**One unit or many.** A ledger may carry one physical unit or several (a lot, a batch of serials). Records with no unit (approvals, source release, suitability, planning, authorization) are shared. Records with a unit move that unit along its own track: state, prerequisites, independence rules, inspections and dispositions are judged per unit, so one unit's accepted inspection can never disposition another. Job ids, NCR ids and CIP ids are unique across the whole ledger.
+
+**Recording in the browser.** The viewer can sign records too. Load a key file and its passphrase; the key is decrypted in memory with a dependency-free scrypt (`src/core/scrypt.ts`, tested against Node's) and imported non-extractable. It is never stored or sent. The form only collects inputs: `appendRecord` runs the same gate as the CLI, and a forbidden step is refused with nothing signed. The updated ledger is downloaded as a file.
+
 The viewer's hash-chained audit log (`audit.ts`) is different: it is a local, unsigned record of what one browser session did. The signed ledger is the portable engineering record.
 
 ### What signatures and chains do not prove
@@ -61,6 +65,10 @@ The viewer's hash-chained audit log (`audit.ts`) is different: it is a local, un
 A record never grants its own signer authority. A role comes from a grant in the authority configuration, valid at the record time, or from a `delegation` record issued earlier by a key whose *configured* grant has `mayDelegate` for that role. Delegations can't be re-delegated, can't name their issuer, and stay within the issuer's organization.
 
 Manufacturing operations need a **bounded authorization**: a Change Implementation Plan (`authorization` record) naming the operations, organizations, roles, serials or lots (inside baseline effectivity), validity period and policy version. It is bound to the baseline digest like every record. The issuer can't perform the operations it authorizes.
+
+A CIP may also cap how often it can be used: `limits: [{ "transition": "dispatch-build", "max": 2 }]` allows at most two records of that transition to rely on it, across all units. A third attempt needs a new authorization.
+
+**Superseded baselines.** When the operator loads a newer trusted baseline whose `supersedes` names this one (`--successor` in the CLI, **Load newer baselines…** in the viewer), new work under the old baseline stops: planning, authorization, queueing and starting builds are denied. Units already built may still be inspected, dispositioned and closed. Only baselines you have loaded are known; offline, the tool can't discover a newer one by itself.
 
 The gate fails closed: missing grant, revoked key (trust store or authority), wrong organization, expired authority, process not pinned by digest, CIP for an older policy version (stale), CIP outside its window or not covering the unit, missing approval step, missing evidence, or incompatible configuration all deny.
 
@@ -97,9 +105,18 @@ A TDP is data, not an executable or a container image. The exchange contract (`s
 - **Publishing recipe** (`tdp-recipe/0.1`): the selected baseline (id + manifest digest), the artifact classes and relationships it must contain, the permitted record kinds, the target system, and field mappings. Lossy mappings list what they drop and need explicit `acceptLoss`; mappings whose approval would change the definition are marked `changesDefinition`.
 - **Adapter interface** (`SourceAdapter`): `describe`, `checkPublication` (compares the baseline's source declarations with the source's current revision and state), and `reconcile`.
 - **Local fixture adapter** (`LocalFixtureAdapter`): a file-backed stand-in source system. It handles create, update proposal (expected source version), no change, conflict, unsupported type, held lossy mapping, and accepted or rejected acknowledgement. Transaction ids are deterministic. Replaying a transaction returns `duplicate` and changes nothing, and reusing an id with different content is rejected. After a failed transaction, later ones for the same object in the same set are refused.
+- **Signed acknowledgements:** the authority configuration names which trust-store keys may acknowledge for each source system (`acknowledgementKeys`). With trust and authority loaded, `importAcknowledgements` refuses unsigned, edited or wrongly signed acknowledgements, and marks nothing as synchronized.
 - **Acknowledgement import** reports only. It never rewrites the package or the ledger. A source-approved change is flagged as needing a newly published baseline.
 
-There is no Onshape or Windchill connectivity, and nothing claims there is.
+### Onshape (read-only, CLI only)
+
+`tools/onshape.ts` implements the adapter interface against Onshape's REST API using documented GET endpoints only (document, versions, revisions), with request-signature (HMAC-SHA256) API-key authentication. Credentials come from `ONSHAPE_ACCESS_KEY` / `ONSHAPE_SECRET_KEY` in the environment and are never written anywhere.
+
+- `tdp source onshape-ref …` captures a source reference (document, version, element, part number, names) for an engineering model with `capture: "api-read"`. The release state stays a declaration.
+- `tdp sync check-publication --onshape …` compares a baseline's Onshape references with Onshape's current versions and revisions: `current`, `superseded`, `mismatch`, `not-released` or `unknown`.
+- `reconcile` answers every proposal `unsupported`: nothing is written to Onshape.
+
+The public documentation doesn't fully specify the revision response, so fields are read defensively. When a field the decision needs is missing, the answer is `unknown`, never `current`. **It has been tested only against a fake transport, not a live Onshape account.** Verify it with real credentials before relying on it. The browser app never talks to Onshape or anything else. There is no Windchill adapter.
 
 ## Deferred, with interfaces kept open
 

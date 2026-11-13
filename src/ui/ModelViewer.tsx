@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { meshStats, type ManifestFile, type Mesh, type MeshStats } from "../core";
+import { meshStats, type Mesh, type MeshStats } from "../core/mesh";
+import type { ManifestFile } from "../core/schema";
 import { workerMesher } from "../mesh/client";
 
 const PALETTE = [0x4f7fd9, 0xd98a4f, 0x5fae6e, 0xb76cc4, 0xc9b23f, 0x4fb3b8];

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { overlay, type OverlayResult, type PackageSession } from "../core";
+import { overlay, type OverlayResult } from "../core/imagediff";
+import type { PackageSession } from "../core/session";
 import { openPdf, renderPage } from "./pdf";
 
 export interface DrawingSide {

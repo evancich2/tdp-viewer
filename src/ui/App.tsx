@@ -1,15 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  AuditLog,
-  PackageSession,
-  defaultPolicy,
-  loadAnchors,
-  loadTrustStoreFile,
-  type Anchors,
-  type AuditEntry,
-  type RootKey,
-  type TrustStore,
-} from "../core";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
+// Direct module imports (not the ../core barrel) keep the workflow modules out of the main bundle.
+import { AuditLog, type AuditEntry } from "../core/audit";
+import { defaultPolicy } from "../core/policy";
+import type { TrustStore } from "../core/schema";
+import { PackageSession } from "../core/session";
+import { loadAnchors, loadTrustStoreFile, type Anchors, type RootKey } from "../core/truststore";
 import demoAnchors from "../../samples/anchors.json?raw";
 import demoTrustStore from "../../samples/trust-store.signed.json?raw";
 import labAnchors from "../../samples/lab/anchors.json?raw";
@@ -17,7 +12,8 @@ import labTrustStore from "../../samples/lab/trust-store.signed.json?raw";
 import { BomTree } from "./BomTree";
 import { ComparePanel } from "./ComparePanel";
 import { FilePreview } from "./FilePreview";
-import { WorkflowPanel } from "./WorkflowPanel";
+// The workflow panel (and the lab configuration it embeds) loads only when a trusted package is open.
+const WorkflowPanel = lazy(() => import("./WorkflowPanel").then((m) => ({ default: m.WorkflowPanel })));
 import { onInstallAvailable, onLaunchFiles, registerServiceWorker } from "../pwa/client";
 import { fingerprint, forget, recall, recordSerial, remember, seenSerials } from "./trustMemory";
 
@@ -189,7 +185,7 @@ export function App() {
         <div className="row">
           <label className="button">
             Pin root keys…
-            <input type="file" accept=".json" hidden
+            <input type="file" accept=".json" className="file-input"
               onChange={async (e) => { const f = e.target.files?.[0]; if (f) await pinRoots(await f.text(), f.name); e.target.value = ""; }} />
           </label>
           {roots ? (
@@ -206,7 +202,7 @@ export function App() {
         <div className="row">
           <label className="button">
             Load trust store…
-            <input type="file" accept=".json" hidden
+            <input type="file" accept=".json" className="file-input"
               onChange={async (e) => { const f = e.target.files?.[0]; if (f) await applyTrustStore(await f.text(), f.name); e.target.value = ""; }} />
           </label>
           <button onClick={() => void useDemoKeys()}>Use demo keys</button>
@@ -232,16 +228,16 @@ export function App() {
         <h2>2. Package</h2>
         <label className={`button ${trust ? "" : "disabled"}`}>
           Open .tdp package…
-          <input type="file" accept=".tdp,.zip" hidden disabled={!trust}
+          <input type="file" accept=".tdp,.zip" className="file-input" disabled={!trust}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) void openPackage(f); e.target.value = ""; }} />
         </label>
       </section>
 
-      {error && <div className="banner fail">{error}</div>}
+      {error && <div className="banner fail" role="alert">{error}</div>}
 
       {session && (
         <>
-          <div className={`banner ${session.trusted ? "pass" : "fail"}`}>
+          <div className={`banner ${session.trusted ? "pass" : "fail"}`} role="status" aria-live="polite">
             <strong>{session.trusted ? "TRUSTED" : "REJECTED"}</strong> {session.name}
             {!session.trusted && " — nothing in this package can be opened."}
           </div>
@@ -293,7 +289,9 @@ export function App() {
       )}
 
       {session?.trusted && trust && (
-        <WorkflowPanel key={`wf-${session.result.manifestSha256}`} session={session} trustStore={trust.store} anchors={roots?.anchors} audit={audit} onAudit={refreshAudit} />
+        <Suspense fallback={<p className="muted">Loading workflow…</p>}>
+          <WorkflowPanel key={`wf-${session.result.manifestSha256}`} session={session} trustStore={trust.store} anchors={roots?.anchors} audit={audit} onAudit={refreshAudit} />
+        </Suspense>
       )}
 
       {session?.trusted && trust && (

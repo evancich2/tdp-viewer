@@ -562,6 +562,15 @@ export async function runLab(opts: { legacySample?: { tdp: Uint8Array; trustJson
       { metric: "ledger verification per record", value: round(ledMs / n), unit: "ms", note: "full chain re-verified from genesis" },
       { metric: "ledger size", value: bytes.length, unit: "bytes", note: `${n} signed records` },
     );
+    const big = await buildLargeLedger(lab, 45, 3);
+    const bigStart = performance_now();
+    const bigR = await verifyLedger(big, ctx);
+    const bigMs = performance_now() - bigStart;
+    performance.push(
+      { metric: `large ledger verification (45 units, ${big.entries.length} records)`, value: round(bigMs), unit: "ms", note: "one lot, 3 failed builds per unit before success; single run" },
+      { metric: "large ledger verification per record", value: round(bigMs / big.entries.length), unit: "ms", note: "scales linearly in this range" },
+    );
+    demo("P08-b", `A ${big.entries.length}-record ledger (45 units in one lot) verifies completely, every unit tracked separately`, "verified; 45 units closed", `${bigR.verdict}; ${bigR.units.filter((u) => u.state === "closed").length} units closed; ${round(bigMs)} ms`, bigR.verdict === "verified" && bigR.units.filter((u) => u.state === "closed").length === 45);
     demo("P08-a", "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)", "measurements recorded", performance.map((p) => `${p.metric}: ${p.value} ${p.unit}`).join("; "), performance.every((p) => p.value > 0));
   }
 
@@ -593,4 +602,45 @@ const round = (x: number) => Math.round(x * 100) / 100;
 /** Reads the committed 0.1 sample, for the compatibility demonstration. */
 export function legacySample() {
   return { tdp: new Uint8Array(readFileSync("samples/sample.tdp")), trustJson: readFileSync("samples/trust-store.json", "utf8") };
+}
+
+/**
+ * A large but fully valid ledger for performance measurement: `units` serials in one lot, each with
+ * `failedCycles` failed builds before a good one, then inspection, disposition and closure. Records
+ * are signed directly (the gate is applied once, by the verification being measured).
+ */
+export async function buildLargeLedger(lab: Lab, units: number, failedCycles: number): Promise<LedgerFile> {
+  const serials = Array.from({ length: units }, (_, i) => `SN-${String(6 + i).padStart(4, "0")}`);
+  const p = await prelude(lab, `PERF-${units}-${failedCycles}`, lab.revA, serials);
+  let L = p.get();
+  const ctx = lab.ctx("printed-part", lab.revA);
+  const base = L.entries[0]!.record as Record<string, unknown>;
+  let head = (await verifyLedger(L, ctx)).head!;
+  let t = Date.parse(iso(100));
+  const ev = async (name: string, id: string) => ref(lab.evidence[name]!, id);
+  const jobFile = lab.evidence["job-J-0101.txt"]!;
+  const jobSha = await sha256Hex(jobFile.bytes);
+  const who = (k: string, org: string, role: string) => ({ keyId: lab.world.keys[k]!.keyId, organization: org, role });
+  const add = async (key: string, org: string, role: string, serial: string, action: string, outcome: string, data: unknown, evidence: unknown[] = []) => {
+    t += 3_000;
+    const record = { ...base, recordId: await uuidFor(`perf/${L.entries.length + 1}/${units}/${failedCycles}`), seq: L.entries.length + 1, unit: { serial }, actor: who(key, org, role), action, at: new Date(t).toISOString(), prev: head, evidence, outcome, reason: "performance fixture (synthetic)", data };
+    L = await forceAppend(L, lab.world.keys[key]!, record);
+    head = await canonicalSha256(record);
+  };
+  const meas = measurementsFor([6.03, 40.02, 19.97], undefined, 0);
+  let job = 0;
+  for (const serial of serials) {
+    for (let c = 0; c <= failedCycles; c++) {
+      const jobId = `PJ-${++job}`;
+      const ok = c === failedCycles;
+      await add("planner", ORG.cell, "planner", serial, "enter-queue", "queued", { kind: "queue-entry", jobId, submittedFile: { name: jobFile.name, sha256: jobSha }, settings: {} }, [await ev(jobFile.name, "EV-JOB")]);
+      await add("operator", ORG.cell, "operator", serial, "dispatch-build", "started", { kind: "build-start", jobId, resource: "H2C-LAB-01", startedAt: new Date(t).toISOString() });
+      await add("operator", ORG.cell, "operator", serial, "complete-build", ok ? "completed" : "failed", { kind: "build-complete", jobId, submittedFileSha256: jobSha, startedAt: new Date(t).toISOString(), completedAt: new Date(t + 1000).toISOString(), errors: ok ? [] : ["synthetic failure"], settings: {} }, [await ev("build-log-J-0101.txt", "EV-LOG")]);
+    }
+    await add("inspector", ORG.lab, "inspector", serial, "inspect", "accept", { kind: "inspection", decisionRules: "core/decision-rules/0.1", measurements: meas.map((m) => ({ ...m, measuredAt: new Date(t).toISOString() })) }, [await ev("measurements-SN-0001.csv", "EV-MEAS"), await ev("micrometer-MIC-07-cal.txt", "EV-MIC"), await ev("caliper-CAL-12-cal.txt", "EV-CAL")]);
+    const inspId = (L.entries.at(-1)!.record as { recordId: string }).recordId;
+    await add("mrb", ORG.design, "disposition-authority", serial, "disposition", "accept", { kind: "disposition", inspectionRecord: inspId, rationale: "performance fixture" });
+    await add("config-mgr", ORG.design, "configuration-manager", serial, "close-evidence", "closed", { kind: "closure", summary: "performance fixture" });
+  }
+  return L;
 }

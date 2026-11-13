@@ -1,4 +1,4 @@
-import type { BomItem } from "../core";
+import type { BomItem } from "../core/schema";
 
 export function BomTree({ items, onSelectFile }: { items: BomItem[]; onSelectFile: (path: string) => void }) {
   const children = (parent?: string) => items.filter((i) => i.parent === parent);

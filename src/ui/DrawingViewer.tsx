@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ManifestFile } from "../core";
+import type { ManifestFile } from "../core/schema";
 import { openPdf, pdfjs } from "./pdf";
 
 const MIN_SCALE = 0.25;

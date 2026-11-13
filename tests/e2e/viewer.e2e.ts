@@ -42,6 +42,15 @@ try {
   page.on("request", (r) => !r.url().startsWith(`${ORIGIN}/`) && !r.url().startsWith("blob:") && !r.url().startsWith("data:") && offsite.push(r.url()));
 
   await page.goto(`${ORIGIN}/`);
+  // Keyboard: the file pickers are reachable with Tab (they are visually hidden inside their labels, not `hidden`).
+  const reached = new Set<string>();
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press("Tab");
+    const label = await page.evaluate(() => { const el = document.activeElement as HTMLInputElement | null; return el?.type === "file" ? el.closest("label")?.textContent?.trim() ?? "" : ""; });
+    if (label) reached.add(label);
+  }
+  for (const want of ["Pin root keys…", "Load trust store…"]) if (![...reached].some((l) => l.startsWith(want))) fail(`file picker "${want}" not reachable by keyboard (reached: ${[...reached].join(", ")})`);
+  console.log("ok  file pickers reachable by keyboard");
   await page.getByRole("button", { name: "Use demo keys" }).click();
   await page.getByText(/✓ Signed by Sample Org Root/).waitFor();
   // With a root pinned, an unsigned trust store is refused.
