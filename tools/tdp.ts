@@ -1,6 +1,7 @@
 // tdp: build, sign and verify Technical Data Packages.
 //
-//   tdp keygen --name "Jane Approver" --roles approver [--days 365] --out keys/jane
+//   tdp keygen --name "Jane Approver" --roles approver --org "Acme" [--cage 1ABC2] [--days 365] --out keys/jane
+//   tdp keygen --name "Oli Operator" --org "Print Cell" --out keys/oli        (no --roles: signs workflow records only)
 //   tdp trust add <trust-store.json> <keys/jane.pub.json>
 //   tdp trust revoke <trust-store.json> <keyId>
 //   tdp keygen --name "Acme Root" --roles root --out keys/root
@@ -10,6 +11,18 @@
 //   tdp sign <package.tdp> --key <keys/jane.key.json> --role approver
 //   tdp verify <package.tdp> --trust <trust-store.json> [--anchors <anchors.json>]
 //   tdp diff <old.tdp> <new.tdp> --trust <trust-store.json> [--anchors <anchors.json>]
+//   tdp authority sign <authority.json> --key <root.key.json> --out <authority.signed.json>
+//   tdp record new <package.tdp> --out <ledger.json> [--item ID@REV] <context>
+//   tdp record add <ledger.json> --package <package.tdp> --key <key.json> --action <transition> --role <workflow-role> --outcome <outcome> --reason "..." --data <data.json> [--serial SN] [--lot L] [--evidence ID=TAG=PATH ...] [--synthetic] <context>
+//   tdp record verify <ledger.json> --package <package.tdp> [--checkpoint <checkpoint.json>] <context>
+//   tdp record checkpoint <ledger.json> --package <package.tdp> --out <checkpoint.json> <context>
+//   tdp evidence export <ledger.json> --package <package.tdp> --out <bundle.json> [--proposals <p.json> --acks <a.json>] <context>
+//   tdp sync export <ledger.json> --package <package.tdp> --recipe <recipe.json> --fixture <fixture.json> --out <proposals.json> [--known-proposals <p.json> --known-acks <a.json>] <context>
+//   tdp sync apply-fixture <proposals.json> --fixture <fixture.json> --out <acks.json>     (local fixture adapter; updates the fixture file)
+//   tdp sync import <proposals.json> <acks.json>
+//   tdp sync check-publication --package <package.tdp> --fixture <fixture.json> <context>
+//
+//   <context> = --trust <trust-store> --authority <authority> --process <process.json> [--anchors <anchors.json>] [--evidence-dir <dir>] [--at <ISO time>]
 //
 // Passphrases come from the TDP_PASSPHRASE environment variable or an interactive prompt.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -22,11 +35,15 @@ import { TrustStore } from "../src/core/schema";
 import { Anchors, loadAnchors, loadTrustStoreFile, signTrustStore } from "../src/core/truststore";
 import { verifyPackage } from "../src/core/verify";
 import { addToTrustStore, pack, revokeInTrustStore, sign } from "./commands";
+import { signConfig, AuthorityConfig } from "../src/core/authority";
+import { TransitionDenied as RecordDenied, verifyLedger } from "../src/core/records";
+import { utf8 } from "../src/core/bytes";
+import * as wf from "./workflow-commands";
 import { KeyRole, MIN_PASSPHRASE, createKey, unlockKey } from "./keys";
 
 const USAGE = readFileSync(new URL(import.meta.url), "utf8")
   .split("\n")
-  .filter((l) => l.startsWith("//   tdp"))
+  .filter((l) => /^\/\/   (tdp|<context>)/.test(l))
   .map((l) => l.slice(5))
   .join("\n");
 
@@ -91,8 +108,41 @@ const { values, positionals } = parseArgs({
     key: { type: "string" },
     trust: { type: "string" },
     anchors: { type: "string" },
+    org: { type: "string" },
+    cage: { type: "string" },
+    package: { type: "string" },
+    authority: { type: "string" },
+    process: { type: "string" },
+    "evidence-dir": { type: "string" },
+    at: { type: "string" },
+    item: { type: "string" },
+    action: { type: "string" },
+    outcome: { type: "string" },
+    reason: { type: "string" },
+    data: { type: "string" },
+    serial: { type: "string" },
+    lot: { type: "string" },
+    evidence: { type: "string", multiple: true },
+    synthetic: { type: "boolean", default: false },
+    checkpoint: { type: "string" },
+    recipe: { type: "string" },
+    fixture: { type: "string" },
+    proposals: { type: "string" },
+    acks: { type: "string" },
+    "known-proposals": { type: "string" },
+    "known-acks": { type: "string" },
   },
 });
+
+/** Everything a workflow decision depends on, verified. */
+async function workflowContext() {
+  if (!values.package || !values.trust || !values.authority || !values.process)
+    die("needs --package, --trust, --authority and --process (plus --anchors for signed files, --evidence-dir to hash-check evidence)");
+  const c = await wf.loadContext({ package: values.package, trust: values.trust, authority: values.authority, process: values.process, anchors: values.anchors, evidenceDir: values["evidence-dir"], at: values.at });
+  for (const n of c.notes) console.log(n);
+  return c;
+}
+const writeJson = (path: string, v: unknown) => writeFileSync(path, JSON.stringify(v, null, 2) + "\n");
 
 switch (command) {
   case "keygen": {
@@ -103,7 +153,10 @@ switch (command) {
     if (!Number.isInteger(days) || days < 1 || days > 3650) die("--days must be 1 to 3650");
     const pass = await passphrase(true);
     if (pass.length < MIN_PASSPHRASE) die(`passphrase must be at least ${MIN_PASSPHRASE} characters`);
-    const { keyFile, trusted } = await createKey({ name: values.name, roles: keyRoles(values.roles), passphrase: pass, validDays: days });
+    if (values.cage && !values.org) die("--cage needs --org");
+    const organization = values.org ? { name: values.org, ...(values.cage ? { cage: values.cage } : {}) } : undefined;
+    if (!values.roles && !organization) die("--roles is required unless --org is given (a workflow-only key)");
+    const { keyFile, trusted } = await createKey({ name: values.name, roles: values.roles ? keyRoles(values.roles) : [], passphrase: pass, validDays: days, organization });
     writeFileSync(keyPath, JSON.stringify(keyFile, null, 2) + "\n", { mode: 0o600, flag: "wx" });
     writeFileSync(pubPath, JSON.stringify(trusted, null, 2) + "\n", { flag: "wx" });
     const kind = keyFile.roles.includes("root") ? "anchors entry (pin with tdp trust anchor)" : "trust-store entry";
@@ -187,6 +240,125 @@ switch (command) {
       if (r.verdict !== "trusted") die(`${f} is not trusted: ${r.checks.filter((c) => c.status === "fail").map((c) => c.message).join("; ")}`);
     console.log(`${a!.manifest!.package.partNumber} rev ${a!.manifest!.package.revision} → rev ${b!.manifest!.package.revision}`);
     console.log(formatDiff(diffManifests(a!.manifest!, b!.manifest!)));
+    break;
+  }
+  case "authority": {
+    const [action, file] = positionals;
+    if (action !== "sign" || !file || !values.key || !values.out) die("usage: tdp authority sign <authority.json> --key <root.key.json> --out <signed.json>");
+    const bytes = new Uint8Array(readFileSync(file));
+    const config = AuthorityConfig.parse(JSON.parse(utf8.decode(bytes)));
+    const key = await unlockKey(readFileSync(values.key, "utf8"), await passphrase(false));
+    if (!key.roles.includes("root")) die(`${key.name}'s key is not a root key`);
+    writeJson(values.out, await signConfig("tdp-authority/0.1", bytes, key));
+    console.log(`signed ${values.out}: authority ${config.id} serial ${config.serial}${config.fixture ? " (LABORATORY FIXTURE)" : ""}, by ${key.name}`);
+    break;
+  }
+  case "record": {
+    const [action, file] = positionals;
+    if (action === "new") {
+      if (!file || !values.out) die("usage: tdp record new <package.tdp> --out <ledger.json> [--item ID@REV] <context>");
+      refuseExisting(values.out);
+      values.package = file;
+      const c = await workflowContext();
+      const ledger = wf.createLedger(c, values.item);
+      writeJson(values.out, ledger);
+      console.log(`new ledger ${ledger.instance.id} for ${ledger.instance.item.itemId}@${ledger.instance.item.revision} in baseline ${ledger.instance.baselineId}: ${values.out}`);
+      break;
+    }
+    if (!file) die("usage: tdp record add|verify|checkpoint <ledger.json> ... (run tdp with no arguments for details)");
+    if (action === "add") {
+      if (!values.key || !values.action || !values.role || !values.outcome || !values.reason || !values.data)
+        die("usage: tdp record add <ledger.json> --package <tdp> --key <key.json> --action <transition> --role <workflow-role> --outcome <outcome> --reason <text> --data <data.json> <context>");
+      const c = await workflowContext();
+      const evidence = await wf.evidenceRefs(values.evidence ?? [], values.synthetic);
+      const key = await unlockKey(readFileSync(values.key, "utf8"), await passphrase(false));
+      try {
+        const { ledger, record, sha256 } = await wf.addRecord(wf.readLedger(file), c, key, {
+          action: values.action, role: values.role, outcome: values.outcome, reason: values.reason, dataJson: readFileSync(values.data, "utf8"),
+          serial: values.serial, lot: values.lot, evidence,
+        });
+        writeJson(values.out ?? file, ledger);
+        console.log(`record ${record.seq}: ${record.action} → ${record.outcome} by ${key.name} as ${record.actor.role} (${record.actor.organization}), sha256 ${sha256}${values.at ? "\n  record time from --at: that is the signer's claim, not a trusted timestamp" : ""}`);
+      } catch (e) {
+        if (e instanceof RecordDenied) {
+          console.error(`DENIED  ${values.action} by ${key.name} as ${values.role}: ${e.message}`);
+          process.exit(1);
+        }
+        throw e;
+      }
+      break;
+    }
+    if (action === "verify" || action === "checkpoint") {
+      const c = await workflowContext();
+      const r = await verifyLedger(JSON.parse(readFileSync(file, "utf8")), c.ctx);
+      if (action === "checkpoint") {
+        if (!values.out) die("usage: tdp record checkpoint <ledger.json> --out <checkpoint.json> <context>");
+        const cp = await wf.checkpointFor(r, c.ctx.now);
+        writeJson(values.out, cp);
+        console.log(`checkpoint ${values.out}: ${cp.count} records, head ${cp.head}. Keep it where the ledger's holder can't change it.`);
+        break;
+      }
+      for (const l of wf.formatLedger(r, c)) console.log(l);
+      if (values.checkpoint) {
+        const problem = wf.checkAgainst(r, readFileSync(values.checkpoint, "utf8"));
+        console.log(problem ? `FAIL  checkpoint  ${problem}` : `PASS  checkpoint  ledger contains the retained checkpoint's history`);
+        if (problem) { console.log("REJECTED"); process.exit(1); }
+      }
+      console.log(r.verdict.toUpperCase());
+      process.exit(r.verdict === "verified" ? 0 : r.verdict === "held" ? 3 : 1);
+    }
+    die(`unknown record action ${action}`);
+    break;
+  }
+  case "evidence": {
+    const [action, file] = positionals;
+    if (action !== "export" || !file || !values.out) die("usage: tdp evidence export <ledger.json> --package <tdp> --out <bundle.json> <context>");
+    const c = await workflowContext();
+    const bundle = await wf.exportEvidence(readFileSync(file, "utf8"), c, { proposals: values.proposals, acks: values.acks });
+    writeJson(values.out, bundle);
+    console.log(`evidence bundle ${values.out}: ledger ${bundle.ledger.verdict}, ${bundle.records.length} records, ${bundle.records.reduce((n, r) => n + r.evidence.length, 0)} evidence references (no keys or secrets included)`);
+    for (const [k, v] of Object.entries(bundle.status)) console.log(`  ${k}: ${v}`);
+    break;
+  }
+  case "sync": {
+    const [action, a1, a2] = positionals;
+    if (action === "export") {
+      if (!a1 || !values.recipe || !values.fixture || !values.out) die("usage: tdp sync export <ledger.json> --package <tdp> --recipe <recipe.json> --fixture <fixture.json> --out <proposals.json> <context>");
+      const c = await workflowContext();
+      const known = values["known-acks"] ? readFileSync(values["known-acks"], "utf8") : undefined;
+      const knownP = values["known-proposals"] ? readFileSync(values["known-proposals"], "utf8") : undefined;
+      const p = await wf.syncExport(readFileSync(a1, "utf8"), c, readFileSync(values.recipe, "utf8"), readFileSync(values.fixture, "utf8"), known, knownP);
+      writeJson(values.out, p);
+      for (const t of p.transactions) console.log(`  ${t.status.padEnd(11)} ${t.txId} ${t.operation} ${t.target.objectType}/${t.target.objectId}${t.expectedVersion ? ` expecting v${t.expectedVersion}` : ""}${t.lossy.length ? ` lossy: ${t.lossy.map((l) => l.field).join(", ")}` : ""}`);
+      for (const x of p.excluded) console.log(`  excluded    ${x.kind} ${x.recordId}: ${x.reason}`);
+      console.log(`wrote ${values.out}: ${p.transactions.length} transactions (proposals only; nothing was sent anywhere)`);
+      break;
+    }
+    if (action === "apply-fixture") {
+      if (!a1 || !values.fixture || !values.out) die("usage: tdp sync apply-fixture <proposals.json> --fixture <fixture.json> --out <acks.json>");
+      const { acks, state } = await wf.syncApplyFixture(readFileSync(a1, "utf8"), readFileSync(values.fixture, "utf8"));
+      writeJson(values.out, acks);
+      writeJson(values.fixture, state);
+      for (const a of acks.acks) console.log(`  ${a.status.padEnd(11)} ${a.txId} ${a.objectType}/${a.objectId}${a.sourceVersion ? ` v${a.sourceVersion}` : ""}: ${a.reason}`);
+      console.log(`LOCAL FIXTURE adapter (${acks.adapter.label}) wrote ${values.out} and updated ${values.fixture}. This is not Onshape or Windchill.`);
+      break;
+    }
+    if (action === "import") {
+      if (!a1 || !a2) die("usage: tdp sync import <proposals.json> <acks.json>");
+      const r = await wf.syncImport(readFileSync(a1, "utf8"), readFileSync(a2, "utf8"));
+      for (const row of r.rows) console.log(`  ${row.state.padEnd(11)} ${row.tx.txId} ${row.tx.target.objectType}/${row.tx.target.objectId}${row.ack ? `: ${row.ack.reason}` : ""}`);
+      for (const t of r.changeRequests) console.log(`  NOTE  ${t.target.objectType}/${t.target.objectId}: approval at the source needs a newly published baseline; no baseline was changed`);
+      for (const p of r.problems) console.log(`FAIL  ${p}`);
+      process.exit(r.problems.length ? 1 : 0);
+    }
+    if (action === "check-publication") {
+      if (!values.fixture) die("usage: tdp sync check-publication --package <tdp> --fixture <fixture.json> <context>");
+      const c = await workflowContext();
+      const checks = wf.checkPublication(c, readFileSync(values.fixture, "utf8"));
+      for (const ch of checks) console.log(`  ${ch.status.padEnd(12)} ${ch.message}`);
+      process.exit(checks.every((ch) => ch.status === "current") ? 0 : 1);
+    }
+    die("usage: tdp sync export|apply-fixture|import|check-publication ...");
     break;
   }
   default:

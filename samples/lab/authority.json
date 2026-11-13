@@ -1,0 +1,239 @@
+{
+  "schema": "tdp-authority/0.1",
+  "id": "lab-authority",
+  "serial": 1,
+  "issuer": "Lab Authority Root (demo key, public seed)",
+  "issued": "2026-11-10T12:00:00.000Z",
+  "expires": "2027-11-10T00:00:00.000Z",
+  "fixture": true,
+  "label": "LOCAL LABORATORY AUTHORITY FIXTURE: stands in for the source PLM's release authority and the program's role assignments. Not Onshape, not Windchill.",
+  "offlineValidityHours": 168,
+  "organizations": [
+    {
+      "name": "Lab Design Authority (synthetic)"
+    },
+    {
+      "name": "Lab Print Cell (synthetic)"
+    },
+    {
+      "name": "Lab Inspection (synthetic)"
+    }
+  ],
+  "sources": [
+    {
+      "id": "lab-fixture-plm",
+      "system": "lab-fixture",
+      "label": "Laboratory fixture PLM (synthetic)",
+      "authoritativeFor": [
+        "SYN-PH-2001",
+        "SYN-PH-2000"
+      ],
+      "integration": "file-exchange",
+      "releasedStates": [
+        "Released"
+      ]
+    }
+  ],
+  "processes": [
+    {
+      "id": "printed-part",
+      "version": 1,
+      "sha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff"
+    },
+    {
+      "id": "printed-part-fai",
+      "version": 1,
+      "sha256": "c3ba8dd1ab839ddb721944086b4177bbcf08fa60004be67a2722384bcd15ad9f"
+    }
+  ],
+  "grants": [
+    {
+      "keyId": "c7e1ee0161dac7817a2fe447ebbdf51e",
+      "organization": "Lab Design Authority (synthetic)",
+      "roles": [
+        "requirement-owner"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "45c74edb2764c39a76fb50033c3ac95e",
+      "organization": "Lab Design Authority (synthetic)",
+      "roles": [
+        "configuration-manager"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "c178980de2948732ec4a08cc497ca5f2",
+      "organization": "Lab Design Authority (synthetic)",
+      "roles": [
+        "design-engineer"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "7a4150a457b781de8f686f0c2f5af3e0",
+      "organization": "Lab Design Authority (synthetic)",
+      "roles": [
+        "manufacturing-authority"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "93f1304f60266492b7ebc90b2788df0e",
+      "organization": "Lab Design Authority (synthetic)",
+      "roles": [
+        "disposition-authority"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "a5c3dc9adf529103a67bbffd6259c4cc",
+      "organization": "Lab Print Cell (synthetic)",
+      "roles": [
+        "manufacturing-engineer"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "6b16af583466bc31ce992c3cff830e73",
+      "organization": "Lab Print Cell (synthetic)",
+      "roles": [
+        "planner"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+      "organization": "Lab Print Cell (synthetic)",
+      "roles": [
+        "operator"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "97dd438ae178fba3c7da6f90a53a8e43",
+      "organization": "Lab Print Cell (synthetic)",
+      "roles": [
+        "operator"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": true,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "e1000ea1930dc6f4a0d286d3962b54ec",
+      "organization": "Lab Print Cell (synthetic)",
+      "roles": [
+        "operator"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "d677edaf9481f8fa54577abfc9de20ec",
+      "organization": "Lab Inspection (synthetic)",
+      "roles": [
+        "inspector"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "3ffd72cd5ee00a510b05869188a0bfb4",
+      "organization": "Lab Inspection (synthetic)",
+      "roles": [
+        "inspector"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    },
+    {
+      "keyId": "0e33e41d7697201e31ec5d9a00bc8dd6",
+      "organization": "Lab Inspection (synthetic)",
+      "roles": [
+        "quality-engineer"
+      ],
+      "processes": [
+        "printed-part",
+        "printed-part-fai"
+      ],
+      "mayDelegate": false,
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2027-11-10T00:00:00.000Z"
+    }
+  ],
+  "revokedKeys": [
+    {
+      "keyId": "e1000ea1930dc6f4a0d286d3962b54ec",
+      "reason": "demo: credential withdrawn after badge loss (synthetic)"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+SYNTHETIC DEMONSTRATION EVIDENCE - NOT A REAL CAPABILITY STUDY
+SYNTHETIC SURROGATE: not the controlled design. Demonstration data only; dimensions, limits, approvals, builds and measurements are invented.
+
+Resource: H2C-LAB-01 (synthetic)
+Material: PETG
+Claimed general dimensional capability: +/-0.15 mm at k=2 over 30 coupons (INVENTED)

@@ -8,7 +8,9 @@ TDP Viewer treats every package as hostile until proven otherwise, and keeps re-
 |---|---|---|
 | Never trust, always verify | A package is `trusted` only if *every* check passes; there is no partial trust. File bytes are re-hashed on every open. | `verifyPackage`, `PackageSession.openFile` |
 | Explicit trust anchors | Signer keys come from an operator-supplied trust store. A key's id is derived from its public key, so it can't be spoofed. Optionally an organization root signs the trust store; once a root is pinned, unsigned stores are refused, and serial numbers block rollback to an older store. | `loadTrustStoreFile`, `keyIdFor` |
-| Least privilege | Keys are authorized per role (`author`, `checker`, `approver`, `release`) and only within a validity window. | `checkSignature` |
+| Least privilege | Keys are authorized per package-signing role (`author`, `checker`, `approver`, `release`) and only within a validity window. Engineering workflow roles are a separate grant in the operator's authority configuration; a signature grants neither manufacturing permission nor proof of source release. | `checkSignature`, `resolveRole` |
+| Authority from configuration, never from data | A workflow record can't grant its signer authority. Roles come from grants (or a one-level delegation under a grant that allows it), organizations from the trust store, process rules from a definition pinned by digest. | `authority.ts`, `evaluateRecord` |
+| Fail closed offline | Missing grant, revoked key, expired authority, stale policy, unpinned process, missing evidence or a CIP that doesn't cover the unit all deny. Revocation-sensitive steps are denied once the authority configuration is older than its offline validity window. | `evaluateRecord`, `freshnessProblem` |
 | Separation of duties | Required roles must be signed by distinct keys. One person can't author and approve. | `verifyPackage` step 3 |
 | Default deny | Strict schemas reject unknown fields; unlisted files, disallowed media types and mismatched content fail. | `schema.ts`, `policy.ts` |
 | Assume breach | Size, ratio, entry-count and path checks run before and after decompression, since zip headers are attacker-controlled. | `readArchive`, `checkPath` |
@@ -38,6 +40,9 @@ Binding the role and time means a signature can't be relabeled as a different ro
 4. **Package validity:** not created in the future, not expired.
 5. **Contents:** exactly the listed files; size, digest, allowed media type and content sniffing for each.
 6. **BOM:** file references resolve, parents exist, no cycles.
+7. **Engineering model** (0.2 only): strict parse and cross-check against the manifest; stale geometry links are flagged for review.
+
+Workflow ledgers are verified separately against a trusted 0.2 baseline (`verifyLedger`): chain, signature, identity and organization binding, baseline and item binding, policy binding, role, transition, evidence hashes, payload semantics. See [engineering-workflow.md](engineering-workflow.md).
 
 ## Drawings
 
@@ -77,6 +82,9 @@ What it does *not* protect against: the root of trust for the code is still `sw.
 Remembering the trust store is opt-in. It is stored in the browser's site storage, revalidated (schema and key ids) each time it's loaded, shown with a fingerprint of its exact bytes, and logged in the audit log as a `trust` event. Unticking the box deletes it. Anything able to run script on the origin could alter it; the strict CSP is what prevents that.
 
 ## Threats not yet covered
+
+- Trusted time: record and signature times are the signer's claim; nothing is timestamped by a third party.
+- Truncated ledgers: dropping the newest records is detected only against an independently retained checkpoint.
 
 These are tracked in [ROADMAP.md](../ROADMAP.md):
 

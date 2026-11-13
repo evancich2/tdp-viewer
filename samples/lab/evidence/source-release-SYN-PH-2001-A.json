@@ -1,0 +1,10 @@
+SYNTHETIC DEMONSTRATION EVIDENCE - NOT A REAL RELEASE RECORD
+SYNTHETIC SURROGATE: not the controlled design. Demonstration data only; dimensions, limits, approvals, builds and measurements are invented.
+
+{
+  "system": "lab-fixture",
+  "item": "SYN-PH-2001",
+  "revision": "A",
+  "state": "Released",
+  "releaseId": "SYNTH-REL-0001"
+}

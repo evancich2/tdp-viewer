@@ -42,6 +42,11 @@ export class PackageSession {
     return this.result.manifest;
   }
 
+  /** The verified engineering model of a trusted 0.2 package; undefined otherwise. */
+  get engineering() {
+    return this.trusted ? this.result.engineering : undefined;
+  }
+
   async openFile(path: string, purpose: string): Promise<{ file: ManifestFile; bytes: Uint8Array }> {
     const deny = async (why: string): Promise<never> => {
       await this.audit.append("deny", path, `${purpose}: ${why}`);

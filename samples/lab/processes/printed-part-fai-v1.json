@@ -1,0 +1,379 @@
+{
+  "schema": "tdp-process/0.1",
+  "id": "printed-part-fai",
+  "version": 1,
+  "title": "Printed part: first-article inspection variant",
+  "label": "Second laboratory configuration (synthetic): dual independent inspection, no queue, no gap acceptance",
+  "synthetic": true,
+  "roles": [
+    {
+      "id": "requirement-owner",
+      "description": "requirement owner (workflow role)"
+    },
+    {
+      "id": "configuration-manager",
+      "description": "configuration manager (workflow role)"
+    },
+    {
+      "id": "manufacturing-engineer",
+      "description": "manufacturing engineer (workflow role)"
+    },
+    {
+      "id": "planner",
+      "description": "planner (workflow role)"
+    },
+    {
+      "id": "manufacturing-authority",
+      "description": "manufacturing authority (workflow role)"
+    },
+    {
+      "id": "operator",
+      "description": "operator (workflow role)"
+    },
+    {
+      "id": "inspector",
+      "description": "inspector (workflow role)"
+    },
+    {
+      "id": "quality-engineer",
+      "description": "quality engineer (workflow role)"
+    }
+  ],
+  "states": [
+    "received",
+    "approved",
+    "released",
+    "qualified",
+    "planned",
+    "authorized",
+    "building",
+    "built",
+    "first-inspected",
+    "fai-verified",
+    "held",
+    "rejected",
+    "nonconforming",
+    "accepted",
+    "scrapped",
+    "closed"
+  ],
+  "initial": "received",
+  "terminal": [
+    "closed"
+  ],
+  "operations": [
+    "build"
+  ],
+  "allowDelegation": false,
+  "transitions": [
+    {
+      "id": "approve-requirements",
+      "kind": "requirements-approval",
+      "description": "Requirement owner approves",
+      "from": [
+        "received"
+      ],
+      "outcomes": {
+        "approved": "approved"
+      },
+      "roles": [
+        "requirement-owner"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": false,
+        "unit": false
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "record-source-release",
+      "kind": "source-release",
+      "description": "Source release evidence",
+      "from": [
+        "approved"
+      ],
+      "outcomes": {
+        "verified": "released"
+      },
+      "roles": [
+        "configuration-manager"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [
+          "source-release-record"
+        ],
+        "freshAuthority": false,
+        "unit": false
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "qualify-process",
+      "kind": "suitability",
+      "description": "Suitability must be clean: gaps send it back, there is no gap acceptance in this variant",
+      "from": [
+        "released"
+      ],
+      "outcomes": {
+        "suitable": "qualified",
+        "review-required": "released",
+        "not-suitable": "released"
+      },
+      "roles": [
+        "manufacturing-engineer"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [
+          "capability-study",
+          "calibration-certificate"
+        ],
+        "freshAuthority": false,
+        "unit": false
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "plan-first-article",
+      "kind": "plan",
+      "description": "First-article plan",
+      "from": [
+        "qualified"
+      ],
+      "outcomes": {
+        "planned": "planned"
+      },
+      "roles": [
+        "planner"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": false,
+        "unit": false
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "authorize-first-article",
+      "kind": "authorization",
+      "description": "One-unit authorization",
+      "from": [
+        "planned"
+      ],
+      "outcomes": {
+        "issued": "authorized"
+      },
+      "roles": [
+        "manufacturing-authority"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": true,
+        "unit": false
+      },
+      "distinctActorFrom": [
+        "plan-first-article"
+      ],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "build",
+      "kind": "build-start",
+      "description": "Operator starts the build (no queue in this variant)",
+      "from": [
+        "authorized"
+      ],
+      "outcomes": {
+        "started": "building"
+      },
+      "roles": [
+        "operator"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": true,
+        "unit": true,
+        "authorization": "build"
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "finish",
+      "kind": "build-complete",
+      "description": "Build outcome",
+      "from": [
+        "building"
+      ],
+      "outcomes": {
+        "completed": "built",
+        "failed": "scrapped"
+      },
+      "roles": [
+        "operator"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [
+          "build-log"
+        ],
+        "freshAuthority": false,
+        "unit": true,
+        "authorization": "build"
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "first-inspection",
+      "kind": "inspection",
+      "description": "First inspection",
+      "from": [
+        "built"
+      ],
+      "outcomes": {
+        "accept": "first-inspected",
+        "reject": "rejected",
+        "indeterminate": "held"
+      },
+      "roles": [
+        "inspector"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [
+          "measurement-data"
+        ],
+        "freshAuthority": false,
+        "unit": true
+      },
+      "distinctActorFrom": [
+        "build",
+        "finish"
+      ],
+      "distinctOrganizationFrom": [
+        "finish"
+      ]
+    },
+    {
+      "id": "second-inspection",
+      "kind": "inspection",
+      "description": "Second, independent inspection",
+      "from": [
+        "first-inspected"
+      ],
+      "outcomes": {
+        "accept": "fai-verified",
+        "reject": "rejected",
+        "indeterminate": "held"
+      },
+      "roles": [
+        "inspector"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [
+          "measurement-data"
+        ],
+        "freshAuthority": false,
+        "unit": true
+      },
+      "distinctActorFrom": [
+        "first-inspection",
+        "build",
+        "finish"
+      ],
+      "distinctOrganizationFrom": [
+        "finish"
+      ]
+    },
+    {
+      "id": "raise-nonconformance",
+      "kind": "nonconformance",
+      "description": "NCR",
+      "from": [
+        "rejected",
+        "held"
+      ],
+      "outcomes": {
+        "raised": "nonconforming"
+      },
+      "roles": [
+        "quality-engineer"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": false,
+        "unit": true
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "fai-disposition",
+      "kind": "disposition",
+      "description": "Quality engineer dispositions the first article",
+      "from": [
+        "fai-verified",
+        "nonconforming"
+      ],
+      "outcomes": {
+        "accept": "accepted",
+        "use-as-is": "accepted",
+        "scrap": "scrapped"
+      },
+      "roles": [
+        "quality-engineer"
+      ],
+      "requires": {
+        "actions": [
+          {
+            "id": "second-inspection"
+          }
+        ],
+        "evidence": [],
+        "freshAuthority": true,
+        "unit": true
+      },
+      "distinctActorFrom": [
+        "first-inspection",
+        "second-inspection"
+      ],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "close",
+      "kind": "closure",
+      "description": "Close",
+      "from": [
+        "accepted",
+        "scrapped"
+      ],
+      "outcomes": {
+        "closed": "closed"
+      },
+      "roles": [
+        "configuration-manager"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": false,
+        "unit": true
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    }
+  ]
+}

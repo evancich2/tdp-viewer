@@ -7,14 +7,16 @@ import { readArchive } from "../src/core/archive";
 import { sha256Hex, utf8 } from "../src/core/bytes";
 import { buildManifest, type PackInput } from "../src/core/pack";
 import type { Policy } from "../src/core/policy";
-import { BomItem, FileRole, Manifest, SignatureFile, TrustStore, type SignerRole } from "../src/core/schema";
+import { BomItem, FileRole, Manifest, ManifestPackage, SignatureFile, TrustStore, type SignerRole } from "../src/core/schema";
 import { signEd25519 } from "../src/core/signing";
 import { MANIFEST_PATH, SIGNATURES_PATH, checkContents, signingMessage } from "../src/core/verify";
 
 /** `tdp-package.json`: what `tdp pack` reads from the source folder. */
 export const PackageSpec = z
   .object({
-    package: Manifest.shape.package.omit({ id: true, created: true }).extend({ id: z.string().uuid().optional() }),
+    package: ManifestPackage.omit({ id: true, created: true }).extend({ id: z.string().uuid().optional() }),
+    /** Path of a `tdp-engineering/0.1` model in the folder. Set it to build a `tdp-manifest/0.2` package. */
+    engineering: z.string().min(1).max(255).optional(),
     files: z
       .record(
         z.string(),
@@ -75,6 +77,7 @@ export async function pack(dir: string, now = new Date()): Promise<Uint8Array> {
     { ...spec.package, id: spec.package.id ?? crypto.randomUUID(), created: now.toISOString() },
     inputs,
     spec.bom,
+    { engineering: spec.engineering },
   );
   Manifest.parse(manifest);
   const zipFiles: Record<string, Uint8Array> = { [MANIFEST_PATH]: utf8.encode(JSON.stringify(manifest, null, 2)) };

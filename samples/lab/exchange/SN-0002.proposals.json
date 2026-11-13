@@ -1,0 +1,219 @@
+{
+  "schema": "tdp-sync-proposals/0.1",
+  "recipe": {
+    "id": "lab-asbuilt",
+    "version": 1
+  },
+  "baseline": {
+    "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+    "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+    "baselineId": "BL-SYN-PH-2000-A"
+  },
+  "ledger": {
+    "instance": "cc9f658c-5fb6-4099-aa95-77837a6d79cd",
+    "count": 13,
+    "head": "3848b52e9dceb2e5b870ca7e522fd3bb674302668e12a2bd5e174859d84a3a6d"
+  },
+  "generatedAt": "2026-11-12T13:00:00.000Z",
+  "transactions": [
+    {
+      "txId": "tx-8d0f8e94ef7435f627aa9da99c617b3b",
+      "contentSha256": "fd071d7d2b922abd9f753be790008c60a8f148182bce8271462e644bce550d98",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "ProcessReview",
+        "objectId": "52d7fe06-823b-44ea-ba3c-3654d6318ca6"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "resource": "H2C-LAB-01",
+        "outcome": "review-required"
+      },
+      "source": {
+        "recordId": "52d7fe06-823b-44ea-ba3c-3654d6318ca6",
+        "recordSha256": "e7427c08a46c845d30a18a58db626a8e2dff2ab565382295acd7b8e598e87a5a",
+        "kind": "suitability"
+      },
+      "lossy": [
+        {
+          "field": "data.input.capabilities",
+          "reason": "capability evidence detail has no target field"
+        }
+      ],
+      "status": "held-lossy",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-292727d55f9294592422fe84e1e42a56",
+      "contentSha256": "5eee254f7e5b570e23303245481741314ca54d195f6945fee24fac6dbb8b2dbc",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "ProcessPlan",
+        "objectId": "789cfe03-6583-4323-8728-482c7d660c0a"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "plan": "BP-SN-0002"
+      },
+      "source": {
+        "recordId": "789cfe03-6583-4323-8728-482c7d660c0a",
+        "recordSha256": "51e7b36c3a7ee506fa6a86a0a94d0321d5b778e348c2c04d27198eed42d709d4",
+        "kind": "plan"
+      },
+      "lossy": [],
+      "status": "unsupported",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-e97a259908f1d9c7866e66aba506be1c",
+      "contentSha256": "04fca5c14cc6b5fe19c4a2580351c9247db18b59d461c6e6c1c03e8c0630e16d",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "AsBuiltUnit",
+        "objectId": "SYN-PH-2001:SN-0002"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "serial": "SN-0002",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "baselineManifest": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+        "jobId": "J-0101",
+        "buildOutcome": "completed",
+        "completedAt": "2026-11-10T15:35:00.000Z"
+      },
+      "source": {
+        "recordId": "5c35f4be-96ab-41c8-9904-171da437765a",
+        "recordSha256": "e09e2e8d5b655cbb4a23fc8d8d454dc47f5f319730303e762e67f41b18326903",
+        "kind": "build-complete"
+      },
+      "lossy": [],
+      "status": "proposed",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-26e3a27e4f66052a1aa13d5ad563c1c6",
+      "contentSha256": "3caef74975078264bcb24bd60665aa6367f458cc9b5f7ff6ac000938ea5322da",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "InspectionResult",
+        "objectId": "fed06b96-90f1-4e0d-b905-19a1fea912c2"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "serial": "SN-0002",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "outcome": "reject",
+        "decisionRules": "core/decision-rules/0.1",
+        "signedRecord": "fed06b96-90f1-4e0d-b905-19a1fea912c2"
+      },
+      "source": {
+        "recordId": "fed06b96-90f1-4e0d-b905-19a1fea912c2",
+        "recordSha256": "2a8f171e9ba0cb6d9cbe1532f8ccae22338cb050288a46f97fb6a83dda45bb22",
+        "kind": "inspection"
+      },
+      "lossy": [
+        {
+          "field": "data.measurements",
+          "reason": "the fixture's InspectionResult has no per-characteristic values, instruments or uncertainty; the signed record stays the authority"
+        }
+      ],
+      "status": "proposed",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-19b0111cf67c376efc34c5644b9f8701",
+      "contentSha256": "ec21abc96ecacfcbe23fce5c6668300bc184d9a18e93ce364b4e97706fc1a3a6",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "ChangeRequest",
+        "objectId": "ebddba26-27cd-4c75-b620-f954ac5e3438"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "ncr": "NCR-0001",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "description": "CH-001 tab thickness 6.25 mm exceeds 6.20 mm + U (synthetic)"
+      },
+      "source": {
+        "recordId": "ebddba26-27cd-4c75-b620-f954ac5e3438",
+        "recordSha256": "8ce08d1e6607f21e5566ab05fc7cfa6231017bd577d39f119bb312577fc56e67",
+        "kind": "nonconformance"
+      },
+      "lossy": [],
+      "status": "proposed",
+      "changesDefinition": true
+    },
+    {
+      "txId": "tx-c451d3f5cb306d8856fa7c2b03a49ef1",
+      "contentSha256": "a1273ff8be7dcc79883da232e9300ab29f5af85e8294021e6abbe3984979bff6",
+      "operation": "update",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "AsBuiltUnit",
+        "objectId": "SYN-PH-2001:SN-0002"
+      },
+      "expectedVersion": 1,
+      "attributes": {
+        "serial": "SN-0002",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "baselineManifest": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+        "disposition": "scrap",
+        "dispositionedBy": "Mel Disposition Authority (demo)"
+      },
+      "source": {
+        "recordId": "57344e0c-78e2-45a4-a95a-5488225fc3fb",
+        "recordSha256": "3176a8c543035b09388f511aa1dd0a300db1abe7edd1972a4cd679897d1183a8",
+        "kind": "disposition"
+      },
+      "lossy": [],
+      "status": "proposed",
+      "changesDefinition": false
+    }
+  ],
+  "excluded": [
+    {
+      "recordId": "3d95e78d-c234-4763-805c-074af69d97b1",
+      "kind": "requirements-approval",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "11d09d28-02ac-4aab-a5f4-8a219ea39937",
+      "kind": "source-release",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "8a8bab85-864e-443a-8530-dc113677f7d3",
+      "kind": "suitability-review",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "c18d0b18-d861-429b-a655-678a7475fba1",
+      "kind": "authorization",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "79d12ce4-7f3b-402c-9120-4be835523d1e",
+      "kind": "queue-entry",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "224330e3-1bfb-49ae-a575-f3083d8537a4",
+      "kind": "build-start",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "8ecd8faa-3ad9-4342-b756-300cbbaa7888",
+      "kind": "closure",
+      "reason": "record kind not permitted by recipe"
+    }
+  ]
+}

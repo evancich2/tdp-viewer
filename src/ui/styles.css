@@ -104,3 +104,29 @@ select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; 
 .key.added { background: rgb(20, 150, 70); }
 button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
 p.signed { color: var(--pass-fg); margin: 0.25rem 0; }
+
+.banner.info { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.small { font-size: 0.85em; }
+.tag { display: inline-block; margin: 0 4px; padding: 0 6px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.8em; }
+.tag.stale, .tag.unresolved { color: var(--fail-fg); border-color: var(--fail-fg); }
+.tag.valid { color: var(--pass-fg); }
+.workflow table { margin: 0.5rem 0 1rem; }
+.workflow th { white-space: nowrap; }
+.kv th { width: 9rem; vertical-align: top; }
+.status-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin: 0.75rem 0; }
+.badge { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; }
+.badge .mark { font-weight: 700; width: 1em; text-align: center; }
+.badge.ok { background: var(--pass-bg); color: var(--pass-fg); }
+.badge.fail { background: var(--fail-bg); color: var(--fail-fg); }
+.badge.warn { border-color: var(--fail-fg); }
+.badge.none { color: var(--muted); }
+.states { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; padding: 0; margin: 0.5rem 0; font-size: 0.8em; }
+.states li { padding: 2px 8px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); }
+.states li.done { color: var(--pass-fg); border-color: var(--pass-fg); }
+.states li.current { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+td.accept { color: var(--pass-fg); }
+td.reject { color: var(--fail-fg); }
+td.indeterminate, tr.held td { color: var(--muted); font-style: italic; }
+.events { padding-left: 1.2rem; }
+.events li.fail { color: var(--fail-fg); }
+.records td:first-child { white-space: nowrap; }

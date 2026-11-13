@@ -1,0 +1,4 @@
+SYNTHETIC DEMONSTRATION EVIDENCE - NOT A REAL CALIBRATION CERTIFICATE
+SYNTHETIC SURROGATE: not the controlled design. Demonstration data only; dimensions, limits, approvals, builds and measurements are invented.
+
+Instrument CAL-12 0-150 mm digital caliper; due 2027-03-01 (INVENTED)

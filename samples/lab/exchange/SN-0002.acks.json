@@ -1,0 +1,72 @@
+{
+  "schema": "tdp-sync-acks/0.1",
+  "adapter": {
+    "system": "lab-fixture",
+    "label": "Laboratory fixture PLM (synthetic, file-backed)",
+    "fixture": true
+  },
+  "proposalSetSha256": "5f4a61bf791b4f33577dbdb5f119c874bd82f35eacee01c622b46e2e7141f2ff",
+  "acknowledgedAt": "2026-11-12T13:00:00.000Z",
+  "acks": [
+    {
+      "txId": "tx-8d0f8e94ef7435f627aa9da99c617b3b",
+      "contentSha256": "fd071d7d2b922abd9f753be790008c60a8f148182bce8271462e644bce550d98",
+      "objectType": "ProcessReview",
+      "objectId": "52d7fe06-823b-44ea-ba3c-3654d6318ca6",
+      "requiresNewBaseline": false,
+      "status": "rejected",
+      "sourceVersion": null,
+      "reason": "lossy mapping (data.input.capabilities) not accepted by the recipe"
+    },
+    {
+      "txId": "tx-292727d55f9294592422fe84e1e42a56",
+      "contentSha256": "5eee254f7e5b570e23303245481741314ca54d195f6945fee24fac6dbb8b2dbc",
+      "objectType": "ProcessPlan",
+      "objectId": "789cfe03-6583-4323-8728-482c7d660c0a",
+      "requiresNewBaseline": false,
+      "status": "unsupported",
+      "sourceVersion": null,
+      "reason": "ProcessPlan is not a supported object type"
+    },
+    {
+      "txId": "tx-e97a259908f1d9c7866e66aba506be1c",
+      "contentSha256": "04fca5c14cc6b5fe19c4a2580351c9247db18b59d461c6e6c1c03e8c0630e16d",
+      "objectType": "AsBuiltUnit",
+      "objectId": "SYN-PH-2001:SN-0002",
+      "requiresNewBaseline": false,
+      "status": "conflict",
+      "sourceVersion": 1,
+      "reason": "object already exists at version 1 with different content"
+    },
+    {
+      "txId": "tx-26e3a27e4f66052a1aa13d5ad563c1c6",
+      "contentSha256": "3caef74975078264bcb24bd60665aa6367f458cc9b5f7ff6ac000938ea5322da",
+      "objectType": "InspectionResult",
+      "objectId": "fed06b96-90f1-4e0d-b905-19a1fea912c2",
+      "requiresNewBaseline": false,
+      "status": "accepted",
+      "sourceVersion": 1,
+      "reason": "created."
+    },
+    {
+      "txId": "tx-19b0111cf67c376efc34c5644b9f8701",
+      "contentSha256": "ec21abc96ecacfcbe23fce5c6668300bc184d9a18e93ce364b4e97706fc1a3a6",
+      "objectType": "ChangeRequest",
+      "objectId": "ebddba26-27cd-4c75-b620-f954ac5e3438",
+      "requiresNewBaseline": true,
+      "status": "accepted",
+      "sourceVersion": 1,
+      "reason": "created. Approval would change the engineering definition: it takes a newly published baseline, and this acknowledgement changes no baseline."
+    },
+    {
+      "txId": "tx-c451d3f5cb306d8856fa7c2b03a49ef1",
+      "contentSha256": "a1273ff8be7dcc79883da232e9300ab29f5af85e8294021e6abbe3984979bff6",
+      "objectType": "AsBuiltUnit",
+      "objectId": "SYN-PH-2001:SN-0002",
+      "requiresNewBaseline": false,
+      "status": "conflict",
+      "sourceVersion": 1,
+      "reason": "an earlier transaction for this object in the same set was not applied; resolve it first"
+    }
+  ]
+}

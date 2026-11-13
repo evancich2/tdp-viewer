@@ -40,6 +40,10 @@ export function PrintPanel({ session, file, onAccess }: { session: PackageSessio
         Exports a 3MF with this package's part number, revision and digests embedded. Open it in Bambu Studio to slice and
         send it to your printer.
       </p>
+      <p className="muted small">
+        Exporting a build file does not authorize manufacture. Authorization comes only from a verified, in-date CIP in the part's
+        workflow ledger; the build itself is recorded there as manual queue and build records.
+      </p>
       <div className="row">
         <label className="row">
           Printer

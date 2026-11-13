@@ -1,0 +1,46 @@
+{
+  "schema": "tdp-fixture-source/0.1",
+  "system": "lab-fixture",
+  "label": "Laboratory fixture PLM (synthetic, file-backed)",
+  "objectTypes": [
+    "AsBuiltUnit",
+    "InspectionResult",
+    "ChangeRequest",
+    "ProcessReview"
+  ],
+  "sourceItems": {
+    "SYN-PH-2001": {
+      "revision": "A",
+      "releaseState": "Released",
+      "reference": {
+        "surrogateFor": "onshape",
+        "documentId": "SYNTH-DOC-SYN-PH-2001",
+        "versionId": "SYNTH-V-SYN-PH-2001-A",
+        "elementId": "SYNTH-EL-SYN-PH-2001"
+      }
+    },
+    "SYN-PH-2000": {
+      "revision": "A",
+      "releaseState": "Released",
+      "reference": {
+        "surrogateFor": "onshape",
+        "documentId": "SYNTH-DOC-SYN-PH-2000",
+        "versionId": "SYNTH-V-SYN-PH-2000-A",
+        "elementId": "SYNTH-EL-SYN-PH-2000"
+      }
+    }
+  },
+  "objects": {
+    "AsBuiltUnit/SYN-PH-2001:SN-0002": {
+      "version": 1,
+      "attributes": {
+        "serial": "SN-0002",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "note": "entered manually at the source (synthetic)"
+      },
+      "lastTx": "manual"
+    }
+  },
+  "transactions": {}
+}

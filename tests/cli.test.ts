@@ -60,6 +60,19 @@ describe("key files", () => {
     await expect(unlockKey(JSON.stringify(spliced), PASS)).rejects.toThrow(/key id/);
   });
 
+  it("put the holder's organization in the trust-store entry", async () => {
+    const k = await createKey({ name: "Ollie Operator", roles: ["author"], passphrase: PASS, validDays: 30, organization: { name: "Print Shop", cage: "1ABC2" }, now });
+    expect(k.trusted).toMatchObject({ organization: { name: "Print Shop", cage: "1ABC2" } });
+    await expect(createKey({ name: "x", roles: ["author"], passphrase: PASS, validDays: 1, organization: { name: "Shop", cage: "bad" } })).rejects.toThrow(/CAGE/);
+  });
+
+  it("make workflow-only keys with no package-signing roles, but only with an organization", async () => {
+    const k = await createKey({ name: "Wanda Workflow", roles: [], passphrase: PASS, validDays: 30, organization: { name: "Print Shop" }, now });
+    expect(k.trusted).toMatchObject({ roles: [], organization: { name: "Print Shop" } });
+    expect((await unlockKey(JSON.stringify(k.keyFile), PASS)).roles).toEqual([]);
+    await expect(createKey({ name: "x", roles: [], passphrase: PASS, validDays: 1 })).rejects.toThrow(/needs an organization/);
+  });
+
   it("refuse short passphrases", async () => {
     await expect(createKey({ name: "x", roles: ["author"], passphrase: "short", validDays: 1 })).rejects.toThrow(/at least/);
   });

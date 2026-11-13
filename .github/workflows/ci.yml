@@ -23,4 +23,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run tdp -- verify samples/sample.tdp --trust samples/trust-store.json
+      - run: npm run lab
+      - run: git diff --exit-code -- samples/lab ':!samples/lab/demo-results.*' ':!samples/lab/evidence-bundle-*'
+      - run: npm run tdp -- record verify samples/lab/ledgers/SN-0001.ledger.json --package samples/lab/SYN-PH-2000_A.tdp --trust samples/lab/trust-store.signed.json --anchors samples/lab/anchors.json --authority samples/lab/authority.signed.json --process samples/lab/processes/printed-part-v1.json --evidence-dir samples/lab/evidence --checkpoint samples/lab/ledgers/SN-0001.checkpoint.json --at 2026-11-12T13:00:00Z
       - run: npm run e2e

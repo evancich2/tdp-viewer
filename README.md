@@ -6,11 +6,12 @@ TDP Viewer opens a `.tdp` package in the browser and refuses to show anything un
 
 **Who it's for:** engineers, configuration managers and suppliers who receive or hand off TDPs and need to know a package is complete, unaltered and properly released before they build from it.
 
-> Status: early development. Verification, the audit log, the drawing and 3D viewers and 3D-print export work today; see [ROADMAP.md](ROADMAP.md) for what's next.
+> Status: early development. Verification, the audit log, the drawing and 3D viewers, 3D-print export and an offline engineering-workflow demonstrator (synthetic laboratory data) work today; see [ROADMAP.md](ROADMAP.md) for what's next.
 
 ## Features
 
 - **Verify** a package against your trust store and policy, with a per-check report.
+- **Engineering workflow (laboratory demonstrator):** `tdp-manifest/0.2` packages carry a canonical engineering model (items, occurrences, requirements, characteristics, artifacts, geometry links, source references). Signed, hash-chained workflow records in a ledger *beside* the immutable baseline take a part through requirements approval, source-release evidence, process suitability, planning, a bounded manufacturing authorization, manual build, independent inspection with deterministic decision rules, nonconformance, disposition and closure. Who may do what comes from an operator-trusted authority configuration and a versioned process definition, never from the package. Proposed updates for a source system go out as files, and acknowledgements come back the same way, with a local fixture adapter. There is no Onshape or Windchill connectivity yet. See [docs/engineering-workflow.md](docs/engineering-workflow.md) and [docs/laboratory-demo.md](docs/laboratory-demo.md).
 - **View drawings:** PDF pages rendered with pdf.js in an isolated worker, with zoom (buttons or Ctrl/⌘ + scroll), pan by dragging, rotate and multi-page navigation. Only page content is drawn: no links, forms, annotations or scripts.
 - **View 3D models:** STEP files meshed by OpenCascade in a throwaway worker and shown with three.js: orbit, preset views (iso, top, front, right), click a solid to select it, show or hide solids, and see each solid's size.
 - **Print a part:** turn a verified STEP model into a 3MF that [Bambu Studio](https://bambulab.com/en/download/studio) opens directly, ready to slice and send to a Bambu Lab printer (or any 3MF slicer). The model is meshed with OpenCascade in a throwaway worker, checked to be watertight, and stamped with its part number, revision and the package and source digests, so a printed part traces back to the exact signed package. Pick the target printer (Bambu Lab H2C by default) and the export checks every solid against its build volume, allowing for rotation.
@@ -28,7 +29,9 @@ TDP Viewer opens a `.tdp` package in the browser and refuses to show anything un
 - **Every action is recorded.** A hash-chained audit log covers each load, verdict, denial and file open, and can be exported.
 - **No network, strict CSP.** Production builds ship `default-src 'none'; connect-src 'none'`.
 
-Details: [docs/zero-trust.md](docs/zero-trust.md) · Chain of custody (planned): [docs/chain-of-custody.md](docs/chain-of-custody.md) · Package format: [docs/package-format.md](docs/package-format.md) · Building packages: [docs/packaging.md](docs/packaging.md)
+- **Integrity is not authorization.** The viewer reports package integrity, source release, operation authorized, inspection and disposition as separate statuses. A trusted package grants no manufacturing permission.
+
+Details: [docs/zero-trust.md](docs/zero-trust.md) · Workflow: [docs/engineering-workflow.md](docs/engineering-workflow.md) · Lab demo: [docs/laboratory-demo.md](docs/laboratory-demo.md) · Chain of custody (planned): [docs/chain-of-custody.md](docs/chain-of-custody.md) · Package format: [docs/package-format.md](docs/package-format.md) · Building packages: [docs/packaging.md](docs/packaging.md)
 
 ## Built with
 
@@ -43,7 +46,7 @@ npm install
 npm run dev          # open the printed URL
 ```
 
-In the app, click **Use demo keys** (it pins the demo root and loads the root-signed demo trust store), then open `samples/sample.tdp` (trusted) or `samples/tampered.tdp` (one drawing altered after signing, so it's rejected). To see a change report, open `samples/sample.tdp` and compare it with `samples/sample-rev-c.tdp`, where a sample change order thickens the gusset.
+In the app, click **Use demo keys** (it pins the demo root and loads the root-signed demo trust store), then open `samples/sample.tdp` (trusted) or `samples/tampered.tdp` (one drawing altered after signing, so it's rejected). For the engineering workflow, click **Use lab demo keys**, open `samples/lab/SYN-PH-2000_A.tdp` (a clearly labeled synthetic surrogate), then follow [docs/laboratory-demo.md](docs/laboratory-demo.md). To see a change report, open `samples/sample.tdp` and compare it with `samples/sample-rev-c.tdp`, where a sample change order thickens the gusset.
 
 ### Printing on a Bambu Lab printer
 
@@ -60,6 +63,7 @@ npm test             # unit and fuzz tests (FUZZ_ITERATIONS=5000 npm test for a 
 npm run e2e          # build, then drive the app in headless Chrome (needs Google Chrome)
 npm run build        # typecheck + production build into dist/
 npm run sample       # regenerate the sample packages with fresh demo keys
+npm run lab          # regenerate samples/lab/ and run the P01–P08 laboratory demonstrations
 npm run tdp -- verify samples/sample.tdp --trust samples/trust-store.json
 npm run tdp -- diff samples/sample.tdp samples/sample-rev-c.tdp --trust samples/trust-store.json
 ```

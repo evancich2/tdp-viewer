@@ -12,9 +12,12 @@ import {
 } from "../core";
 import demoAnchors from "../../samples/anchors.json?raw";
 import demoTrustStore from "../../samples/trust-store.signed.json?raw";
+import labAnchors from "../../samples/lab/anchors.json?raw";
+import labTrustStore from "../../samples/lab/trust-store.signed.json?raw";
 import { BomTree } from "./BomTree";
 import { ComparePanel } from "./ComparePanel";
 import { FilePreview } from "./FilePreview";
+import { WorkflowPanel } from "./WorkflowPanel";
 import { onInstallAvailable, onLaunchFiles, registerServiceWorker } from "../pwa/client";
 import { fingerprint, forget, recall, recordSerial, remember, seenSerials } from "./trustMemory";
 
@@ -89,6 +92,11 @@ export function App() {
   async function useDemoKeys() {
     const pinned = await pinRoots(demoAnchors, "demo root (samples/anchors.json)");
     if (pinned) await applyTrustStore(demoTrustStore, "demo keys (samples/trust-store.signed.json)", false, pinned);
+  }
+
+  async function useLabKeys() {
+    const pinned = await pinRoots(labAnchors, "lab demo root (samples/lab/anchors.json)");
+    if (pinned) await applyTrustStore(labTrustStore, "lab demo keys (samples/lab/trust-store.signed.json)", false, pinned);
   }
 
   function toggleRemember(on: boolean) {
@@ -202,6 +210,7 @@ export function App() {
               onChange={async (e) => { const f = e.target.files?.[0]; if (f) await applyTrustStore(await f.text(), f.name); e.target.value = ""; }} />
           </label>
           <button onClick={() => void useDemoKeys()}>Use demo keys</button>
+          <button onClick={() => void useLabKeys()}>Use lab demo keys</button>
           {trust && <span>Using <strong>{trust.label}</strong>: {trust.store.keys.length} keys · fingerprint <code>{trust.fingerprint}</code></span>}
         </div>
         {trust && (
@@ -284,12 +293,19 @@ export function App() {
       )}
 
       {session?.trusted && trust && (
+        <WorkflowPanel key={`wf-${session.result.manifestSha256}`} session={session} trustStore={trust.store} anchors={roots?.anchors} audit={audit} onAudit={refreshAudit} />
+      )}
+
+      {session?.trusted && trust && (
         <ComparePanel key={session.name + session.result.manifestSha256} session={session} trustStore={trust.store} audit={audit} onAccess={refreshAudit} />
       )}
 
       <section>
         <h2>Audit log</h2>
-        <p className="muted">Hash-chained record of every load, check and file access this session.</p>
+        <p className="muted">
+          Hash-chained record of every load, check and file access in this browser session. It is local and unsigned: it is not the
+          signed engineering record, which lives in workflow ledgers.
+        </p>
         <button disabled={!auditEntries.length} onClick={exportAudit}>Export audit log</button>
         <ol className="audit">
           {auditEntries.map((e) => (

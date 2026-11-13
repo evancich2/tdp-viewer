@@ -1,0 +1,128 @@
+{
+  "schema": "tdp-recipe/0.1",
+  "id": "lab-asbuilt",
+  "version": 1,
+  "label": "As-built and quality results to the laboratory fixture PLM (synthetic)",
+  "baseline": {
+    "baselineId": "BL-SYN-PH-2000-A",
+    "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877"
+  },
+  "includeArtifactClasses": [
+    "cad-model",
+    "drawing"
+  ],
+  "requiredRelationships": [
+    "verifies",
+    "describes"
+  ],
+  "permittedRecordKinds": [
+    "build-complete",
+    "inspection",
+    "nonconformance",
+    "disposition",
+    "suitability",
+    "plan"
+  ],
+  "target": {
+    "system": "lab-fixture",
+    "adapter": "local-fixture"
+  },
+  "mappings": [
+    {
+      "recordKind": "build-complete",
+      "objectType": "AsBuiltUnit",
+      "key": "unit",
+      "fields": {
+        "serial": "unit.serial",
+        "item": "item.itemId",
+        "revision": "item.revision",
+        "baselineManifest": "baseline.manifestSha256",
+        "jobId": "data.jobId",
+        "buildOutcome": "record.outcome",
+        "completedAt": "data.completedAt"
+      },
+      "lossy": [],
+      "acceptLoss": false,
+      "changesDefinition": false
+    },
+    {
+      "recordKind": "inspection",
+      "objectType": "InspectionResult",
+      "key": "record",
+      "fields": {
+        "serial": "unit.serial",
+        "item": "item.itemId",
+        "revision": "item.revision",
+        "outcome": "record.outcome",
+        "decisionRules": "data.decisionRules",
+        "signedRecord": "record.recordId"
+      },
+      "lossy": [
+        {
+          "field": "data.measurements",
+          "reason": "the fixture's InspectionResult has no per-characteristic values, instruments or uncertainty; the signed record stays the authority"
+        }
+      ],
+      "acceptLoss": true,
+      "changesDefinition": false
+    },
+    {
+      "recordKind": "disposition",
+      "objectType": "AsBuiltUnit",
+      "key": "unit",
+      "fields": {
+        "serial": "unit.serial",
+        "item": "item.itemId",
+        "revision": "item.revision",
+        "baselineManifest": "baseline.manifestSha256",
+        "disposition": "record.outcome",
+        "dispositionedBy": "actor.name"
+      },
+      "lossy": [],
+      "acceptLoss": false,
+      "changesDefinition": false
+    },
+    {
+      "recordKind": "nonconformance",
+      "objectType": "ChangeRequest",
+      "key": "record",
+      "fields": {
+        "ncr": "data.ncrId",
+        "item": "item.itemId",
+        "revision": "item.revision",
+        "description": "data.description"
+      },
+      "lossy": [],
+      "acceptLoss": false,
+      "changesDefinition": true
+    },
+    {
+      "recordKind": "suitability",
+      "objectType": "ProcessReview",
+      "key": "record",
+      "fields": {
+        "resource": "data.input.resource.id",
+        "outcome": "record.outcome"
+      },
+      "lossy": [
+        {
+          "field": "data.input.capabilities",
+          "reason": "capability evidence detail has no target field"
+        }
+      ],
+      "acceptLoss": false,
+      "changesDefinition": false
+    },
+    {
+      "recordKind": "plan",
+      "objectType": "ProcessPlan",
+      "key": "record",
+      "fields": {
+        "plan": "data.buildPlanId"
+      },
+      "lossy": [],
+      "acceptLoss": false,
+      "changesDefinition": false
+    }
+  ]
+}

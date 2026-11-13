@@ -1,0 +1,4 @@
+SYNTHETIC DEMONSTRATION EVIDENCE - NOT A REAL SLICED JOB
+SYNTHETIC SURROGATE: not the controlled design. Demonstration data only; dimensions, limits, approvals, builds and measurements are invented.
+
+Job J-0001 placeholder. A real run would attach the exact .gcode.3mf submitted to the printer.

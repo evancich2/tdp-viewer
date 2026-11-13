@@ -1,0 +1,275 @@
+[
+  {
+    "id": "P01-a",
+    "scenario": "Synthetic surrogate rev A (tdp-manifest/0.2) verifies with its engineering model",
+    "expected": "trusted, engineering model consistent",
+    "actual": "trusted; tdp-engineering/0.1 baseline BL-SYN-PH-2000-A: 2 items, 3 requirements, 3 characteristics (SYNTHETIC)",
+    "pass": true
+  },
+  {
+    "id": "P01-b",
+    "scenario": "Committed tdp-manifest/0.1 sample still verifies unchanged, with no engineering model inferred",
+    "expected": "trusted; no engineering model",
+    "actual": "trusted; tdp-manifest/0.1: no engineering model (workflow records can't bind to this package)",
+    "pass": true
+  },
+  {
+    "id": "P01-c",
+    "scenario": "Possessing a trusted package does not authorize manufacture or prove source release",
+    "expected": "source release not established; operation not authorized",
+    "actual": "Source release evidence not established; No authorized operation pending in state baseline-received",
+    "pass": true
+  },
+  {
+    "id": "P01-d",
+    "scenario": "Source release evidence recorded by the configuration manager under the lab fixture authority",
+    "expected": "source release verified, labeled as laboratory fixture",
+    "actual": "Source release evidence verified: lab-fixture Released rev A (laboratory fixture authority, not a live PLM)",
+    "pass": true
+  },
+  {
+    "id": "P01-e",
+    "scenario": "New baseline rev B supersedes rev A; rev A and its evidence are preserved and still verify",
+    "expected": "rev B trusted with supersedes link; rev A bytes unchanged; rev A ledger verified; rev A ledger rejected against rev B",
+    "actual": "rev B trusted, supersedes BL-SYN-PH-2000-A; rev A unchanged; rev A ledger verified; against rev B: rejected (wrong baseline: ledger is for package 2a395545-a7ca-42e0-b927-a8dfa9af4752 basel…)",
+    "pass": true
+  },
+  {
+    "id": "P02-a",
+    "scenario": "Suitability: build-volume fit passes, but missing firmware is a gap, so the result is review-required (fit alone isn't capability)",
+    "expected": "review-required with gap 'printer firmware not recorded'; fit pass",
+    "actual": "review-required; fit pass; gaps: printer firmware not recorded",
+    "pass": true
+  },
+  {
+    "id": "P02-b",
+    "scenario": "Manual queue/build records: a failed job is recorded with its errors and the unit is requeued under the same CIP",
+    "expected": "J-0001 failed with errors; J-0002 completed; state closed",
+    "actual": "first-layer adhesion failure at layer 3 (synthetic); final state closed",
+    "pass": true
+  },
+  {
+    "id": "P02-c",
+    "scenario": "Operator authority via a verified delegation from a configured key with mayDelegate",
+    "expected": "dispatch by delegated operator verifies",
+    "actual": "dispatch by Jo Second-Shift Operator (demo, delegated only) via delegation 40fe54e2-66c1…",
+    "pass": true
+  },
+  {
+    "id": "P03-a",
+    "scenario": "SN-0001 measured within limits (guard-banded / simple acceptance) → accept; disposition is a separate signed decision",
+    "expected": "inspection accepted; dispositioned accept",
+    "actual": "Inspection accepted (measurement outcome; not a disposition); Dispositioned accept by Mel Disposition Authority (demo)",
+    "pass": true
+  },
+  {
+    "id": "P03-b",
+    "scenario": "SN-0002 tab 6.25 mm > 6.20 mm + U → reject → NCR → scrap",
+    "expected": "rejected; NCR-0001; scrap",
+    "actual": "Inspection rejected one or more characteristics; Dispositioned scrap by Mel Disposition Authority (demo); state closed",
+    "pass": true
+  },
+  {
+    "id": "P03-c",
+    "scenario": "SN-0003 tab 6.198 mm is within U of the upper limit → indeterminate, held (never an automatic pass)",
+    "expected": "indeterminate; state inspection-held",
+    "actual": "Inspection indeterminate: held for missing or insufficient measurement evidence; state inspection-held",
+    "pass": true
+  },
+  {
+    "id": "P03-d",
+    "scenario": "Units, limits and missing evidence: 0.2378 in converts and is accepted; degrees vs mm, or no calibration evidence → indeterminate",
+    "expected": "accept; indeterminate; indeterminate",
+    "actual": "accept (6.04012 mm); indeterminate; indeterminate",
+    "pass": true
+  },
+  {
+    "id": "P03-e",
+    "scenario": "Disposition authority tries to 'accept' a held (indeterminate) inspection directly",
+    "expected": "DENIED: a held inspection needs an NCR before any disposition",
+    "actual": "DENIED: disposition is not allowed from state inspection-held (needs inspected or nonconforming)",
+    "pass": true
+  },
+  {
+    "id": "P04-a",
+    "scenario": "A validly signed build start that skips suitability, planning and authorization",
+    "expected": "ledger rejected: not allowed from state source-released",
+    "actual": "record 3 (dispatch-build) by Oli Operator (demo): denied: dispatch-build is not allowed from state source-released (needs queued)",
+    "pass": true
+  },
+  {
+    "id": "P04-b",
+    "scenario": "Planning before source release is recorded (missing approval/evidence step)",
+    "expected": "DENIED before signing",
+    "actual": "DENIED: plan-build is not allowed from state requirements-approved (needs process-qualified)",
+    "pass": true
+  },
+  {
+    "id": "P04-c",
+    "scenario": "Suitability review without the required capability-study / calibration evidence",
+    "expected": "DENIED: requires evidence tagged capability-study",
+    "actual": "DENIED: review-suitability requires evidence tagged capability-study",
+    "pass": true
+  },
+  {
+    "id": "P04-d",
+    "scenario": "An inspection record that claims 'accept' when the decision rules give 'reject'",
+    "expected": "ledger rejected: decision rules give reject",
+    "actual": "record 10 (inspect) by Ines Inspector (demo): denied: inspect: record says accept, but the decision rules give reject",
+    "pass": true
+  },
+  {
+    "id": "P04-e",
+    "scenario": "Rev B carries geometry link GL-002 over from rev A (stale): planning is held until the plan records a review",
+    "expected": "DENIED without review; ALLOWED with review",
+    "actual": "DENIED: plan-build: geometry link GL-002 of CH-002 is stale; the plan must record a review of it…; with review: ALLOWED",
+    "pass": true
+  },
+  {
+    "id": "P05-a",
+    "scenario": "A trusted key with no workflow grant tries to dispatch",
+    "expected": "DENIED: no grant or valid delegation",
+    "actual": "DENIED: no grant or valid delegation gives this key the operator role for Lab Print Cell (synthetic) in printed-part",
+    "pass": true
+  },
+  {
+    "id": "P05-b",
+    "scenario": "A key revoked in the authority configuration tries to dispatch",
+    "expected": "DENIED: revoked",
+    "actual": "DENIED: Rex Revoked Operator (demo)'s key is revoked by the authority configuration (demo: credential withdrawn after badge loss (synthetic))",
+    "pass": true
+  },
+  {
+    "id": "P05-c",
+    "scenario": "Queueing after the CIP's validity period has ended",
+    "expected": "DENIED: not authorized (outside CIP window)",
+    "actual": "DENIED: enter-queue is not authorized: CIP CIP-SN-0001 is valid 2026-11-10T14:30:00.000Z to 2026-11-24T14:30:00.000Z, not at 2026-11-25T14:30:00.000Z",
+    "pass": true
+  },
+  {
+    "id": "P05-d",
+    "scenario": "Dispatch 8 days after the authority configuration was issued (offline validity 168 h)",
+    "expected": "DENIED: freshness can't be established offline",
+    "actual": "DENIED: dispatch-build needs current revocation status, which can't be established offline: authority lab-authority serial 1 was issued 2026-11-10T12:00:00.000Z, beyond its 168 h offline validity window; load a freshly issued configuration",
+    "pass": true
+  },
+  {
+    "id": "P05-e",
+    "scenario": "A signed record that asserts an organization the trust store doesn't bind to the key",
+    "expected": "rejected: trust store binds the key to another organization",
+    "actual": "DENIED: record 8 (dispatch-build) by Ola Outsider (demo, no grants): denied: Ola Outsider (demo, no grants) asserts organization Lab Design Authority (synthetic), but the trust store binds the key to Lab Print Cell (synthetic)",
+    "pass": true
+  },
+  {
+    "id": "P05-f",
+    "scenario": "A key tries to delegate authority to itself",
+    "expected": "DENIED: can't grant authority to its own signer",
+    "actual": "DENIED: a delegation can't grant authority to its own signer",
+    "pass": true
+  },
+  {
+    "id": "P05-g",
+    "scenario": "Loading a changed process definition (v2) that the authority does not pin",
+    "expected": "rejected: authority does not pin process v2",
+    "actual": "authority lab-authority does not pin process printed-part v2 with this digest",
+    "pass": true
+  },
+  {
+    "id": "P05-h",
+    "scenario": "Verifying after the authority configuration expired",
+    "expected": "rejected: authority configuration expired",
+    "actual": "authority configuration lab-authority serial 1 expired 2027-11-10T00:00:00.000Z",
+    "pass": true
+  },
+  {
+    "id": "P06-a",
+    "scenario": "A measured value edited in a signed record",
+    "expected": "rejected: signature over different bytes",
+    "actual": "record 14 (inspect): signature is over different bytes or by a different key",
+    "pass": true
+  },
+  {
+    "id": "P06-b",
+    "scenario": "A record removed from the middle",
+    "expected": "rejected",
+    "actual": "record 6 (enter-queue): says it is record 7",
+    "pass": true
+  },
+  {
+    "id": "P06-c",
+    "scenario": "The newest two records dropped: the chain alone still verifies; an independently retained checkpoint detects it",
+    "expected": "chain verifies; checkpoint reports truncation",
+    "actual": "verified; checkpoint: ledger has 14 verified records, but a retained checkpoint saw 16: history was truncated",
+    "pass": true
+  },
+  {
+    "id": "P06-d",
+    "scenario": "A measurement evidence file altered after recording",
+    "expected": "held: its hash can't be checked; nothing is accepted on the altered file",
+    "actual": "held: record 14 (inspect) by Ines Inspector (demo) (Lab Inspection (synthetic)) as inspector: accept; held: evidence EV-MEAS (…",
+    "pass": true
+  },
+  {
+    "id": "P06-e",
+    "scenario": "An inspection limit widened inside the signed engineering model",
+    "expected": "package rejected; no ledger can bind to it",
+    "actual": "rejected: 1 of 6 files failed; package is not trusted; records can't be checked against it",
+    "pass": true
+  },
+  {
+    "id": "P06-f",
+    "scenario": "Recovery: re-verifying the retained ledger and evidence from scratch",
+    "expected": "verified, same head as the checkpoint",
+    "actual": "verified, head 932778502eabbef9…",
+    "pass": true
+  },
+  {
+    "id": "P07-a",
+    "scenario": "SN-0001 proposals to the fixture PLM: AsBuiltUnit create then update (expected version 1), lossy-but-accepted InspectionResult, held lossy ProcessReview, unsupported ProcessPlan",
+    "expected": "accepted ×4, rejected (lossy held) ×1, unsupported ×1",
+    "actual": "{\"rejected\":1,\"unsupported\":1,\"accepted\":4}",
+    "pass": true
+  },
+  {
+    "id": "P07-b",
+    "scenario": "Replaying the same transactions",
+    "expected": "all duplicate; source objects unchanged",
+    "actual": "{\"duplicate\":6}; objects unchanged",
+    "pass": true
+  },
+  {
+    "id": "P07-c",
+    "scenario": "Reusing a transaction id with different content",
+    "expected": "rejected: transaction id reused with different content",
+    "actual": "transaction id reused with different content",
+    "pass": true
+  },
+  {
+    "id": "P07-d",
+    "scenario": "SN-0002 AsBuiltUnit already exists at the source with different content; the later update in the same set must not overwrite it",
+    "expected": "conflict, then dependent update refused; source object untouched",
+    "actual": "conflict: object already exists at version 1 with different content | conflict: an earlier transaction for this object in the same set was not applied; resolve it first; source object v1 manual",
+    "pass": true
+  },
+  {
+    "id": "P07-e",
+    "scenario": "An NCR proposed as a ChangeRequest: accepted for review, flagged as needing a newly published baseline; no baseline is altered",
+    "expected": "requiresNewBaseline true; package and ledger unchanged",
+    "actual": "accepted, requiresNewBaseline=true; package unchanged; acks match proposals",
+    "pass": true
+  },
+  {
+    "id": "P07-f",
+    "scenario": "Publication version check after the source moves to rev B",
+    "expected": "rev A reported superseded",
+    "actual": "SYN-PH-2001@A (SRC-SYN-PH-2001): source is now at revision B",
+    "pass": true
+  },
+  {
+    "id": "P08-a",
+    "scenario": "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)",
+    "expected": "measurements recorded",
+    "actual": "package verification (rev A, 6 files): 1.63 ms; ledger verification (SN-0001, 16 records): 6.1 ms; ledger verification per record: 0.38 ms; ledger size: 27550 bytes",
+    "pass": true
+  }
+]

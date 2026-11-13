@@ -4,41 +4,34 @@ Each milestone becomes a set of GitHub issues.
 
 ## TRL 4 demonstration (Phase I)
 
-Goal: one bracket governed end to end — requirements, CAD release, process match, queue, print on the Bambu Lab H2C, inspection and disposition — with every step recorded against one package identity and revision, and at least one invalid step rejected with an auditable reason. The package's signed event log acts as the PLM for that one package: no server, and the viewer stays network-free.
+Goal: one printed part governed end to end against one released baseline, with every step a signed record and invalid steps rejected with an auditable reason. The viewer stays network-free. Status of the software increment, with its evidence/gap matrix: [docs/laboratory-demo.md](docs/laboratory-demo.md).
 
-Open decisions: the demo part and its requirement set; the package event log as release authority (vs. Onshape release management); H2C firmware and whether Developer Mode is acceptable.
+Decided: the source PLM governs release (Onshape first, Windchill preferred later); until integrated, a labeled laboratory authority fixture stands in. Workflow records live in a ledger beside the package; the baseline is never modified. Package-signing roles (`author`, `checker`, `approver`, `release`) stay separate from workflow roles.
 
-### Phase A: governance core
-- [ ] Lifecycle state machine: draft → requirements approved → CAD released → process matched → planned → queued → printing → printed → inspected → dispositioned; allowed transitions, required role and evidence for each
-- [ ] Signed lifecycle events carried in the package (first step of [chain of custody](docs/chain-of-custody.md), without the Merkle log): actor, organization, role, time, reason, result; hash-linked to the previous event and bound to the manifest digest
-- [ ] CLI `tdp event add`; viewer verifies events and shows the timeline
-- [ ] Organization on trusted keys (optional CAGE code)
-- [ ] Roles: requester, design engineer, requirement owner, approver, planner, operator, inspector, auditor (replacing author/checker/approver/release)
-- [ ] Policy permits or denies each action by role, organization and lifecycle state
-- [ ] Demo: one allowed and one denied transition (e.g. wrong revision, missing approval, process mismatch) with the reason recorded
+### Done in software (synthetic fixtures)
+- [x] `tdp-manifest/0.2` with a versioned engineering model (items, occurrences, requirements, characteristics, artifacts, geometry links with stability, sources, effectivity, supersedes); 0.1 unchanged
+- [x] Authority configuration: workflow grants, organizations, source release authority, pinned processes, revocation, offline validity window; root-signed
+- [x] Signed, hash-chained workflow records bound to the baseline digest; checkpoints for truncation
+- [x] Configurable process definitions; reference process and a first-article variant on the same engine
+- [x] Bounded authorization (CIP); one-level delegation; fail-closed gates
+- [x] Process suitability (fit, material, firmware, calibration, capability) with engineering gap review
+- [x] Manual queue and build records; inspection with documented decision rules, units and uncertainty; NCR; disposition; closure with incorporation
+- [x] Publishing recipe, adapter interface, local fixture adapter, idempotent transactions, acknowledgements
+- [x] CLI `record`, `evidence export`, `sync`, `authority sign`; viewer workflow panels; evidence bundle
 
-### Phase B: requirements and process fit
-- [ ] Requirements in the manifest: function, interfaces, material, datums, acceptance criteria, requirement owner; approval gate before release
-- [ ] Process registry: printer, firmware, material, slicer profile, orientation, geometry/tolerance envelope, calibration status, evidence
-- [ ] Requirements-to-process match that passes or blocks with listed gaps (grows out of the build-volume fit check)
-- [ ] Work instructions and print settings in the package, written into the 3MF (replaces the 3D-printing item below)
+### Needs real inputs (not to be fabricated)
+- [ ] The controlled design of the demo part and its real requirement set and tolerances
+- [ ] Onshape source references for it; decision on Windchill access
+- [ ] Printer identity and firmware, capability study, calibration and instrument certificates
+- [ ] Actual builds on the H2C and real measurements, run through the workflow and kept as evidence
+- [ ] Named people, keys and organizations for each workflow role
 
-### Phase C: build and inspection
-- [ ] Manual queue: record queued, dispatched, job ID and timestamps as manual events
-- [ ] Bambu LAN bridge (separate CLI): FTPS upload and MQTT start/status, pinned firmware, job ID correlated to the package revision (replaces the 3D-printing item below)
-- [ ] Serial/lot assignment
-- [ ] Inspection intake: inspector and organization, instrument and calibration, measurements against acceptance criteria, decision rule, pass/fail, disposition
-
-### Phase D: evidence and end-to-end run
-- [ ] Onshape source reference in the manifest: document, element, version, release state (entered at pack time; REST pull later)
-- [ ] Real single-part bracket from Onshape as the demo package
-- [ ] Allow 3MF as a process-input file, marked as not the authoritative definition
-- [ ] Effectivity and supersession fields (from configuration control below)
-- [ ] Evidence view in the viewer: requirements → release → process → job → inspection → disposition for one revision
-- [ ] CLI `tdp evidence`: export the TRL 4 evidence bundle
-- [ ] Run the full workflow on the H2C and keep the artifacts and logs
-
-Deferred until after the demo: signed app releases, multi-page and geometry compare, Merkle custody log and anchoring, hardware-backed keys, measure tool, BOM↔3D picking, title-block panel, STL export, rebuilding occt without `unsafe-eval`.
+### Next in software
+- [ ] Onshape adapter (read release state and versions through the `SourceAdapter` interface), then Windchill
+- [ ] Merkle custody log with exchanged tree heads (replaces checkpoints as the truncation defense); RFC 3161 time-stamps
+- [ ] Bambu LAN bridge as a separate CLI producing automated build records (needs LAN-only and Developer Mode decisions)
+- [ ] Allow 3MF as a process-input artifact class in packages; print settings carried into the 3MF
+- [ ] Hardware-backed keys for workflow records
 
 ## Done: v0.1 foundation
 - [x] Package format: signed manifest, detached Ed25519 signatures, trust store

@@ -1,0 +1,10 @@
+{
+  "schema": "tdp-anchors/0.1",
+  "roots": [
+    {
+      "keyId": "ce11d6059e4773a8a7b9cd8aa81f0819",
+      "name": "Lab Authority Root (demo key, public seed)",
+      "publicKey": "915+WS8Cqe7ZkEUYMLTifgTh6tJn9SqG+Xt8LvJngyw="
+    }
+  ]
+}

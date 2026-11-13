@@ -1,0 +1,1196 @@
+{
+  "schema": "tdp-evidence-bundle/0.1",
+  "generatedAt": "2026-11-12T13:00:00.000Z",
+  "generator": "tdp-viewer 0.1.0",
+  "synthetic": true,
+  "label": "SYNTHETIC SURROGATE: not the controlled design. Demonstration data only; dimensions, limits, approvals, builds and measurements are invented.",
+  "status": {
+    "packageIntegrity": "Package integrity verified",
+    "sourceRelease": "Source release evidence verified: lab-fixture Released rev A (laboratory fixture authority, not a live PLM)",
+    "operation": "No authorized operation pending in state closed",
+    "inspection": "Inspection accepted (measurement outcome; not a disposition)",
+    "disposition": "Dispositioned accept by Mel Disposition Authority (demo)"
+  },
+  "package": {
+    "id": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+    "schema": "tdp-manifest/0.2",
+    "partNumber": "SYN-PH-2000",
+    "revision": "A",
+    "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+    "verdict": "trusted",
+    "checks": [
+      {
+        "id": "archive",
+        "status": "pass",
+        "message": "8 entries within size limits"
+      },
+      {
+        "id": "manifest",
+        "status": "pass",
+        "message": "manifest for SYN-PH-2000 rev A"
+      },
+      {
+        "id": "signature:5f5496ba6dd6ef253887e2f1cd1fe82a:author",
+        "status": "pass",
+        "message": "author signature by Dana Author (demo) is valid"
+      },
+      {
+        "id": "signature:6bb8df56e53068a39197bbc82f9f4a98:approver",
+        "status": "pass",
+        "message": "approver signature by Avery Approver (demo) is valid"
+      },
+      {
+        "id": "signatures",
+        "status": "pass",
+        "message": "required roles signed by distinct keys: author, approver"
+      },
+      {
+        "id": "validity",
+        "status": "pass",
+        "message": "valid until 2028-11-10T00:00:00.000Z"
+      },
+      {
+        "id": "contents",
+        "status": "pass",
+        "message": "all 6 files match the manifest"
+      },
+      {
+        "id": "bom",
+        "status": "pass",
+        "message": "2 BOM items, references resolve"
+      },
+      {
+        "id": "engineering",
+        "status": "pass",
+        "message": "tdp-engineering/0.1 baseline BL-SYN-PH-2000-A: 2 items, 3 requirements, 3 characteristics (SYNTHETIC)"
+      }
+    ]
+  },
+  "baseline": {
+    "id": "BL-SYN-PH-2000-A",
+    "item": {
+      "itemId": "SYN-PH-2000",
+      "revision": "A"
+    },
+    "effectivity": {
+      "kind": "serial",
+      "from": "SN-0001",
+      "to": "SN-0050"
+    },
+    "supersedes": null,
+    "sources": [
+      {
+        "id": "SRC-SYN-PH-2001",
+        "system": "lab-fixture",
+        "reference": {
+          "surrogateFor": "onshape",
+          "documentId": "SYNTH-DOC-SYN-PH-2001",
+          "versionId": "SYNTH-V-SYN-PH-2001-A",
+          "elementId": "SYNTH-EL-SYN-PH-2001"
+        },
+        "declaredRevision": "A",
+        "declaredReleaseState": "Released",
+        "capture": "fixture",
+        "capturedAt": "2026-11-10T12:00:00.000Z"
+      },
+      {
+        "id": "SRC-SYN-PH-2000",
+        "system": "lab-fixture",
+        "reference": {
+          "surrogateFor": "onshape",
+          "documentId": "SYNTH-DOC-SYN-PH-2000",
+          "versionId": "SYNTH-V-SYN-PH-2000-A",
+          "elementId": "SYNTH-EL-SYN-PH-2000"
+        },
+        "declaredRevision": "A",
+        "declaredReleaseState": "Released",
+        "capture": "fixture",
+        "capturedAt": "2026-11-10T12:00:00.000Z"
+      }
+    ]
+  },
+  "configuration": {
+    "trustStoreSha256": "1fe4fa4ba89a037197f7b29e25989e314a5ad272074531913836ee6381bca2c9",
+    "authority": {
+      "id": "lab-authority",
+      "serial": 1,
+      "sha256": "c7266dbda0cfe2fed3c5119102ed8cd1da571b0c2272dabe8f60865d15789cec",
+      "fixture": true,
+      "label": "LOCAL LABORATORY AUTHORITY FIXTURE: stands in for the source PLM's release authority and the program's role assignments. Not Onshape, not Windchill.",
+      "signedBy": "Lab Authority Root (demo key, public seed)",
+      "issued": "2026-11-10T12:00:00.000Z",
+      "offlineValidityHours": 168
+    },
+    "process": {
+      "id": "printed-part",
+      "version": 1,
+      "sha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff"
+    },
+    "decisionRules": "core/decision-rules/0.1",
+    "evaluatedAt": "2026-11-12T13:00:00.000Z"
+  },
+  "ledger": {
+    "sha256": "339f63a1555731d3575f3a4556852b8081cb9445c2e5456361eee8e95871e34e",
+    "instance": "a1e8949d-57e9-42b4-be91-19d4182f0b2b",
+    "verdict": "verified",
+    "state": "closed",
+    "records": 16,
+    "head": "932778502eabbef9bd4bde82412d0674d1b5aae91460fc4d8b1399c27888f399",
+    "checks": [
+      {
+        "id": "ledger",
+        "status": "pass",
+        "message": "ledger a1e8949d-57e9-42b4-be91-19d4182f0b2b for SYN-PH-2001@A in baseline BL-SYN-PH-2000-A, process printed-part v1"
+      },
+      {
+        "id": "authority",
+        "status": "pass",
+        "message": "LABORATORY FIXTURE authority lab-authority serial 1, signed by Lab Authority Root (demo key, public seed); pins printed-part v1"
+      },
+      {
+        "id": "record:1",
+        "status": "pass",
+        "message": "record 1 (approve-requirements) by Riley Requirement Owner (demo) (Lab Design Authority (synthetic)) as requirement-owner: approved"
+      },
+      {
+        "id": "record:2",
+        "status": "pass",
+        "message": "record 2 (record-source-release) by Casey Configuration Manager (demo) (Lab Design Authority (synthetic)) as configuration-manager: verified"
+      },
+      {
+        "id": "record:3",
+        "status": "pass",
+        "message": "record 3 (review-suitability) by Sam Manufacturing Engineer (demo) (Lab Print Cell (synthetic)) as manufacturing-engineer: review-required"
+      },
+      {
+        "id": "record:4",
+        "status": "pass",
+        "message": "record 4 (engineering-gap-review) by Drew Design Engineer (demo) (Lab Design Authority (synthetic)) as design-engineer: accepted"
+      },
+      {
+        "id": "record:5",
+        "status": "pass",
+        "message": "record 5 (plan-build) by Pat Planner (demo) (Lab Print Cell (synthetic)) as planner: planned"
+      },
+      {
+        "id": "record:6",
+        "status": "pass",
+        "message": "record 6 (authorize-manufacture) by Morgan Manufacturing Authority (demo) (Lab Design Authority (synthetic)) as manufacturing-authority: issued"
+      },
+      {
+        "id": "record:7",
+        "status": "pass",
+        "message": "record 7 (enter-queue) by Pat Planner (demo) (Lab Print Cell (synthetic)) as planner: queued"
+      },
+      {
+        "id": "record:8",
+        "status": "pass",
+        "message": "record 8 (dispatch-build) by Oli Operator (demo) (Lab Print Cell (synthetic)) as operator: started"
+      },
+      {
+        "id": "record:9",
+        "status": "pass",
+        "message": "record 9 (complete-build) by Oli Operator (demo) (Lab Print Cell (synthetic)) as operator: failed"
+      },
+      {
+        "id": "record:10",
+        "status": "pass",
+        "message": "record 10 (enter-queue) by Oli Operator (demo) (Lab Print Cell (synthetic)) as operator: queued"
+      },
+      {
+        "id": "record:11",
+        "status": "pass",
+        "message": "record 11 (delegate) by Lee Cell Lead (demo) (Lab Print Cell (synthetic)) as operator: issued"
+      },
+      {
+        "id": "record:12",
+        "status": "pass",
+        "message": "record 12 (dispatch-build) by Jo Second-Shift Operator (demo, delegated only) (Lab Print Cell (synthetic)) as operator: started"
+      },
+      {
+        "id": "record:13",
+        "status": "pass",
+        "message": "record 13 (complete-build) by Jo Second-Shift Operator (demo, delegated only) (Lab Print Cell (synthetic)) as operator: completed"
+      },
+      {
+        "id": "record:14",
+        "status": "pass",
+        "message": "record 14 (inspect) by Ines Inspector (demo) (Lab Inspection (synthetic)) as inspector: accept"
+      },
+      {
+        "id": "record:15",
+        "status": "pass",
+        "message": "record 15 (disposition) by Mel Disposition Authority (demo) (Lab Design Authority (synthetic)) as disposition-authority: accept"
+      },
+      {
+        "id": "record:16",
+        "status": "pass",
+        "message": "record 16 (close-evidence) by Casey Configuration Manager (demo) (Lab Design Authority (synthetic)) as configuration-manager: closed"
+      }
+    ]
+  },
+  "records": [
+    {
+      "seq": 1,
+      "recordId": "2287980a-16d0-4457-81c7-76be3e56d6a1",
+      "sha256": "44ab339f45c7ebe66d59a48fe20f63fb09b8986465615fe924b57fb24281ae9f",
+      "action": "approve-requirements",
+      "kind": "requirements-approval",
+      "outcome": "approved",
+      "at": "2026-11-10T13:00:00.000Z",
+      "actor": {
+        "keyId": "c7e1ee0161dac7817a2fe447ebbdf51e",
+        "name": "Riley Requirement Owner (demo)",
+        "organization": "Lab Design Authority (synthetic)",
+        "role": "requirement-owner",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": null,
+      "evidence": [],
+      "held": []
+    },
+    {
+      "seq": 2,
+      "recordId": "35e10290-fedf-4c3c-bc9c-55f136a1c461",
+      "sha256": "b667ebcc249bf15da3b77cca997912390e52749c58965c6bb8a865a624025a4a",
+      "action": "record-source-release",
+      "kind": "source-release",
+      "outcome": "verified",
+      "at": "2026-11-10T13:10:00.000Z",
+      "actor": {
+        "keyId": "45c74edb2764c39a76fb50033c3ac95e",
+        "name": "Casey Configuration Manager (demo)",
+        "organization": "Lab Design Authority (synthetic)",
+        "role": "configuration-manager",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": null,
+      "evidence": [
+        {
+          "id": "EV-REL",
+          "tag": "source-release-record",
+          "sha256": "ef0c46259244e782ad7be7d2cb460fbcdb4fc9726c1efe2f8099855b772eb1fb",
+          "synthetic": true,
+          "hashVerified": true
+        }
+      ],
+      "held": []
+    },
+    {
+      "seq": 3,
+      "recordId": "0989bca5-6863-4581-bc37-9b3a9fb1414a",
+      "sha256": "2b8b357df3d05d027e9983237d8f88151482bb839fa56b2b816c74ad099ba40d",
+      "action": "review-suitability",
+      "kind": "suitability",
+      "outcome": "review-required",
+      "at": "2026-11-10T13:30:00.000Z",
+      "actor": {
+        "keyId": "a5c3dc9adf529103a67bbffd6259c4cc",
+        "name": "Sam Manufacturing Engineer (demo)",
+        "organization": "Lab Print Cell (synthetic)",
+        "role": "manufacturing-engineer",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": null,
+      "evidence": [
+        {
+          "id": "EV-CAP",
+          "tag": "capability-study",
+          "sha256": "e18d2fc6983ceb54e8b2439695224e398601e4a80d4b5d5a62a64dae335021b3",
+          "synthetic": true,
+          "hashVerified": true
+        },
+        {
+          "id": "EV-PCAL",
+          "tag": "calibration-certificate",
+          "sha256": "4ab89c172fa52547a11986a8e5bd1a077d37a83c027fb8402ef3274444d64c15",
+          "synthetic": true,
+          "hashVerified": true
+        }
+      ],
+      "held": []
+    },
+    {
+      "seq": 4,
+      "recordId": "d8f2d310-c5f2-4ff6-b010-40a02daa573b",
+      "sha256": "578b90c513719acd784d7e5767e6539429e0aeead36e0923e6950ce99d8197d0",
+      "action": "engineering-gap-review",
+      "kind": "suitability-review",
+      "outcome": "accepted",
+      "at": "2026-11-10T13:45:00.000Z",
+      "actor": {
+        "keyId": "c178980de2948732ec4a08cc497ca5f2",
+        "name": "Drew Design Engineer (demo)",
+        "organization": "Lab Design Authority (synthetic)",
+        "role": "design-engineer",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": null,
+      "evidence": [],
+      "held": []
+    },
+    {
+      "seq": 5,
+      "recordId": "b7456e59-417e-49b1-b971-5e7bae840b73",
+      "sha256": "ea6358ce5659cee27cfb290cb2f07586d208041bf7ca4a58694da7080e591de3",
+      "action": "plan-build",
+      "kind": "plan",
+      "outcome": "planned",
+      "at": "2026-11-10T14:00:00.000Z",
+      "actor": {
+        "keyId": "6b16af583466bc31ce992c3cff830e73",
+        "name": "Pat Planner (demo)",
+        "organization": "Lab Print Cell (synthetic)",
+        "role": "planner",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": null,
+      "evidence": [],
+      "held": []
+    },
+    {
+      "seq": 6,
+      "recordId": "2618e621-a2bd-437d-a5cb-561501c5513a",
+      "sha256": "3ceceb5af2c58cc1b1e5545fc9e8be4ac47ad0b18c91eaa64d253a7c8e78aabb",
+      "action": "authorize-manufacture",
+      "kind": "authorization",
+      "outcome": "issued",
+      "at": "2026-11-10T14:30:00.000Z",
+      "actor": {
+        "keyId": "7a4150a457b781de8f686f0c2f5af3e0",
+        "name": "Morgan Manufacturing Authority (demo)",
+        "organization": "Lab Design Authority (synthetic)",
+        "role": "manufacturing-authority",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": null,
+      "evidence": [],
+      "held": []
+    },
+    {
+      "seq": 7,
+      "recordId": "764dc7f2-a227-4893-9979-74c1fc46904f",
+      "sha256": "3efa074049eb1d2e5a158e10b0663a36e8d6b7c9676feb7938dc6b4dc2acbd96",
+      "action": "enter-queue",
+      "kind": "queue-entry",
+      "outcome": "queued",
+      "at": "2026-11-10T14:40:00.000Z",
+      "actor": {
+        "keyId": "6b16af583466bc31ce992c3cff830e73",
+        "name": "Pat Planner (demo)",
+        "organization": "Lab Print Cell (synthetic)",
+        "role": "planner",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": {
+        "serial": "SN-0001"
+      },
+      "evidence": [
+        {
+          "id": "EV-JOB",
+          "tag": "build-file",
+          "sha256": "5f5c3f10cf976020ab49a3af781859d49cbc4ccb1424ac440fbc8c039dd38023",
+          "synthetic": true,
+          "hashVerified": true
+        }
+      ],
+      "held": []
+    },
+    {
+      "seq": 8,
+      "recordId": "77c8945c-b0ed-40b6-8538-4fcf7afbe27c",
+      "sha256": "38143d8675ffb7d68047c7fe2497cdbdf470d7e1cc7afbcc2a305b5a0e1197bc",
+      "action": "dispatch-build",
+      "kind": "build-start",
+      "outcome": "started",
+      "at": "2026-11-10T14:50:00.000Z",
+      "actor": {
+        "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+        "name": "Oli Operator (demo)",
+        "organization": "Lab Print Cell (synthetic)",
+        "role": "operator",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": {
+        "serial": "SN-0001"
+      },
+      "evidence": [],
+      "held": []
+    },
+    {
+      "seq": 9,
+      "recordId": "a5ebbca2-0f27-4b1f-ba13-fe4499655e57",
+      "sha256": "5e34daeb7e24525c05aedd5fbf7ccaeffb422fc8ddfd49f225d90351032cf58a",
+      "action": "complete-build",
+      "kind": "build-complete",
+      "outcome": "failed",
+      "at": "2026-11-10T15:20:00.000Z",
+      "actor": {
+        "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+        "name": "Oli Operator (demo)",
+        "organization": "Lab Print Cell (synthetic)",
+        "role": "operator",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": {
+        "serial": "SN-0001"
+      },
+      "evidence": [
+        {
+          "id": "EV-LOG",
+          "tag": "build-log",
+          "sha256": "370b15db1a6cae35ed2b969f2e2e4e4fc6c30c5ba56678248bff392aaec2930b",
+          "synthetic": true,
+          "hashVerified": true
+        }
+      ],
+      "held": []
+    },
+    {
+      "seq": 10,
+      "recordId": "53f7496b-6526-4938-b367-218a4ee80ab0",
+      "sha256": "271ae8e5e66c2659d12da5d083d686bebc3a33532a7651f49419c1c621aa3619",
+      "action": "enter-queue",
+      "kind": "queue-entry",
+      "outcome": "queued",
+      "at": "2026-11-10T15:30:00.000Z",
+      "actor": {
+        "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+        "name": "Oli Operator (demo)",
+        "organization": "Lab Print Cell (synthetic)",
+        "role": "operator",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": {
+        "serial": "SN-0001"
+      },
+      "evidence": [
+        {
+          "id": "EV-JOB",
+          "tag": "build-file",
+          "sha256": "f55b74f1599ac39f16ca0f9643ac79ba828c0487c154b1a1a53580045266acda",
+          "synthetic": true,
+          "hashVerified": true
+        }
+      ],
+      "held": []
+    },
+    {
+      "seq": 11,
+      "recordId": "40fe54e2-66c1-4ca7-a131-031b00aad3b1",
+      "sha256": "843faba501ac1aa18420083ce89eee2158c6232aa5bbbed828988c81f283368c",
+      "action": "delegate",
+      "kind": "delegation",
+      "outcome": "issued",
+      "at": "2026-11-10T15:35:00.000Z",
+      "actor": {
+        "keyId": "97dd438ae178fba3c7da6f90a53a8e43",
+        "name": "Lee Cell Lead (demo)",
+        "organization": "Lab Print Cell (synthetic)",
+        "role": "operator",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": null,
+      "evidence": [],
+      "held": []
+    },
+    {
+      "seq": 12,
+      "recordId": "da039157-a5d3-4199-97c0-45a3b096912d",
+      "sha256": "d0a16cfdabb0be07cc81a1b8d3705e5313d6f778445090afa1e444464edb26a9",
+      "action": "dispatch-build",
+      "kind": "build-start",
+      "outcome": "started",
+      "at": "2026-11-10T15:40:00.000Z",
+      "actor": {
+        "keyId": "15229206595ccc5a10b436db089ffcce",
+        "name": "Jo Second-Shift Operator (demo, delegated only)",
+        "organization": "Lab Print Cell (synthetic)",
+        "role": "operator",
+        "authorizedVia": "delegation 40fe54e2-66c1-4ca7-a131-031b00aad3b1 from 97dd438ae178fba3c7da6f90a53a8e43"
+      },
+      "unit": {
+        "serial": "SN-0001"
+      },
+      "evidence": [],
+      "held": []
+    },
+    {
+      "seq": 13,
+      "recordId": "a2f31d5d-2281-400a-96f5-374a5062f73f",
+      "sha256": "02ec7992d54e183fd9be31e19b74736ffbb1a8fef7634851e88b42e67f010773",
+      "action": "complete-build",
+      "kind": "build-complete",
+      "outcome": "completed",
+      "at": "2026-11-10T16:25:00.000Z",
+      "actor": {
+        "keyId": "15229206595ccc5a10b436db089ffcce",
+        "name": "Jo Second-Shift Operator (demo, delegated only)",
+        "organization": "Lab Print Cell (synthetic)",
+        "role": "operator",
+        "authorizedVia": "delegation 40fe54e2-66c1-4ca7-a131-031b00aad3b1 from 97dd438ae178fba3c7da6f90a53a8e43"
+      },
+      "unit": {
+        "serial": "SN-0001"
+      },
+      "evidence": [
+        {
+          "id": "EV-LOG",
+          "tag": "build-log",
+          "sha256": "e3f479b1499b1d0db376c3b3de5f49117202a62d8f40f206737960c2b591f4a1",
+          "synthetic": true,
+          "hashVerified": true
+        }
+      ],
+      "held": []
+    },
+    {
+      "seq": 14,
+      "recordId": "fed8a23d-ce6f-41d9-8f91-1357b6210a77",
+      "sha256": "e1a6e6962d0617d093b0685408b735d14eaaee22797a9463c19e1f541d19efe0",
+      "action": "inspect",
+      "kind": "inspection",
+      "outcome": "accept",
+      "at": "2026-11-10T18:00:00.000Z",
+      "actor": {
+        "keyId": "d677edaf9481f8fa54577abfc9de20ec",
+        "name": "Ines Inspector (demo)",
+        "organization": "Lab Inspection (synthetic)",
+        "role": "inspector",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": {
+        "serial": "SN-0001"
+      },
+      "evidence": [
+        {
+          "id": "EV-MEAS",
+          "tag": "measurement-data",
+          "sha256": "d03544f0edbd38405aca009bdf0b11e6eba26557e83f5d230656af35d583f992",
+          "synthetic": true,
+          "hashVerified": true
+        },
+        {
+          "id": "EV-MIC",
+          "tag": "calibration-certificate",
+          "sha256": "39db0ddbb50c9bdb3fe129e2a15f80665b39673989108611f67ad1345def616b",
+          "synthetic": true,
+          "hashVerified": true
+        },
+        {
+          "id": "EV-CAL",
+          "tag": "calibration-certificate",
+          "sha256": "8bce83ed1e75fbec3e5fe500880db354aba6ddd2641a691e0366ad311600d00c",
+          "synthetic": true,
+          "hashVerified": true
+        }
+      ],
+      "held": []
+    },
+    {
+      "seq": 15,
+      "recordId": "8a143808-775b-4f68-a959-b3fcce76ea02",
+      "sha256": "8138025ca0fb9afea1a2d0cd2f21f5404d9510ac9f79f9d2773a081e0a95f674",
+      "action": "disposition",
+      "kind": "disposition",
+      "outcome": "accept",
+      "at": "2026-11-10T18:30:00.000Z",
+      "actor": {
+        "keyId": "93f1304f60266492b7ebc90b2788df0e",
+        "name": "Mel Disposition Authority (demo)",
+        "organization": "Lab Design Authority (synthetic)",
+        "role": "disposition-authority",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": {
+        "serial": "SN-0001"
+      },
+      "evidence": [],
+      "held": []
+    },
+    {
+      "seq": 16,
+      "recordId": "23820af0-67ec-4c0b-b189-1740f05ff54c",
+      "sha256": "932778502eabbef9bd4bde82412d0674d1b5aae91460fc4d8b1399c27888f399",
+      "action": "close-evidence",
+      "kind": "closure",
+      "outcome": "closed",
+      "at": "2026-11-10T19:00:00.000Z",
+      "actor": {
+        "keyId": "45c74edb2764c39a76fb50033c3ac95e",
+        "name": "Casey Configuration Manager (demo)",
+        "organization": "Lab Design Authority (synthetic)",
+        "role": "configuration-manager",
+        "authorizedVia": "grant in lab-authority serial 1"
+      },
+      "unit": {
+        "serial": "SN-0001"
+      },
+      "evidence": [],
+      "held": []
+    }
+  ],
+  "traceability": [
+    {
+      "requirement": "REQ-001 v1",
+      "verification": "inspection",
+      "characteristics": [
+        {
+          "id": "CH-001",
+          "limits": "5.8 ≤ tab thickness ≤ 6.2 mm (nominal 6, guard-banded)",
+          "planned": true,
+          "result": "accept",
+          "basis": [
+            "6.04 mm within [5.8 + U, 6.2 − U], U = 0.004"
+          ]
+        }
+      ]
+    },
+    {
+      "requirement": "REQ-002 v1",
+      "verification": "inspection",
+      "characteristics": [
+        {
+          "id": "CH-002",
+          "limits": "39.7 ≤ overall length ≤ 40.3 mm (nominal 40, simple-acceptance)",
+          "planned": true,
+          "result": "accept",
+          "basis": [
+            "40.12 mm within [39.7, 40.3] (TUR 10.00)"
+          ]
+        },
+        {
+          "id": "CH-003",
+          "limits": "19.7 ≤ hook height ≤ 20.3 mm (nominal 20, guard-banded)",
+          "planned": true,
+          "result": "accept",
+          "basis": [
+            "19.88 mm within [19.7 + U, 20.3 − U], U = 0.03"
+          ]
+        }
+      ]
+    },
+    {
+      "requirement": "REQ-003 v1",
+      "verification": "process-evidence",
+      "characteristics": []
+    }
+  ],
+  "reconciliation": {
+    "recipe": {
+      "id": "lab-asbuilt",
+      "version": 1
+    },
+    "transactions": [
+      {
+        "txId": "tx-d39d1e572e49deb15baccd9993ba3446",
+        "contentSha256": "6baa38c962539437c41f21058d720a1bd23839f2639292d4ab5b383c502d1c66",
+        "operation": "create",
+        "target": {
+          "system": "lab-fixture",
+          "objectType": "ProcessReview",
+          "objectId": "0989bca5-6863-4581-bc37-9b3a9fb1414a"
+        },
+        "expectedVersion": null,
+        "status": "held-lossy",
+        "lossy": [
+          {
+            "field": "data.input.capabilities",
+            "reason": "capability evidence detail has no target field"
+          }
+        ],
+        "ack": {
+          "txId": "tx-d39d1e572e49deb15baccd9993ba3446",
+          "contentSha256": "6baa38c962539437c41f21058d720a1bd23839f2639292d4ab5b383c502d1c66",
+          "status": "rejected",
+          "objectType": "ProcessReview",
+          "objectId": "0989bca5-6863-4581-bc37-9b3a9fb1414a",
+          "sourceVersion": null,
+          "reason": "lossy mapping (data.input.capabilities) not accepted by the recipe",
+          "requiresNewBaseline": false
+        }
+      },
+      {
+        "txId": "tx-90b0b977274ca3c5828cfc17b574e1e0",
+        "contentSha256": "a29b68bb8202059b6daa92b5ff30258100162f3e7b4720e70ec442277831ce92",
+        "operation": "create",
+        "target": {
+          "system": "lab-fixture",
+          "objectType": "ProcessPlan",
+          "objectId": "b7456e59-417e-49b1-b971-5e7bae840b73"
+        },
+        "expectedVersion": null,
+        "status": "unsupported",
+        "lossy": [],
+        "ack": {
+          "txId": "tx-90b0b977274ca3c5828cfc17b574e1e0",
+          "contentSha256": "a29b68bb8202059b6daa92b5ff30258100162f3e7b4720e70ec442277831ce92",
+          "status": "unsupported",
+          "objectType": "ProcessPlan",
+          "objectId": "b7456e59-417e-49b1-b971-5e7bae840b73",
+          "sourceVersion": null,
+          "reason": "ProcessPlan is not a supported object type",
+          "requiresNewBaseline": false
+        }
+      },
+      {
+        "txId": "tx-044a448abefd1c34beb73289cf4bc0fa",
+        "contentSha256": "a468cdce5231082bd9778a97ac750bf79db86f37b8342a74da6efea3e9afed56",
+        "operation": "create",
+        "target": {
+          "system": "lab-fixture",
+          "objectType": "AsBuiltUnit",
+          "objectId": "SYN-PH-2001:SN-0001"
+        },
+        "expectedVersion": null,
+        "status": "proposed",
+        "lossy": [],
+        "ack": {
+          "txId": "tx-044a448abefd1c34beb73289cf4bc0fa",
+          "contentSha256": "a468cdce5231082bd9778a97ac750bf79db86f37b8342a74da6efea3e9afed56",
+          "status": "accepted",
+          "objectType": "AsBuiltUnit",
+          "objectId": "SYN-PH-2001:SN-0001",
+          "sourceVersion": 1,
+          "reason": "created.",
+          "requiresNewBaseline": false
+        }
+      },
+      {
+        "txId": "tx-66d53bffda73b140fb86be051d046e90",
+        "contentSha256": "968c87bc181a1eb01e927621c48e4c90417b7884c9f580aeb70c2dc8d20f3c39",
+        "operation": "update",
+        "target": {
+          "system": "lab-fixture",
+          "objectType": "AsBuiltUnit",
+          "objectId": "SYN-PH-2001:SN-0001"
+        },
+        "expectedVersion": 1,
+        "status": "proposed",
+        "lossy": [],
+        "ack": {
+          "txId": "tx-66d53bffda73b140fb86be051d046e90",
+          "contentSha256": "968c87bc181a1eb01e927621c48e4c90417b7884c9f580aeb70c2dc8d20f3c39",
+          "status": "accepted",
+          "objectType": "AsBuiltUnit",
+          "objectId": "SYN-PH-2001:SN-0001",
+          "sourceVersion": 2,
+          "reason": "updated.",
+          "requiresNewBaseline": false
+        }
+      },
+      {
+        "txId": "tx-e611a1aecf060f682d13bcaf580f291e",
+        "contentSha256": "6dbf930eb3620eb97e8a01604e7a129843660f778f2cc7353eb37b236511649f",
+        "operation": "create",
+        "target": {
+          "system": "lab-fixture",
+          "objectType": "InspectionResult",
+          "objectId": "fed8a23d-ce6f-41d9-8f91-1357b6210a77"
+        },
+        "expectedVersion": null,
+        "status": "proposed",
+        "lossy": [
+          {
+            "field": "data.measurements",
+            "reason": "the fixture's InspectionResult has no per-characteristic values, instruments or uncertainty; the signed record stays the authority"
+          }
+        ],
+        "ack": {
+          "txId": "tx-e611a1aecf060f682d13bcaf580f291e",
+          "contentSha256": "6dbf930eb3620eb97e8a01604e7a129843660f778f2cc7353eb37b236511649f",
+          "status": "accepted",
+          "objectType": "InspectionResult",
+          "objectId": "fed8a23d-ce6f-41d9-8f91-1357b6210a77",
+          "sourceVersion": 1,
+          "reason": "created.",
+          "requiresNewBaseline": false
+        }
+      },
+      {
+        "txId": "tx-fad85cb363c1826c3812e6b1c7bdb622",
+        "contentSha256": "afd2adb25a3229407235cb8c64bf2d99dd365a3ee8537589a37f1bb109339039",
+        "operation": "update",
+        "target": {
+          "system": "lab-fixture",
+          "objectType": "AsBuiltUnit",
+          "objectId": "SYN-PH-2001:SN-0001"
+        },
+        "expectedVersion": 2,
+        "status": "proposed",
+        "lossy": [],
+        "ack": {
+          "txId": "tx-fad85cb363c1826c3812e6b1c7bdb622",
+          "contentSha256": "afd2adb25a3229407235cb8c64bf2d99dd365a3ee8537589a37f1bb109339039",
+          "status": "accepted",
+          "objectType": "AsBuiltUnit",
+          "objectId": "SYN-PH-2001:SN-0001",
+          "sourceVersion": 3,
+          "reason": "updated.",
+          "requiresNewBaseline": false
+        }
+      }
+    ],
+    "excluded": [
+      {
+        "recordId": "2287980a-16d0-4457-81c7-76be3e56d6a1",
+        "kind": "requirements-approval",
+        "reason": "record kind not permitted by recipe"
+      },
+      {
+        "recordId": "35e10290-fedf-4c3c-bc9c-55f136a1c461",
+        "kind": "source-release",
+        "reason": "record kind not permitted by recipe"
+      },
+      {
+        "recordId": "d8f2d310-c5f2-4ff6-b010-40a02daa573b",
+        "kind": "suitability-review",
+        "reason": "record kind not permitted by recipe"
+      },
+      {
+        "recordId": "2618e621-a2bd-437d-a5cb-561501c5513a",
+        "kind": "authorization",
+        "reason": "record kind not permitted by recipe"
+      },
+      {
+        "recordId": "764dc7f2-a227-4893-9979-74c1fc46904f",
+        "kind": "queue-entry",
+        "reason": "record kind not permitted by recipe"
+      },
+      {
+        "recordId": "77c8945c-b0ed-40b6-8538-4fcf7afbe27c",
+        "kind": "build-start",
+        "reason": "record kind not permitted by recipe"
+      },
+      {
+        "recordId": "53f7496b-6526-4938-b367-218a4ee80ab0",
+        "kind": "queue-entry",
+        "reason": "record kind not permitted by recipe"
+      },
+      {
+        "recordId": "40fe54e2-66c1-4ca7-a131-031b00aad3b1",
+        "kind": "delegation",
+        "reason": "authority records are not synchronized"
+      },
+      {
+        "recordId": "da039157-a5d3-4199-97c0-45a3b096912d",
+        "kind": "build-start",
+        "reason": "record kind not permitted by recipe"
+      },
+      {
+        "recordId": "23820af0-67ec-4c0b-b189-1740f05ff54c",
+        "kind": "closure",
+        "reason": "record kind not permitted by recipe"
+      }
+    ]
+  },
+  "demonstrations": [
+    {
+      "id": "P01-a",
+      "scenario": "Synthetic surrogate rev A (tdp-manifest/0.2) verifies with its engineering model",
+      "expected": "trusted, engineering model consistent",
+      "actual": "trusted; tdp-engineering/0.1 baseline BL-SYN-PH-2000-A: 2 items, 3 requirements, 3 characteristics (SYNTHETIC)",
+      "pass": true
+    },
+    {
+      "id": "P01-b",
+      "scenario": "Committed tdp-manifest/0.1 sample still verifies unchanged, with no engineering model inferred",
+      "expected": "trusted; no engineering model",
+      "actual": "trusted; tdp-manifest/0.1: no engineering model (workflow records can't bind to this package)",
+      "pass": true
+    },
+    {
+      "id": "P01-c",
+      "scenario": "Possessing a trusted package does not authorize manufacture or prove source release",
+      "expected": "source release not established; operation not authorized",
+      "actual": "Source release evidence not established; No authorized operation pending in state baseline-received",
+      "pass": true
+    },
+    {
+      "id": "P01-d",
+      "scenario": "Source release evidence recorded by the configuration manager under the lab fixture authority",
+      "expected": "source release verified, labeled as laboratory fixture",
+      "actual": "Source release evidence verified: lab-fixture Released rev A (laboratory fixture authority, not a live PLM)",
+      "pass": true
+    },
+    {
+      "id": "P01-e",
+      "scenario": "New baseline rev B supersedes rev A; rev A and its evidence are preserved and still verify",
+      "expected": "rev B trusted with supersedes link; rev A bytes unchanged; rev A ledger verified; rev A ledger rejected against rev B",
+      "actual": "rev B trusted, supersedes BL-SYN-PH-2000-A; rev A unchanged; rev A ledger verified; against rev B: rejected (wrong baseline: ledger is for package 2a395545-a7ca-42e0-b927-a8dfa9af4752 basel…)",
+      "pass": true
+    },
+    {
+      "id": "P02-a",
+      "scenario": "Suitability: build-volume fit passes, but missing firmware is a gap, so the result is review-required (fit alone isn't capability)",
+      "expected": "review-required with gap 'printer firmware not recorded'; fit pass",
+      "actual": "review-required; fit pass; gaps: printer firmware not recorded",
+      "pass": true
+    },
+    {
+      "id": "P02-b",
+      "scenario": "Manual queue/build records: a failed job is recorded with its errors and the unit is requeued under the same CIP",
+      "expected": "J-0001 failed with errors; J-0002 completed; state closed",
+      "actual": "first-layer adhesion failure at layer 3 (synthetic); final state closed",
+      "pass": true
+    },
+    {
+      "id": "P02-c",
+      "scenario": "Operator authority via a verified delegation from a configured key with mayDelegate",
+      "expected": "dispatch by delegated operator verifies",
+      "actual": "dispatch by Jo Second-Shift Operator (demo, delegated only) via delegation 40fe54e2-66c1…",
+      "pass": true
+    },
+    {
+      "id": "P03-a",
+      "scenario": "SN-0001 measured within limits (guard-banded / simple acceptance) → accept; disposition is a separate signed decision",
+      "expected": "inspection accepted; dispositioned accept",
+      "actual": "Inspection accepted (measurement outcome; not a disposition); Dispositioned accept by Mel Disposition Authority (demo)",
+      "pass": true
+    },
+    {
+      "id": "P03-b",
+      "scenario": "SN-0002 tab 6.25 mm > 6.20 mm + U → reject → NCR → scrap",
+      "expected": "rejected; NCR-0001; scrap",
+      "actual": "Inspection rejected one or more characteristics; Dispositioned scrap by Mel Disposition Authority (demo); state closed",
+      "pass": true
+    },
+    {
+      "id": "P03-c",
+      "scenario": "SN-0003 tab 6.198 mm is within U of the upper limit → indeterminate, held (never an automatic pass)",
+      "expected": "indeterminate; state inspection-held",
+      "actual": "Inspection indeterminate: held for missing or insufficient measurement evidence; state inspection-held",
+      "pass": true
+    },
+    {
+      "id": "P03-d",
+      "scenario": "Units, limits and missing evidence: 0.2378 in converts and is accepted; degrees vs mm, or no calibration evidence → indeterminate",
+      "expected": "accept; indeterminate; indeterminate",
+      "actual": "accept (6.04012 mm); indeterminate; indeterminate",
+      "pass": true
+    },
+    {
+      "id": "P03-e",
+      "scenario": "Disposition authority tries to 'accept' a held (indeterminate) inspection directly",
+      "expected": "DENIED: a held inspection needs an NCR before any disposition",
+      "actual": "DENIED: disposition is not allowed from state inspection-held (needs inspected or nonconforming)",
+      "pass": true
+    },
+    {
+      "id": "P04-a",
+      "scenario": "A validly signed build start that skips suitability, planning and authorization",
+      "expected": "ledger rejected: not allowed from state source-released",
+      "actual": "record 3 (dispatch-build) by Oli Operator (demo): denied: dispatch-build is not allowed from state source-released (needs queued)",
+      "pass": true
+    },
+    {
+      "id": "P04-b",
+      "scenario": "Planning before source release is recorded (missing approval/evidence step)",
+      "expected": "DENIED before signing",
+      "actual": "DENIED: plan-build is not allowed from state requirements-approved (needs process-qualified)",
+      "pass": true
+    },
+    {
+      "id": "P04-c",
+      "scenario": "Suitability review without the required capability-study / calibration evidence",
+      "expected": "DENIED: requires evidence tagged capability-study",
+      "actual": "DENIED: review-suitability requires evidence tagged capability-study",
+      "pass": true
+    },
+    {
+      "id": "P04-d",
+      "scenario": "An inspection record that claims 'accept' when the decision rules give 'reject'",
+      "expected": "ledger rejected: decision rules give reject",
+      "actual": "record 10 (inspect) by Ines Inspector (demo): denied: inspect: record says accept, but the decision rules give reject",
+      "pass": true
+    },
+    {
+      "id": "P04-e",
+      "scenario": "Rev B carries geometry link GL-002 over from rev A (stale): planning is held until the plan records a review",
+      "expected": "DENIED without review; ALLOWED with review",
+      "actual": "DENIED: plan-build: geometry link GL-002 of CH-002 is stale; the plan must record a review of it…; with review: ALLOWED",
+      "pass": true
+    },
+    {
+      "id": "P05-a",
+      "scenario": "A trusted key with no workflow grant tries to dispatch",
+      "expected": "DENIED: no grant or valid delegation",
+      "actual": "DENIED: no grant or valid delegation gives this key the operator role for Lab Print Cell (synthetic) in printed-part",
+      "pass": true
+    },
+    {
+      "id": "P05-b",
+      "scenario": "A key revoked in the authority configuration tries to dispatch",
+      "expected": "DENIED: revoked",
+      "actual": "DENIED: Rex Revoked Operator (demo)'s key is revoked by the authority configuration (demo: credential withdrawn after badge loss (synthetic))",
+      "pass": true
+    },
+    {
+      "id": "P05-c",
+      "scenario": "Queueing after the CIP's validity period has ended",
+      "expected": "DENIED: not authorized (outside CIP window)",
+      "actual": "DENIED: enter-queue is not authorized: CIP CIP-SN-0001 is valid 2026-11-10T14:30:00.000Z to 2026-11-24T14:30:00.000Z, not at 2026-11-25T14:30:00.000Z",
+      "pass": true
+    },
+    {
+      "id": "P05-d",
+      "scenario": "Dispatch 8 days after the authority configuration was issued (offline validity 168 h)",
+      "expected": "DENIED: freshness can't be established offline",
+      "actual": "DENIED: dispatch-build needs current revocation status, which can't be established offline: authority lab-authority serial 1 was issued 2026-11-10T12:00:00.000Z, beyond its 168 h offline validity window; load a freshly issued configuration",
+      "pass": true
+    },
+    {
+      "id": "P05-e",
+      "scenario": "A signed record that asserts an organization the trust store doesn't bind to the key",
+      "expected": "rejected: trust store binds the key to another organization",
+      "actual": "DENIED: record 8 (dispatch-build) by Ola Outsider (demo, no grants): denied: Ola Outsider (demo, no grants) asserts organization Lab Design Authority (synthetic), but the trust store binds the key to Lab Print Cell (synthetic)",
+      "pass": true
+    },
+    {
+      "id": "P05-f",
+      "scenario": "A key tries to delegate authority to itself",
+      "expected": "DENIED: can't grant authority to its own signer",
+      "actual": "DENIED: a delegation can't grant authority to its own signer",
+      "pass": true
+    },
+    {
+      "id": "P05-g",
+      "scenario": "Loading a changed process definition (v2) that the authority does not pin",
+      "expected": "rejected: authority does not pin process v2",
+      "actual": "authority lab-authority does not pin process printed-part v2 with this digest",
+      "pass": true
+    },
+    {
+      "id": "P05-h",
+      "scenario": "Verifying after the authority configuration expired",
+      "expected": "rejected: authority configuration expired",
+      "actual": "authority configuration lab-authority serial 1 expired 2027-11-10T00:00:00.000Z",
+      "pass": true
+    },
+    {
+      "id": "P06-a",
+      "scenario": "A measured value edited in a signed record",
+      "expected": "rejected: signature over different bytes",
+      "actual": "record 14 (inspect): signature is over different bytes or by a different key",
+      "pass": true
+    },
+    {
+      "id": "P06-b",
+      "scenario": "A record removed from the middle",
+      "expected": "rejected",
+      "actual": "record 6 (enter-queue): says it is record 7",
+      "pass": true
+    },
+    {
+      "id": "P06-c",
+      "scenario": "The newest two records dropped: the chain alone still verifies; an independently retained checkpoint detects it",
+      "expected": "chain verifies; checkpoint reports truncation",
+      "actual": "verified; checkpoint: ledger has 14 verified records, but a retained checkpoint saw 16: history was truncated",
+      "pass": true
+    },
+    {
+      "id": "P06-d",
+      "scenario": "A measurement evidence file altered after recording",
+      "expected": "held: its hash can't be checked; nothing is accepted on the altered file",
+      "actual": "held: record 14 (inspect) by Ines Inspector (demo) (Lab Inspection (synthetic)) as inspector: accept; held: evidence EV-MEAS (…",
+      "pass": true
+    },
+    {
+      "id": "P06-e",
+      "scenario": "An inspection limit widened inside the signed engineering model",
+      "expected": "package rejected; no ledger can bind to it",
+      "actual": "rejected: 1 of 6 files failed; package is not trusted; records can't be checked against it",
+      "pass": true
+    },
+    {
+      "id": "P06-f",
+      "scenario": "Recovery: re-verifying the retained ledger and evidence from scratch",
+      "expected": "verified, same head as the checkpoint",
+      "actual": "verified, head 932778502eabbef9…",
+      "pass": true
+    },
+    {
+      "id": "P07-a",
+      "scenario": "SN-0001 proposals to the fixture PLM: AsBuiltUnit create then update (expected version 1), lossy-but-accepted InspectionResult, held lossy ProcessReview, unsupported ProcessPlan",
+      "expected": "accepted ×4, rejected (lossy held) ×1, unsupported ×1",
+      "actual": "{\"rejected\":1,\"unsupported\":1,\"accepted\":4}",
+      "pass": true
+    },
+    {
+      "id": "P07-b",
+      "scenario": "Replaying the same transactions",
+      "expected": "all duplicate; source objects unchanged",
+      "actual": "{\"duplicate\":6}; objects unchanged",
+      "pass": true
+    },
+    {
+      "id": "P07-c",
+      "scenario": "Reusing a transaction id with different content",
+      "expected": "rejected: transaction id reused with different content",
+      "actual": "transaction id reused with different content",
+      "pass": true
+    },
+    {
+      "id": "P07-d",
+      "scenario": "SN-0002 AsBuiltUnit already exists at the source with different content; the later update in the same set must not overwrite it",
+      "expected": "conflict, then dependent update refused; source object untouched",
+      "actual": "conflict: object already exists at version 1 with different content | conflict: an earlier transaction for this object in the same set was not applied; resolve it first; source object v1 manual",
+      "pass": true
+    },
+    {
+      "id": "P07-e",
+      "scenario": "An NCR proposed as a ChangeRequest: accepted for review, flagged as needing a newly published baseline; no baseline is altered",
+      "expected": "requiresNewBaseline true; package and ledger unchanged",
+      "actual": "accepted, requiresNewBaseline=true; package unchanged; acks match proposals",
+      "pass": true
+    },
+    {
+      "id": "P07-f",
+      "scenario": "Publication version check after the source moves to rev B",
+      "expected": "rev A reported superseded",
+      "actual": "SYN-PH-2001@A (SRC-SYN-PH-2001): source is now at revision B",
+      "pass": true
+    },
+    {
+      "id": "P08-a",
+      "scenario": "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)",
+      "expected": "measurements recorded",
+      "actual": "package verification (rev A, 6 files): 1.63 ms; ledger verification (SN-0001, 16 records): 6.1 ms; ledger verification per record: 0.38 ms; ledger size: 27550 bytes",
+      "pass": true
+    }
+  ],
+  "performance": [
+    {
+      "metric": "package verification (rev A, 6 files)",
+      "value": 1.63,
+      "unit": "ms",
+      "note": "mean of 5, this machine"
+    },
+    {
+      "metric": "ledger verification (SN-0001, 16 records)",
+      "value": 6.1,
+      "unit": "ms",
+      "note": "mean of 5, includes every gate re-evaluation"
+    },
+    {
+      "metric": "ledger verification per record",
+      "value": 0.38,
+      "unit": "ms",
+      "note": "full chain re-verified from genesis"
+    },
+    {
+      "metric": "ledger size",
+      "value": 27550,
+      "unit": "bytes",
+      "note": "16 signed records"
+    }
+  ],
+  "limitations": [
+    "Signatures prove which key signed which bytes, not when: record times are the signer's claim and are not independently time-stamped.",
+    "The record hash chain detects edits, reordering and removal in the middle of a ledger; it detects dropped newest records only against an independently retained checkpoint.",
+    "Offline verification can't learn of revocations issued after the loaded trust store and authority configuration; actions that need current revocation status are denied beyond the configuration's offline validity window.",
+    "A valid package signature establishes integrity and signer authorization under the trust policy; it does not authorize manufacture or prove source-system release.",
+    "Source release evidence from a laboratory fixture authority is not evidence of release in Onshape or Windchill; no live integration with either exists in this increment.",
+    "Evidence files are checked by SHA-256 only; their content (a calibration certificate, a photo) is not interpreted."
+  ]
+}

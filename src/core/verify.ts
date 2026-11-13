@@ -1,5 +1,6 @@
 import { readArchive, checkPath, ArchiveError, type ArchiveEntry } from "./archive";
 import { digestEquals, sha256Hex, utf8 } from "./bytes";
+import { EngineeringModel, validateEngineering, type EngineeringIssue } from "./engineering";
 import type { Policy } from "./policy";
 import { Manifest, SignatureFile, TrustStore, type Signature, type SignerRole, type TrustedKey } from "./schema";
 import { keyIdFor, verifyEd25519 } from "./signing";
@@ -28,6 +29,8 @@ export interface VerifyResult {
   manifest?: Manifest;
   manifestSha256?: string;
   files: FileResult[];
+  /** The canonical engineering model, for `tdp-manifest/0.2` packages whose model parsed. */
+  engineering?: { model: EngineeringModel; issues: EngineeringIssue[] };
   /** Archive bytes, kept only so a trusted package can be opened. */
   entries: ArchiveEntry[];
 }
@@ -146,8 +149,46 @@ export async function verifyPackage(
   checks.push(...contents.checks);
   const files = contents.files;
 
+  // 7. Engineering model (0.2 only). It's a signed, listed file, so its digest was checked in step 5.
+  const engineering = checkEngineering(manifest, byPath, checks);
+
   const verdict = checks.every((c) => c.status === "pass") ? "trusted" : "rejected";
-  return { verdict, checks, manifest, manifestSha256, files, entries };
+  return { verdict, checks, manifest, manifestSha256, files, engineering, entries };
+}
+
+function checkEngineering(
+  manifest: Manifest,
+  byPath: Map<string, ArchiveEntry>,
+  checks: Check[],
+): VerifyResult["engineering"] {
+  if (manifest.schema === "tdp-manifest/0.1") {
+    checks.push({ id: "engineering", status: "pass", message: "tdp-manifest/0.1: no engineering model (workflow records can't bind to this package)" });
+    return undefined;
+  }
+  const fail = (message: string) => void checks.push({ id: "engineering", status: "fail", message });
+  const ref = manifest.engineering;
+  const listed = manifest.files.find((f) => f.path === ref.path);
+  const entry = byPath.get(ref.path);
+  if (!listed || !entry) return fail(`engineering model ${ref.path} is not a listed file`);
+  if (listed.mediaType !== "application/json") return fail(`engineering model ${ref.path} must be application/json`);
+  let model: EngineeringModel;
+  try {
+    model = parseJsonEntry(entry.bytes, (v) => EngineeringModel.parse(v));
+  } catch (e) {
+    return fail(`invalid engineering model: ${(e as Error).message}`);
+  }
+  const issues = validateEngineering(model, manifest);
+  const errors = issues.filter((i) => i.severity === "error");
+  if (errors.length) fail(`engineering model inconsistent with the manifest: ${errors.map((i) => i.message).join("; ")}`);
+  else {
+    const held = issues.length ? `; ${issues.length} item(s) need review` : "";
+    checks.push({
+      id: "engineering",
+      status: "pass",
+      message: `${ref.schema} baseline ${model.baseline.id}: ${model.items.length} items, ${model.requirements.length} requirements, ${model.characteristics.length} characteristics${held}${model.synthetic ? " (SYNTHETIC)" : ""}`,
+    });
+  }
+  return { model, issues };
 }
 
 /**

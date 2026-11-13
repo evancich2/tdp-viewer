@@ -1,0 +1,4 @@
+SYNTHETIC DEMONSTRATION EVIDENCE - NOT A REAL CALIBRATION RECORD
+SYNTHETIC SURROGATE: not the controlled design. Demonstration data only; dimensions, limits, approvals, builds and measurements are invented.
+
+Printer H2C-LAB-01: bed level, flow and XY skew calibrated (INVENTED)

@@ -1,0 +1,72 @@
+{
+  "schema": "tdp-sync-acks/0.1",
+  "adapter": {
+    "system": "lab-fixture",
+    "label": "Laboratory fixture PLM (synthetic, file-backed)",
+    "fixture": true
+  },
+  "proposalSetSha256": "ce40f4ed7ce7676786a5634ec1c5f7500ada5412dce106b65c39933398d8203a",
+  "acknowledgedAt": "2026-11-12T13:00:00.000Z",
+  "acks": [
+    {
+      "txId": "tx-d39d1e572e49deb15baccd9993ba3446",
+      "contentSha256": "6baa38c962539437c41f21058d720a1bd23839f2639292d4ab5b383c502d1c66",
+      "objectType": "ProcessReview",
+      "objectId": "0989bca5-6863-4581-bc37-9b3a9fb1414a",
+      "requiresNewBaseline": false,
+      "status": "rejected",
+      "sourceVersion": null,
+      "reason": "lossy mapping (data.input.capabilities) not accepted by the recipe"
+    },
+    {
+      "txId": "tx-90b0b977274ca3c5828cfc17b574e1e0",
+      "contentSha256": "a29b68bb8202059b6daa92b5ff30258100162f3e7b4720e70ec442277831ce92",
+      "objectType": "ProcessPlan",
+      "objectId": "b7456e59-417e-49b1-b971-5e7bae840b73",
+      "requiresNewBaseline": false,
+      "status": "unsupported",
+      "sourceVersion": null,
+      "reason": "ProcessPlan is not a supported object type"
+    },
+    {
+      "txId": "tx-044a448abefd1c34beb73289cf4bc0fa",
+      "contentSha256": "a468cdce5231082bd9778a97ac750bf79db86f37b8342a74da6efea3e9afed56",
+      "objectType": "AsBuiltUnit",
+      "objectId": "SYN-PH-2001:SN-0001",
+      "requiresNewBaseline": false,
+      "status": "accepted",
+      "sourceVersion": 1,
+      "reason": "created."
+    },
+    {
+      "txId": "tx-66d53bffda73b140fb86be051d046e90",
+      "contentSha256": "968c87bc181a1eb01e927621c48e4c90417b7884c9f580aeb70c2dc8d20f3c39",
+      "objectType": "AsBuiltUnit",
+      "objectId": "SYN-PH-2001:SN-0001",
+      "requiresNewBaseline": false,
+      "status": "accepted",
+      "sourceVersion": 2,
+      "reason": "updated."
+    },
+    {
+      "txId": "tx-e611a1aecf060f682d13bcaf580f291e",
+      "contentSha256": "6dbf930eb3620eb97e8a01604e7a129843660f778f2cc7353eb37b236511649f",
+      "objectType": "InspectionResult",
+      "objectId": "fed8a23d-ce6f-41d9-8f91-1357b6210a77",
+      "requiresNewBaseline": false,
+      "status": "accepted",
+      "sourceVersion": 1,
+      "reason": "created."
+    },
+    {
+      "txId": "tx-fad85cb363c1826c3812e6b1c7bdb622",
+      "contentSha256": "afd2adb25a3229407235cb8c64bf2d99dd365a3ee8537589a37f1bb109339039",
+      "objectType": "AsBuiltUnit",
+      "objectId": "SYN-PH-2001:SN-0001",
+      "requiresNewBaseline": false,
+      "status": "accepted",
+      "sourceVersion": 3,
+      "reason": "updated."
+    }
+  ]
+}

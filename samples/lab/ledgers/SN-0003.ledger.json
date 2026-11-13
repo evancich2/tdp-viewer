@@ -1,0 +1,737 @@
+{
+  "schema": "tdp-ledger/0.1",
+  "instance": {
+    "id": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+    "processId": "printed-part",
+    "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+    "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+    "baselineId": "BL-SYN-PH-2000-A",
+    "item": {
+      "itemId": "SYN-PH-2001",
+      "revision": "A"
+    }
+  },
+  "entries": [
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "dfd8845b-d94a-40f7-8f6c-1e3134b810fb",
+        "seq": 1,
+        "instance": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "actor": {
+          "keyId": "c7e1ee0161dac7817a2fe447ebbdf51e",
+          "organization": "Lab Design Authority (synthetic)",
+          "role": "requirement-owner"
+        },
+        "action": "approve-requirements",
+        "at": "2026-11-10T13:00:00.000Z",
+        "prev": "b25de3c11b0efa443e287b1d274b2e8bb513de8f1f29be7f9ad6905a70267b3e",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [],
+        "outcome": "approved",
+        "reason": "Requirement set reviewed against the surrogate design intent (synthetic)",
+        "data": {
+          "kind": "requirements-approval",
+          "requirements": [
+            {
+              "id": "REQ-001",
+              "version": 1
+            },
+            {
+              "id": "REQ-002",
+              "version": 1
+            },
+            {
+              "id": "REQ-003",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "7c614a092caf70f66ad5acdc250fc8b1fc2b0344226f35153c6b7984d8fe8c0f",
+        "keyId": "c7e1ee0161dac7817a2fe447ebbdf51e",
+        "alg": "Ed25519",
+        "sig": "9KQNIHtQHGznCvZd1tdJyrmH1nouO+5GdSvQEJ1uvA4mqCBs4fgQXpvvIJJSQCthMcf0oFpkRzWlW1H8aX0uAw=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "24406e66-5010-4af7-b3d4-bef0ba73b7fa",
+        "seq": 2,
+        "instance": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "actor": {
+          "keyId": "45c74edb2764c39a76fb50033c3ac95e",
+          "organization": "Lab Design Authority (synthetic)",
+          "role": "configuration-manager"
+        },
+        "action": "record-source-release",
+        "at": "2026-11-10T13:10:00.000Z",
+        "prev": "7c614a092caf70f66ad5acdc250fc8b1fc2b0344226f35153c6b7984d8fe8c0f",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [
+          {
+            "id": "EV-REL",
+            "tag": "source-release-record",
+            "sha256": "ef0c46259244e782ad7be7d2cb460fbcdb4fc9726c1efe2f8099855b772eb1fb",
+            "mediaType": "application/json",
+            "description": "Laboratory fixture PLM release record export (synthetic)",
+            "synthetic": true
+          }
+        ],
+        "outcome": "verified",
+        "reason": "Release record exported from the laboratory fixture PLM (synthetic)",
+        "data": {
+          "kind": "source-release",
+          "source": "SRC-SYN-PH-2001",
+          "system": "lab-fixture",
+          "reference": {
+            "surrogateFor": "onshape",
+            "documentId": "SYNTH-DOC-SYN-PH-2001",
+            "versionId": "SYNTH-V-SYN-PH-2001-A",
+            "elementId": "SYNTH-EL-SYN-PH-2001"
+          },
+          "revision": "A",
+          "releaseState": "Released",
+          "attestation": "lab-fixture"
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "bc7b6ecb8adb5fc86413e857c6defa3903da9bda0c4f5d81e231c4da373d5739",
+        "keyId": "45c74edb2764c39a76fb50033c3ac95e",
+        "alg": "Ed25519",
+        "sig": "7Kioz+eW66qQZi6g4nuQOHNXbyz1f9CK8znVeeHmpaB3U+B3ltpBi3rqK27xhDuURi3duDbCyWvf8qtS9pIwCQ=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "3b1dcec7-56f6-4a2d-bf42-a0a765e38374",
+        "seq": 3,
+        "instance": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "actor": {
+          "keyId": "a5c3dc9adf529103a67bbffd6259c4cc",
+          "organization": "Lab Print Cell (synthetic)",
+          "role": "manufacturing-engineer"
+        },
+        "action": "review-suitability",
+        "at": "2026-11-10T13:30:00.000Z",
+        "prev": "bc7b6ecb8adb5fc86413e857c6defa3903da9bda0c4f5d81e231c4da373d5739",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [
+          {
+            "id": "EV-CAP",
+            "tag": "capability-study",
+            "sha256": "e18d2fc6983ceb54e8b2439695224e398601e4a80d4b5d5a62a64dae335021b3",
+            "mediaType": "text/plain",
+            "description": "Dimensional capability study, general claim (synthetic)",
+            "synthetic": true
+          },
+          {
+            "id": "EV-PCAL",
+            "tag": "calibration-certificate",
+            "sha256": "4ab89c172fa52547a11986a8e5bd1a077d37a83c027fb8402ef3274444d64c15",
+            "mediaType": "text/plain",
+            "description": "Printer calibration record (synthetic)",
+            "synthetic": true
+          }
+        ],
+        "outcome": "review-required",
+        "reason": "Suitability reviewed against REQ-001..003 (synthetic)",
+        "data": {
+          "kind": "suitability",
+          "input": {
+            "resource": {
+              "id": "H2C-LAB-01",
+              "model": "Bambu Lab H2C",
+              "serial": "SYNTH-H2C-0001",
+              "firmware": null,
+              "buildVolumeMm": [
+                300,
+                320,
+                320
+              ]
+            },
+            "material": {
+              "name": "PETG",
+              "lot": "SYNTH-LOT-PETG-07"
+            },
+            "profile": {
+              "name": "PETG 0.20 mm lab profile (synthetic)"
+            },
+            "orientation": "tab face down, long axis along X",
+            "scope": "SYN-PH-2001 only: planar prismatic features, ±0.2 mm class tolerances",
+            "capabilities": [
+              {
+                "appliesTo": "*",
+                "deviation": 0.15,
+                "unit": "mm",
+                "basis": "synthetic capability study, 30 coupons, k=2 (INVENTED)",
+                "evidence": "EV-CAP",
+                "validUntil": "2027-05-01T00:00:00.000Z"
+              }
+            ],
+            "calibration": [
+              {
+                "what": "printer H2C-LAB-01",
+                "evidence": "EV-PCAL",
+                "validUntil": "2026-12-31T00:00:00.000Z"
+              }
+            ],
+            "declaredGaps": []
+          }
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "69b8efc76ea9a6ef4e64607f4cc1ad073365832f30b06677a9a013330578ba16",
+        "keyId": "a5c3dc9adf529103a67bbffd6259c4cc",
+        "alg": "Ed25519",
+        "sig": "bY/GdT980N/xGTtHRf9adt7gIor4OTpQYtF4lgpJF87OQl1bnN8VRNJRAnYCSA0zpjNEWdQYpW/LpSC7XNr5BA=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "9e7e25f8-20f9-481d-bdb1-ff4961ae3326",
+        "seq": 4,
+        "instance": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "actor": {
+          "keyId": "c178980de2948732ec4a08cc497ca5f2",
+          "organization": "Lab Design Authority (synthetic)",
+          "role": "design-engineer"
+        },
+        "action": "engineering-gap-review",
+        "at": "2026-11-10T13:45:00.000Z",
+        "prev": "69b8efc76ea9a6ef4e64607f4cc1ad073365832f30b06677a9a013330578ba16",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [],
+        "outcome": "accepted",
+        "reason": "Firmware not read from the machine; accepted for a laboratory build only (synthetic)",
+        "data": {
+          "kind": "suitability-review",
+          "suitabilityRecord": "3b1dcec7-56f6-4a2d-bf42-a0a765e38374",
+          "acceptedGaps": [
+            "printer firmware not recorded"
+          ],
+          "rationale": "Lab-only build; firmware to be recorded before any further use (synthetic)"
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "67480a4802dcf2235705468c2b6065413361370b7d43162eee7fa770039f4f8f",
+        "keyId": "c178980de2948732ec4a08cc497ca5f2",
+        "alg": "Ed25519",
+        "sig": "GCxUbT2APpTAI6dbSYctY004VZuv3Xca+wnJGDOuUTUTzx3BR63o4uGQy/Z5fIdJ867c9MonZrAk+Rz8kTcvCg=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "c90169fd-9c0b-4489-85e4-38d386302ec6",
+        "seq": 5,
+        "instance": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "actor": {
+          "keyId": "6b16af583466bc31ce992c3cff830e73",
+          "organization": "Lab Print Cell (synthetic)",
+          "role": "planner"
+        },
+        "action": "plan-build",
+        "at": "2026-11-10T14:00:00.000Z",
+        "prev": "67480a4802dcf2235705468c2b6065413361370b7d43162eee7fa770039f4f8f",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [],
+        "outcome": "planned",
+        "reason": "Build and inspection plan (synthetic)",
+        "data": {
+          "kind": "plan",
+          "buildPlanId": "BP-SN-0003",
+          "settings": {
+            "layerHeight": "0.20",
+            "infill": "40%",
+            "nozzle": "0.4",
+            "plate": "textured PEI"
+          },
+          "inspectionPlan": [
+            {
+              "characteristic": "CH-001",
+              "method": "micrometer",
+              "instrumentClass": "0-25 mm micrometer"
+            },
+            {
+              "characteristic": "CH-002",
+              "method": "caliper",
+              "instrumentClass": "0-150 mm caliper"
+            },
+            {
+              "characteristic": "CH-003",
+              "method": "caliper",
+              "instrumentClass": "0-150 mm caliper"
+            }
+          ],
+          "geometryReview": []
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "61e7753eaca667d3114b3ea60ed3e0ba74ec6ee6b7cc7bf314dd277fc8e0fc72",
+        "keyId": "6b16af583466bc31ce992c3cff830e73",
+        "alg": "Ed25519",
+        "sig": "KQL/jn40sa/3G6IVPHQeFG12n0uT4HY25YQQzmBG6CzeC15aXOJqYrf0Nix/GVa2+MpfNyRm5WFjSVDj9fUwDA=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "b86df016-b785-4dad-8436-335761ee0411",
+        "seq": 6,
+        "instance": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "actor": {
+          "keyId": "7a4150a457b781de8f686f0c2f5af3e0",
+          "organization": "Lab Design Authority (synthetic)",
+          "role": "manufacturing-authority"
+        },
+        "action": "authorize-manufacture",
+        "at": "2026-11-10T14:30:00.000Z",
+        "prev": "61e7753eaca667d3114b3ea60ed3e0ba74ec6ee6b7cc7bf314dd277fc8e0fc72",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [],
+        "outcome": "issued",
+        "reason": "Bounded CIP for laboratory build of the listed units (synthetic)",
+        "data": {
+          "kind": "authorization",
+          "cipId": "CIP-SN-0003",
+          "operations": [
+            "queue",
+            "build"
+          ],
+          "organizations": [
+            "Lab Print Cell (synthetic)"
+          ],
+          "roles": [
+            "planner",
+            "operator"
+          ],
+          "units": {
+            "serials": [
+              "SN-0003"
+            ]
+          },
+          "notBefore": "2026-11-10T14:30:00.000Z",
+          "notAfter": "2026-11-24T14:30:00.000Z",
+          "policyVersion": 1
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "ad524051ba336946ba36260b9bd969c078d9b5c95275d3ad666074926a8ed6d9",
+        "keyId": "7a4150a457b781de8f686f0c2f5af3e0",
+        "alg": "Ed25519",
+        "sig": "eq6mUgWZY/TILXE9k2rSfWfmoHVQt4TNdroHDRMQfjwmLokqHX2Y5maGzxM6bE19MiWg0qvwk3hGTtn3mt0uAQ=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "4c502128-6224-4198-94af-ff02af57391c",
+        "seq": 7,
+        "instance": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "unit": {
+          "serial": "SN-0003"
+        },
+        "actor": {
+          "keyId": "6b16af583466bc31ce992c3cff830e73",
+          "organization": "Lab Print Cell (synthetic)",
+          "role": "planner"
+        },
+        "action": "enter-queue",
+        "at": "2026-11-10T14:40:00.000Z",
+        "prev": "ad524051ba336946ba36260b9bd969c078d9b5c95275d3ad666074926a8ed6d9",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [
+          {
+            "id": "EV-JOB",
+            "tag": "build-file",
+            "sha256": "89ccd18d5032306ba614a56aef35bc0376bd4f7d18b0dc1b8acb127fcf89b61d",
+            "mediaType": "text/plain",
+            "description": "Placeholder job file J-0101 (synthetic)",
+            "synthetic": true
+          }
+        ],
+        "outcome": "queued",
+        "reason": "Queued",
+        "data": {
+          "kind": "queue-entry",
+          "jobId": "J-0201",
+          "submittedFile": {
+            "name": "job-J-0101.txt",
+            "sha256": "89ccd18d5032306ba614a56aef35bc0376bd4f7d18b0dc1b8acb127fcf89b61d"
+          },
+          "settings": {}
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "ac56c4a57939a0b6294d994f4f0fef3d10061ced9d639d5de8df0c26315ca5db",
+        "keyId": "6b16af583466bc31ce992c3cff830e73",
+        "alg": "Ed25519",
+        "sig": "HCBkCndK9G2ezXbstpy04wF9jwP7ZqkwAwVVAPeN7ZX5PP/mJ3TT4aDmydWw7jj36i2Q2nS8+3kIUxBNmyqqBg=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "37b873ac-14f2-4cd6-a840-93555ea8ce4d",
+        "seq": 8,
+        "instance": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "unit": {
+          "serial": "SN-0003"
+        },
+        "actor": {
+          "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+          "organization": "Lab Print Cell (synthetic)",
+          "role": "operator"
+        },
+        "action": "dispatch-build",
+        "at": "2026-11-10T14:50:00.000Z",
+        "prev": "ac56c4a57939a0b6294d994f4f0fef3d10061ced9d639d5de8df0c26315ca5db",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [],
+        "outcome": "started",
+        "reason": "Dispatched by hand",
+        "data": {
+          "kind": "build-start",
+          "jobId": "J-0201",
+          "resource": "H2C-LAB-01",
+          "startedAt": "2026-11-10T14:50:00.000Z"
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "d90608d4e3c1efc3a711401b06bdda58f44adeb2ea43fb9c8f6f0e1eec451bc2",
+        "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+        "alg": "Ed25519",
+        "sig": "cnNASksQbonjtax1GFhOIxNHnCqsTVoZ0GdrE4aNucrLxCsQ/I9X/R91aeo47dzpZTDoRcGFe5h+A1buHauhCQ=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "916cf295-a526-4f12-aa16-2e39838162f8",
+        "seq": 9,
+        "instance": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "unit": {
+          "serial": "SN-0003"
+        },
+        "actor": {
+          "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+          "organization": "Lab Print Cell (synthetic)",
+          "role": "operator"
+        },
+        "action": "complete-build",
+        "at": "2026-11-10T15:40:00.000Z",
+        "prev": "d90608d4e3c1efc3a711401b06bdda58f44adeb2ea43fb9c8f6f0e1eec451bc2",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [
+          {
+            "id": "EV-LOG",
+            "tag": "build-log",
+            "sha256": "6e5f0a7e644a47bbae7d2275a31135c8dca36234e29ec3b32c789ecfbb7ac5fb",
+            "mediaType": "text/plain",
+            "description": "Build log J-0101 (synthetic)",
+            "synthetic": true
+          }
+        ],
+        "outcome": "completed",
+        "reason": "Completed",
+        "data": {
+          "kind": "build-complete",
+          "jobId": "J-0201",
+          "submittedFileSha256": "89ccd18d5032306ba614a56aef35bc0376bd4f7d18b0dc1b8acb127fcf89b61d",
+          "startedAt": "2026-11-10T14:50:00.000Z",
+          "completedAt": "2026-11-10T15:35:00.000Z",
+          "errors": [],
+          "settings": {}
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "f7738b1808794e0f14ec3c6c26dcbcc8746ceae26027db77cafabcfd4aa81d01",
+        "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+        "alg": "Ed25519",
+        "sig": "2PZ+rJ9NQA2CR0WcCgKXko/Qs8kg6BdUdjdlUiQ1A+Dv/yVUcofLqT7bHDIdn/jgaj6pwCgqDKjMVKDrCTkbAw=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "50d19fe3-f4ab-4ed8-afdd-36d40e9b9a9d",
+        "seq": 10,
+        "instance": "772d6454-1c26-4453-b163-4ad31fc82c0a",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "unit": {
+          "serial": "SN-0003"
+        },
+        "actor": {
+          "keyId": "d677edaf9481f8fa54577abfc9de20ec",
+          "organization": "Lab Inspection (synthetic)",
+          "role": "inspector"
+        },
+        "action": "inspect",
+        "at": "2026-11-10T16:20:00.000Z",
+        "prev": "f7738b1808794e0f14ec3c6c26dcbcc8746ceae26027db77cafabcfd4aa81d01",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [
+          {
+            "id": "EV-MEAS",
+            "tag": "measurement-data",
+            "sha256": "9c72771a3a16e2180095b991d091fff825cf9481c48b8b33b5335f638e2ed9de",
+            "mediaType": "text/csv",
+            "description": "Measurement data SN-0003 (synthetic)",
+            "synthetic": true
+          },
+          {
+            "id": "EV-MIC",
+            "tag": "calibration-certificate",
+            "sha256": "39db0ddbb50c9bdb3fe129e2a15f80665b39673989108611f67ad1345def616b",
+            "mediaType": "text/plain",
+            "description": "Micrometer MIC-07 calibration certificate (synthetic)",
+            "synthetic": true
+          },
+          {
+            "id": "EV-CAL",
+            "tag": "calibration-certificate",
+            "sha256": "8bce83ed1e75fbec3e5fe500880db354aba6ddd2641a691e0366ad311600d00c",
+            "mediaType": "text/plain",
+            "description": "Caliper CAL-12 calibration certificate (synthetic)",
+            "synthetic": true
+          }
+        ],
+        "outcome": "indeterminate",
+        "reason": "Measured per plan (synthetic values)",
+        "data": {
+          "kind": "inspection",
+          "decisionRules": "core/decision-rules/0.1",
+          "measurements": [
+            {
+              "characteristic": "CH-001",
+              "value": 6.198,
+              "unit": "mm",
+              "method": "two-point micrometer, 3 readings averaged",
+              "instrument": {
+                "id": "MIC-07",
+                "description": "0-25 mm outside micrometer (synthetic)",
+                "calibrationEvidence": "EV-MIC",
+                "calibrationValidUntil": "2027-06-01T00:00:00.000Z"
+              },
+              "uncertainty": {
+                "expanded": 0.004,
+                "k": 2,
+                "unit": "mm",
+                "basis": "synthetic uncertainty budget: instrument spec + repeatability (INVENTED)"
+              },
+              "measuredAt": "2026-11-10T16:20:00.000Z"
+            },
+            {
+              "characteristic": "CH-002",
+              "value": 40.01,
+              "unit": "mm",
+              "method": "caliper, overall length",
+              "instrument": {
+                "id": "CAL-12",
+                "description": "0-150 mm digital caliper (synthetic)",
+                "calibrationEvidence": "EV-CAL",
+                "calibrationValidUntil": "2027-03-01T00:00:00.000Z"
+              },
+              "uncertainty": {
+                "expanded": 0.03,
+                "k": 2,
+                "unit": "mm",
+                "basis": "synthetic uncertainty budget: instrument spec + repeatability (INVENTED)"
+              },
+              "measuredAt": "2026-11-10T16:20:00.000Z"
+            },
+            {
+              "characteristic": "CH-003",
+              "value": 20.02,
+              "unit": "mm",
+              "method": "caliper, hook height",
+              "instrument": {
+                "id": "CAL-12",
+                "description": "0-150 mm digital caliper (synthetic)",
+                "calibrationEvidence": "EV-CAL",
+                "calibrationValidUntil": "2027-03-01T00:00:00.000Z"
+              },
+              "uncertainty": {
+                "expanded": 0.03,
+                "k": 2,
+                "unit": "mm",
+                "basis": "synthetic uncertainty budget: instrument spec + repeatability (INVENTED)"
+              },
+              "measuredAt": "2026-11-10T16:20:00.000Z"
+            }
+          ]
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "15bdfdcc255554ae372d57822b0d3edb2603ef4fed7a809f4c1282183f0249e1",
+        "keyId": "d677edaf9481f8fa54577abfc9de20ec",
+        "alg": "Ed25519",
+        "sig": "JZaxecBCX2lWt4aTJVYdFdZr6Nvc0jHPuzGko/iFOLsTwidYcoqlf8XvhW2wfYf3sTN504Ec0MX3B0B2EjRjCg=="
+      }
+    }
+  ]
+}

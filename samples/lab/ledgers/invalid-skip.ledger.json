@@ -1,0 +1,191 @@
+{
+  "schema": "tdp-ledger/0.1",
+  "instance": {
+    "id": "a1e8949d-57e9-42b4-be91-19d4182f0b2b",
+    "processId": "printed-part",
+    "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+    "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+    "baselineId": "BL-SYN-PH-2000-A",
+    "item": {
+      "itemId": "SYN-PH-2001",
+      "revision": "A"
+    }
+  },
+  "entries": [
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "2287980a-16d0-4457-81c7-76be3e56d6a1",
+        "seq": 1,
+        "instance": "a1e8949d-57e9-42b4-be91-19d4182f0b2b",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "actor": {
+          "keyId": "c7e1ee0161dac7817a2fe447ebbdf51e",
+          "organization": "Lab Design Authority (synthetic)",
+          "role": "requirement-owner"
+        },
+        "action": "approve-requirements",
+        "at": "2026-11-10T13:00:00.000Z",
+        "prev": "25b3e8df4ed5ed29b7fe07c010b19de586b162ae42179617384bf5200a7e0fec",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [],
+        "outcome": "approved",
+        "reason": "Requirement set reviewed against the surrogate design intent (synthetic)",
+        "data": {
+          "kind": "requirements-approval",
+          "requirements": [
+            {
+              "id": "REQ-001",
+              "version": 1
+            },
+            {
+              "id": "REQ-002",
+              "version": 1
+            },
+            {
+              "id": "REQ-003",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "44ab339f45c7ebe66d59a48fe20f63fb09b8986465615fe924b57fb24281ae9f",
+        "keyId": "c7e1ee0161dac7817a2fe447ebbdf51e",
+        "alg": "Ed25519",
+        "sig": "YtElMhlg5Jy4nntnDF1uxBtOyRsV9LU4iD09uj0iIEpbJ2Jqe/MCyBm9aeo4mPzso5z+wCcEHzQ7jW53tT91AA=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "35e10290-fedf-4c3c-bc9c-55f136a1c461",
+        "seq": 2,
+        "instance": "a1e8949d-57e9-42b4-be91-19d4182f0b2b",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "actor": {
+          "keyId": "45c74edb2764c39a76fb50033c3ac95e",
+          "organization": "Lab Design Authority (synthetic)",
+          "role": "configuration-manager"
+        },
+        "action": "record-source-release",
+        "at": "2026-11-10T13:10:00.000Z",
+        "prev": "44ab339f45c7ebe66d59a48fe20f63fb09b8986465615fe924b57fb24281ae9f",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [
+          {
+            "id": "EV-REL",
+            "tag": "source-release-record",
+            "sha256": "ef0c46259244e782ad7be7d2cb460fbcdb4fc9726c1efe2f8099855b772eb1fb",
+            "mediaType": "application/json",
+            "description": "Laboratory fixture PLM release record export (synthetic)",
+            "synthetic": true
+          }
+        ],
+        "outcome": "verified",
+        "reason": "Release record exported from the laboratory fixture PLM (synthetic)",
+        "data": {
+          "kind": "source-release",
+          "source": "SRC-SYN-PH-2001",
+          "system": "lab-fixture",
+          "reference": {
+            "surrogateFor": "onshape",
+            "documentId": "SYNTH-DOC-SYN-PH-2001",
+            "versionId": "SYNTH-V-SYN-PH-2001-A",
+            "elementId": "SYNTH-EL-SYN-PH-2001"
+          },
+          "revision": "A",
+          "releaseState": "Released",
+          "attestation": "lab-fixture"
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "b667ebcc249bf15da3b77cca997912390e52749c58965c6bb8a865a624025a4a",
+        "keyId": "45c74edb2764c39a76fb50033c3ac95e",
+        "alg": "Ed25519",
+        "sig": "/FT0dAdusNtYiVgRmbdfZ3go+iqdrr7oxqQ3HdpkXZCz5KG1GMRumHMpNKII+mmFFAIHBzS887oKHXrx3b7IAw=="
+      }
+    },
+    {
+      "record": {
+        "schema": "tdp-record/0.1",
+        "recordId": "a3d848eb-1cdc-47b1-9e99-be97276b4df3",
+        "seq": 3,
+        "instance": "a1e8949d-57e9-42b4-be91-19d4182f0b2b",
+        "baseline": {
+          "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+          "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+          "baselineId": "BL-SYN-PH-2000-A"
+        },
+        "item": {
+          "itemId": "SYN-PH-2001",
+          "revision": "A"
+        },
+        "actor": {
+          "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+          "organization": "Lab Print Cell (synthetic)",
+          "role": "operator"
+        },
+        "action": "dispatch-build",
+        "at": "2026-11-10T13:20:00.000Z",
+        "prev": "b667ebcc249bf15da3b77cca997912390e52749c58965c6bb8a865a624025a4a",
+        "policy": {
+          "processId": "printed-part",
+          "processVersion": 1,
+          "processSha256": "6e3bb90f4330c2739d71812a16c9cc779886e3af4ae8900644aec14ee3822dff",
+          "authorityId": "lab-authority",
+          "authoritySerial": 1
+        },
+        "evidence": [],
+        "outcome": "started",
+        "reason": "Printing straight after release, skipping suitability, planning and authorization (forbidden; synthetic)",
+        "data": {
+          "kind": "build-start",
+          "jobId": "J-9999",
+          "resource": "H2C-LAB-01",
+          "startedAt": "2026-11-10T13:20:00.000Z"
+        },
+        "unit": {
+          "serial": "SN-0001"
+        }
+      },
+      "signature": {
+        "schema": "tdp-record-signature/0.1",
+        "recordSha256": "c1d7a8f0d6f7ffcc9ee6a657a904a29790a9a71005cb26fec823a9f7e98e1ecc",
+        "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+        "alg": "Ed25519",
+        "sig": "gpRyuasL3Jcm0KZaMa95D+uQ9KLc6P47fevDtmRSrkemwVElz2cKOCDzBD+faar8oY39cgCg5pBRiXZeYuJ8Cg=="
+      }
+    }
+  ]
+}

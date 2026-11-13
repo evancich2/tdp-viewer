@@ -1,0 +1,416 @@
+{
+  "schema": "tdp-process/0.1",
+  "id": "printed-part",
+  "version": 1,
+  "title": "Printed part: bounded laboratory build",
+  "label": "Reference laboratory process (synthetic demonstration configuration)",
+  "synthetic": true,
+  "roles": [
+    {
+      "id": "requirement-owner",
+      "description": "requirement owner (workflow role)"
+    },
+    {
+      "id": "configuration-manager",
+      "description": "configuration manager (workflow role)"
+    },
+    {
+      "id": "manufacturing-engineer",
+      "description": "manufacturing engineer (workflow role)"
+    },
+    {
+      "id": "design-engineer",
+      "description": "design engineer (workflow role)"
+    },
+    {
+      "id": "planner",
+      "description": "planner (workflow role)"
+    },
+    {
+      "id": "manufacturing-authority",
+      "description": "manufacturing authority (workflow role)"
+    },
+    {
+      "id": "operator",
+      "description": "operator (workflow role)"
+    },
+    {
+      "id": "inspector",
+      "description": "inspector (workflow role)"
+    },
+    {
+      "id": "quality-engineer",
+      "description": "quality engineer (workflow role)"
+    },
+    {
+      "id": "disposition-authority",
+      "description": "disposition authority (workflow role)"
+    }
+  ],
+  "states": [
+    "baseline-received",
+    "requirements-approved",
+    "source-released",
+    "suitability-review",
+    "process-qualified",
+    "planned",
+    "authorized",
+    "queued",
+    "building",
+    "built",
+    "inspected",
+    "inspection-rejected",
+    "inspection-held",
+    "nonconforming",
+    "dispositioned",
+    "scrapped",
+    "closed"
+  ],
+  "initial": "baseline-received",
+  "terminal": [
+    "closed"
+  ],
+  "operations": [
+    "queue",
+    "build"
+  ],
+  "allowDelegation": true,
+  "transitions": [
+    {
+      "id": "approve-requirements",
+      "kind": "requirements-approval",
+      "description": "Requirement owner approves the requirement set for this item revision",
+      "from": [
+        "baseline-received"
+      ],
+      "outcomes": {
+        "approved": "requirements-approved"
+      },
+      "roles": [
+        "requirement-owner"
+      ],
+      "organizations": [
+        "Lab Design Authority (synthetic)"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": false,
+        "unit": false
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "record-source-release",
+      "kind": "source-release",
+      "description": "Configuration manager records source-system release evidence",
+      "from": [
+        "requirements-approved"
+      ],
+      "outcomes": {
+        "verified": "source-released"
+      },
+      "roles": [
+        "configuration-manager"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [
+          "source-release-record"
+        ],
+        "freshAuthority": false,
+        "unit": false
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "review-suitability",
+      "kind": "suitability",
+      "description": "Manufacturing engineer reviews process suitability against the requirements",
+      "from": [
+        "source-released"
+      ],
+      "outcomes": {
+        "suitable": "process-qualified",
+        "review-required": "suitability-review",
+        "not-suitable": "source-released"
+      },
+      "roles": [
+        "manufacturing-engineer"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [
+          "capability-study",
+          "calibration-certificate"
+        ],
+        "freshAuthority": false,
+        "unit": false
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "engineering-gap-review",
+      "kind": "suitability-review",
+      "description": "Design engineer accepts or rejects each suitability gap",
+      "from": [
+        "suitability-review"
+      ],
+      "outcomes": {
+        "accepted": "process-qualified",
+        "rejected": "source-released"
+      },
+      "roles": [
+        "design-engineer"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": false,
+        "unit": false
+      },
+      "distinctActorFrom": [
+        "review-suitability"
+      ],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "plan-build",
+      "kind": "plan",
+      "description": "Planner records the build and inspection plan",
+      "from": [
+        "process-qualified"
+      ],
+      "outcomes": {
+        "planned": "planned"
+      },
+      "roles": [
+        "planner"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": false,
+        "unit": false
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "authorize-manufacture",
+      "kind": "authorization",
+      "description": "Manufacturing authority issues a bounded Change Implementation Plan",
+      "from": [
+        "planned"
+      ],
+      "outcomes": {
+        "issued": "authorized"
+      },
+      "roles": [
+        "manufacturing-authority"
+      ],
+      "requires": {
+        "actions": [
+          {
+            "id": "record-source-release"
+          },
+          {
+            "id": "approve-requirements"
+          }
+        ],
+        "evidence": [],
+        "freshAuthority": true,
+        "unit": false
+      },
+      "distinctActorFrom": [
+        "plan-build"
+      ],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "enter-queue",
+      "kind": "queue-entry",
+      "description": "Job enters the manual build queue",
+      "from": [
+        "authorized"
+      ],
+      "outcomes": {
+        "queued": "queued"
+      },
+      "roles": [
+        "planner",
+        "operator"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [
+          "build-file"
+        ],
+        "authorization": "queue",
+        "freshAuthority": false,
+        "unit": true
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "dispatch-build",
+      "kind": "build-start",
+      "description": "Operator dispatches the job to the printer by hand",
+      "from": [
+        "queued"
+      ],
+      "outcomes": {
+        "started": "building"
+      },
+      "roles": [
+        "operator"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "authorization": "build",
+        "freshAuthority": true,
+        "unit": true
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "complete-build",
+      "kind": "build-complete",
+      "description": "Operator records the build outcome and errors",
+      "from": [
+        "building"
+      ],
+      "outcomes": {
+        "completed": "built",
+        "failed": "authorized"
+      },
+      "roles": [
+        "operator"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [
+          "build-log"
+        ],
+        "authorization": "build",
+        "freshAuthority": false,
+        "unit": true
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "inspect",
+      "kind": "inspection",
+      "description": "Independent inspector records measurements; the decision rules give the outcome",
+      "from": [
+        "built",
+        "inspection-held"
+      ],
+      "outcomes": {
+        "accept": "inspected",
+        "reject": "inspection-rejected",
+        "indeterminate": "inspection-held"
+      },
+      "roles": [
+        "inspector"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [
+          "measurement-data"
+        ],
+        "freshAuthority": false,
+        "unit": true
+      },
+      "distinctActorFrom": [
+        "dispatch-build",
+        "complete-build"
+      ],
+      "distinctOrganizationFrom": [
+        "complete-build"
+      ]
+    },
+    {
+      "id": "raise-nonconformance",
+      "kind": "nonconformance",
+      "description": "Inspector or quality raises an NCR against a rejected or held inspection",
+      "from": [
+        "inspection-rejected",
+        "inspection-held"
+      ],
+      "outcomes": {
+        "raised": "nonconforming"
+      },
+      "roles": [
+        "inspector",
+        "quality-engineer"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": false,
+        "unit": true
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "disposition",
+      "kind": "disposition",
+      "description": "Disposition authority decides; measurement outcome alone never dispositions",
+      "from": [
+        "inspected",
+        "nonconforming"
+      ],
+      "outcomes": {
+        "accept": "dispositioned",
+        "use-as-is": "dispositioned",
+        "rework": "authorized",
+        "scrap": "scrapped"
+      },
+      "roles": [
+        "disposition-authority"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": true,
+        "unit": true
+      },
+      "distinctActorFrom": [
+        "inspect"
+      ],
+      "distinctOrganizationFrom": []
+    },
+    {
+      "id": "close-evidence",
+      "kind": "closure",
+      "description": "Configuration manager closes the evidence set (and records incorporation)",
+      "from": [
+        "dispositioned",
+        "scrapped"
+      ],
+      "outcomes": {
+        "closed": "closed"
+      },
+      "roles": [
+        "configuration-manager"
+      ],
+      "requires": {
+        "actions": [],
+        "evidence": [],
+        "freshAuthority": false,
+        "unit": true
+      },
+      "distinctActorFrom": [],
+      "distinctOrganizationFrom": []
+    }
+  ]
+}

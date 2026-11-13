@@ -1,14 +1,18 @@
 # Chain of custody (design)
 
-Status: planned (see [ROADMAP.md](../ROADMAP.md)). This note records the design and why it isn't a blockchain.
+Status: partly built. Signed, hash-chained workflow records bound to a baseline digest now exist as ledgers beside the package ([engineering-workflow.md](engineering-workflow.md)), with checkpoints that detect truncation against an independently retained copy. The Merkle log, exchanged tree heads and anchoring below are still planned (see [ROADMAP.md](../ROADMAP.md)). This note records the design and why it isn't a blockchain.
 
 ## The goal
 
 For any package, anyone holding it should be able to answer, without trusting a central server:
 
 - **Who** handled it, and **what** they did: packaged, signed, transferred, received, inspected, printed.
-- **When**, in a form that can't be backdated.
-- That **no event was edited or removed** afterwards.
+- **When**, as far as that can be established. A signature alone does not prove time: a signer can put any time in a record. Only an independent time source (an RFC 3161 timestamp, or a tree head already held by another party) bounds it.
+- That **no event was edited or removed** afterwards. A hash chain proves this for the middle of the history only. Dropping the newest events leaves a chain that still verifies, unless someone independently retained a checkpoint or tree head that covered them.
+
+### What exists today, and its limits
+
+Workflow ledgers (`tdp-ledger/0.1`) are signed and hash-chained, and every record names the baseline manifest digest. They detect edits, reordering and removals in the middle. They detect truncation or a fork only when checked against a checkpoint (`tdp record checkpoint`) kept by someone other than the ledger's holder. Record times are the signer's claim. None of this is a Merkle log yet, and nothing is anchored.
 
 Today, signatures pin who approved which exact bytes, and the audit log is hash-chained. The gap is that each audit log lives on one machine, and whoever holds it could throw it away and start a new one.
 

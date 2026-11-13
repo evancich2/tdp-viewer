@@ -3,14 +3,18 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 import { z } from "zod";
 import { fromBase64, toBase64 } from "../src/core/bytes";
-import { SignerRole, TrustedKey } from "../src/core/schema";
+import { Organization, SignerRole, TrustedKey } from "../src/core/schema";
 import type { RootKey } from "../src/core/truststore";
 import { generateKeyPair, keyIdFor } from "../src/core/signing";
 
 export const MIN_PASSPHRASE = 12;
 const SCRYPT = { N: 1 << 17, r: 8, p: 1 };
 
-/** A key is either a package signer (author, approver, ...) or an organization root that signs trust stores. */
+/**
+ * A key is a package signer (author, checker, approver, release), an organization root that signs
+ * trust stores and configuration, or, with no roles at all, a workflow-record signer whose workflow
+ * roles come from the authority configuration rather than from the key.
+ */
 export const KeyRole = z.union([SignerRole, z.literal("root")]);
 export type KeyRole = z.infer<typeof KeyRole>;
 
@@ -19,7 +23,7 @@ export const KeyFile = z
     schema: z.literal("tdp-key/0.1"),
     keyId: z.string(),
     name: z.string(),
-    roles: z.array(KeyRole).min(1),
+    roles: z.array(KeyRole).max(8),
     publicKey: z.string(),
     kdf: z.object({ alg: z.literal("scrypt"), N: z.number(), r: z.number(), p: z.number(), salt: z.string() }).strict(),
     cipher: z.object({ alg: z.literal("AES-256-GCM"), iv: z.string(), tag: z.string(), data: z.string() }).strict(),
@@ -42,12 +46,16 @@ export async function createKey(opts: {
   roles: KeyRole[];
   passphrase: string;
   validDays: number;
+  /** The organization the holder acts for; goes into the trust-store entry. */
+  organization?: Organization;
   now?: Date;
 }): Promise<NewKey> {
   if (opts.passphrase.length < MIN_PASSPHRASE) throw new Error(`passphrase must be at least ${MIN_PASSPHRASE} characters`);
   const isRoot = opts.roles.includes("root");
   // Keep root keys single-purpose: a root that also signed packages would be a bigger target.
   if (isRoot && opts.roles.length > 1) throw new Error("a root key can't also have package-signing roles");
+  if (!opts.roles.length && !opts.organization) throw new Error("a workflow-only key (no signing roles) needs an organization");
+  const organization = opts.organization ? Organization.parse(opts.organization) : undefined;
   const pair = await generateKeyPair();
   const pkcs8 = new Uint8Array(await crypto.subtle.exportKey("pkcs8", pair.privateKey));
   const salt = randomBytes(16);
@@ -74,6 +82,7 @@ export async function createKey(opts: {
       : {
           keyId: pair.keyId,
           name: opts.name,
+          ...(organization ? { organization } : {}),
           publicKey: pair.publicKey,
           roles: opts.roles as SignerRole[],
           notBefore: now.toISOString(),

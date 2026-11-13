@@ -1,0 +1,213 @@
+{
+  "schema": "tdp-truststore/0.1",
+  "keys": [
+    {
+      "keyId": "5f5496ba6dd6ef253887e2f1cd1fe82a",
+      "name": "Dana Author (demo)",
+      "organization": {
+        "name": "Lab Design Authority (synthetic)"
+      },
+      "publicKey": "BOTfdc936Pd7bUKI2X5RJOBZEAo5+B+R3dHbSwwbXUc=",
+      "roles": [
+        "author"
+      ],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "6bb8df56e53068a39197bbc82f9f4a98",
+      "name": "Avery Approver (demo)",
+      "organization": {
+        "name": "Lab Design Authority (synthetic)"
+      },
+      "publicKey": "YvfprDQpk3/MurEqZnzEp+u4RpBVtYFi5C+vImsaFmo=",
+      "roles": [
+        "approver"
+      ],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "c7e1ee0161dac7817a2fe447ebbdf51e",
+      "name": "Riley Requirement Owner (demo)",
+      "organization": {
+        "name": "Lab Design Authority (synthetic)"
+      },
+      "publicKey": "ujXCzGAJmK+fgye6JwMOR53DkaqkqhNnYd6kaNNK9ZU=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "45c74edb2764c39a76fb50033c3ac95e",
+      "name": "Casey Configuration Manager (demo)",
+      "organization": {
+        "name": "Lab Design Authority (synthetic)"
+      },
+      "publicKey": "r7JpeG0Wr9aj7jKHYLUGjBnfLArO7hQLXrYpJMeIwok=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "c178980de2948732ec4a08cc497ca5f2",
+      "name": "Drew Design Engineer (demo)",
+      "organization": {
+        "name": "Lab Design Authority (synthetic)"
+      },
+      "publicKey": "2l+NXG8E/+BYfmROc3v+eXDCuc5Iu4S+U8GXZGFsF4g=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "7a4150a457b781de8f686f0c2f5af3e0",
+      "name": "Morgan Manufacturing Authority (demo)",
+      "organization": {
+        "name": "Lab Design Authority (synthetic)"
+      },
+      "publicKey": "zQuCtY4gGpu8z/TqugrnNKrQmai/esgBAFfc04dUvp4=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "93f1304f60266492b7ebc90b2788df0e",
+      "name": "Mel Disposition Authority (demo)",
+      "organization": {
+        "name": "Lab Design Authority (synthetic)"
+      },
+      "publicKey": "+wAVqUhHR5bbDF6PlXf2jUXojS2TEtY4QCb1mZ1pp90=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "a5c3dc9adf529103a67bbffd6259c4cc",
+      "name": "Sam Manufacturing Engineer (demo)",
+      "organization": {
+        "name": "Lab Print Cell (synthetic)"
+      },
+      "publicKey": "bzDU3Eeb5Ee7YiNO4J40pmW8/a6CCKNaYioAHxl7QrY=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "6b16af583466bc31ce992c3cff830e73",
+      "name": "Pat Planner (demo)",
+      "organization": {
+        "name": "Lab Print Cell (synthetic)"
+      },
+      "publicKey": "6zhQ2rQhcYSiotumy3gfI68Of94X8ZM6yH8WFTQwX1k=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "2dc8491a0f7ba77d37908452fc002f1c",
+      "name": "Oli Operator (demo)",
+      "organization": {
+        "name": "Lab Print Cell (synthetic)"
+      },
+      "publicKey": "Wsb2gN29OHXWiK3f5iNTbHp0o+arRj6/I1ki77LHHdE=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "97dd438ae178fba3c7da6f90a53a8e43",
+      "name": "Lee Cell Lead (demo)",
+      "organization": {
+        "name": "Lab Print Cell (synthetic)"
+      },
+      "publicKey": "A4JLwDBypGhtepe+UZdAfLfVIP1twgKf8Sxsv5M5C48=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "15229206595ccc5a10b436db089ffcce",
+      "name": "Jo Second-Shift Operator (demo, delegated only)",
+      "organization": {
+        "name": "Lab Print Cell (synthetic)"
+      },
+      "publicKey": "wTVNqCMC3ctNH52Ei1JEHIzZ5xNA2dysnfBcKljCr1A=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "e1000ea1930dc6f4a0d286d3962b54ec",
+      "name": "Rex Revoked Operator (demo)",
+      "organization": {
+        "name": "Lab Print Cell (synthetic)"
+      },
+      "publicKey": "NcI9vv0uqZ1cC9zCF9GtLgfe+FpL40cVPYeGNyNo5E0=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "9ca734d2ee72d82d560fa7e0774345a7",
+      "name": "Ola Outsider (demo, no grants)",
+      "organization": {
+        "name": "Lab Print Cell (synthetic)"
+      },
+      "publicKey": "NSOPfidqMkwo+i67X9IXhtBFde+76GtPH8ZTERE83m4=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "d677edaf9481f8fa54577abfc9de20ec",
+      "name": "Ines Inspector (demo)",
+      "organization": {
+        "name": "Lab Inspection (synthetic)"
+      },
+      "publicKey": "cCnxfvI8NKk/dWFWHlsB7q4adXYjKyQ87pZYc+onN60=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "3ffd72cd5ee00a510b05869188a0bfb4",
+      "name": "Ivo Second Inspector (demo)",
+      "organization": {
+        "name": "Lab Inspection (synthetic)"
+      },
+      "publicKey": "KNir9SsIzoxfNgFCWz/Y5sUlOuo/KTUY8uelJwJUIOQ=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    },
+    {
+      "keyId": "0e33e41d7697201e31ec5d9a00bc8dd6",
+      "name": "Quinn Quality Engineer (demo)",
+      "organization": {
+        "name": "Lab Inspection (synthetic)"
+      },
+      "publicKey": "sgoskJXK9kxiBnX/V8Sg3zWydcZNFTsxgjDPNhhZUPs=",
+      "roles": [],
+      "notBefore": "2026-11-09T13:00:00.000Z",
+      "notAfter": "2028-11-10T00:00:00.000Z",
+      "revoked": false
+    }
+  ]
+}

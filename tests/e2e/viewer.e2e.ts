@@ -1,7 +1,7 @@
 // End-to-end check of the production build in a real Chrome, with the CSP sent as a header.
 // Run with: npm run e2e   (needs Google Chrome installed; uses playwright-core, no browser download)
 import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { unzipSync } from "fflate";
 import { chromium } from "playwright-core";
 
@@ -110,6 +110,53 @@ try {
   const auditText = await page.locator(".audit").innerText();
   if (!/export/.test(auditText)) fail("export missing from audit log");
   console.log("ok  export recorded in audit log");
+
+  // Laboratory workflow (synthetic surrogate): baseline, authority, signed ledger, evidence, sync.
+  await page.getByRole("button", { name: "Use lab demo keys" }).click();
+  await page.getByText(/✓ Signed by Lab Authority Root/).waitFor();
+  await page.locator('input[accept=".tdp,.zip"]').first().setInputFiles("samples/lab/SYN-PH-2000_A.tdp");
+  await page.getByText("TRUSTED", { exact: true }).waitFor();
+  await page.locator(".workflow .synthetic", { hasText: "SYNTHETIC" }).waitFor();
+  const badge = (label: string) => page.locator(`.badge[data-status="${label}"]`);
+  if (!(await badge("Package integrity").getAttribute("class"))!.includes("ok")) fail("package integrity badge not ok");
+  if (!(await badge("Operation authorized").getAttribute("class"))!.includes("none")) fail("a package alone must not show an authorized operation");
+  if (!(await badge("Source release").getAttribute("class"))!.includes("none")) fail("source release must not be implied by package integrity");
+  console.log("ok  lab package trusted; integrity verified but source release and authorization not implied");
+
+  await page.getByRole("button", { name: "Use lab authority and processes" }).click();
+  await page.locator(".workflow .tag", { hasText: "LAB FIXTURE" }).waitFor();
+  const ledgerInput = page.locator(".workflow label", { hasText: "Open ledger" }).locator("input");
+  await ledgerInput.setInputFiles("samples/lab/ledgers/SN-0001.ledger.json");
+  await page.locator('[data-ledger-verdict="held"]').waitFor();
+  await page.locator(".workflow label", { hasText: "Add evidence files" }).locator("input").setInputFiles(
+    readdirSync("samples/lab/evidence").map((f) => `samples/lab/evidence/${f}`),
+  );
+  await page.locator('[data-ledger-verdict="verified"]').waitFor();
+  if (!(await badge("Source release").getAttribute("class"))!.includes("ok")) fail("source release badge not ok after a verified source-release record");
+  if (!(await badge("Inspection").getAttribute("class"))!.includes("ok")) fail("inspection badge not ok");
+  const recs = await page.locator(".workflow table.records tbody tr").count();
+  if (recs !== 16) fail(`expected 16 signed records, got ${recs}`);
+  await page.locator('.workflow .states li[aria-current="step"]', { hasText: "closed" }).waitFor();
+  console.log("ok  SN-0001 ledger held until evidence was supplied, then verified: 16 records, state closed, separate status badges");
+
+  await ledgerInput.setInputFiles("samples/lab/ledgers/invalid-skip.ledger.json");
+  await page.locator('[data-ledger-verdict="rejected"]').waitFor();
+  await page.locator(".workflow .checks li.fail", { hasText: /not allowed from state source-released/ }).waitFor();
+  await ledgerInput.setInputFiles("samples/lab/ledgers/SN-0003.ledger.json");
+  await page.locator('[data-ledger-verdict="verified"]').waitFor();
+  if (!(await badge("Inspection").getAttribute("class"))!.includes("warn")) fail("indeterminate inspection should be held (warn), not accepted");
+  console.log("ok  forbidden step rejected with its reason; indeterminate inspection shown as held");
+
+  await page.locator(".workflow label", { hasText: "Open proposals" }).locator("input").setInputFiles("samples/lab/exchange/SN-0002.proposals.json");
+  await page.locator(".workflow label", { hasText: "Import acknowledgements" }).locator("input").setInputFiles("samples/lab/exchange/SN-0002.acks.json");
+  await page.locator('[data-sync-state="conflict"]').first().waitFor();
+  await page.getByText(/Needs a newly published baseline/).waitFor();
+  console.log("ok  sync acknowledgements imported: conflict explicit, change request flagged for a new baseline");
+
+  await page.locator('input[accept=".tdp,.zip"]').first().setInputFiles("samples/lab/SYN-PH-2000_B.tdp");
+  await page.getByText("TRUSTED", { exact: true }).waitFor();
+  await page.getByText(/Geometry review needed: CH-002/).waitFor();
+  console.log("ok  rev B shows the stale geometry link and holds planning for review");
 
   if (problems.length) fail(`console/CSP problems:\n${problems.join("\n")}`);
   if (offsite.length) fail(`off-origin requests: ${offsite.join(", ")}`);

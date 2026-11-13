@@ -5,8 +5,9 @@ The `tdp` CLI turns a folder of drawings and models into a signed `.tdp`. Run it
 ## 1. Create signing keys (once per person)
 
 ```sh
-npm run tdp -- keygen --name "Ann Author" --roles author --out keys/ann
-npm run tdp -- keygen --name "Abe Approver" --roles approver --out keys/abe
+npm run tdp -- keygen --name "Ann Author" --roles author --org "Acme" --out keys/ann
+npm run tdp -- keygen --name "Abe Approver" --roles approver --org "Acme" --cage 1ABC2 --out keys/abe
+npm run tdp -- keygen --name "Oli Operator" --org "Acme Print Cell" --out keys/oli      # no --roles: signs workflow records only
 ```
 
 Each command asks for a passphrase (at least 12 characters) and writes two files:
@@ -76,3 +77,17 @@ npm run tdp -- diff W-100_A.tdp W-100_B.tdp --trust trust-store.json
 ```
 
 Both packages must verify. The report lists package field changes, then files (`+` added, `-` removed, `~` changed or revised, `>` moved), then parts.
+
+## Engineering baselines and workflow records
+
+Add `"engineering": "engineering/model.json"` to `tdp-package.json` to build a `tdp-manifest/0.2` package carrying a `tdp-engineering/0.1` model. After that, workflow steps are signed records in a ledger beside the package, never inside it:
+
+```sh
+npm run tdp -- authority sign authority.json --key keys/root.key.json --out authority.signed.json
+npm run tdp -- record new part.tdp --item PART@A --out part.ledger.json --trust ... --authority ... --process ...
+npm run tdp -- record add part.ledger.json --package part.tdp --key keys/owen.key.json --action approve-requirements \
+  --role requirement-owner --outcome approved --reason "..." --data approval.json --evidence-dir evidence/ --trust ... --authority ... --process ...
+npm run tdp -- record verify part.ledger.json --package part.tdp --evidence-dir evidence/ --trust ... --authority ... --process ...
+```
+
+A step the policy forbids prints `DENIED` with the reason and nothing is signed. A key's package-signing roles give it no workflow role: those come only from the authority configuration's grants. The full walkthrough, with the synthetic laboratory files, is in [laboratory-demo.md](laboratory-demo.md).
