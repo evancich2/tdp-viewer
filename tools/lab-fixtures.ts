@@ -197,8 +197,9 @@ export async function buildLabPackage(revision: LabRevision, author: DemoKey, ap
     at(revision === "A" ? -25 : 24 * 60 + 5),
     { engineering: "engineering/model.json" },
   );
-  // Fixed zip entry times so `npm run lab` reproduces the same package bytes.
-  const mtime = new Date("2026-11-10T00:00:00Z");
+  // Fixed zip entry times so `npm run lab` reproduces the same package bytes. Zip stores local
+  // time, so this is a local-time date: the same DOS timestamp in every timezone.
+  const mtime = new Date(2026, 10, 10, 0, 0, 0);
   const stable = zipSync(Object.fromEntries(Object.entries(unzipSync(tdp)).map(([k, v]) => [k, [v, { mtime }]])));
   return { revision, tdp: stable, model, packageId };
 }

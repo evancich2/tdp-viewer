@@ -53,19 +53,19 @@ source-system release is represented; see docs/laboratory-demo.md for the eviden
 | P05-i | A CIP that allows at most two dispatches: a third attempt needs a new authorization | DENIED: at most 2 dispatch-build, 2 already used | DENIED: dispatch-build is not authorized: CIP CIP-SN-0001 allows at most 2 dispatch-build record(s), and 2 already used it | PASS |
 | P02-d | A lot of two serials in one ledger: shared approvals and CIP, separate unit tracks (one accepted and incorporated, one scrapped) | SN-0004 closed, SN-0005 scrapped; statuses per unit | verified; SN-0004=closed, SN-0005=scrapped; Dispositioned accept (SN-0004) by Mel Disposition Authority (demo); Dispositioned scrap (SN-0005) by Mel Disposition Authority (demo) | PASS |
 | P03-f | Dispositioning SN-0005 by citing SN-0004's accepted inspection | DENIED: a unit is dispositioned against its own latest inspection | DENIED: disposition: must disposition the latest inspection | PASS |
-| P08-b | A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately | verified; 45 units closed | verified; 45 units closed; 232.4 ms | PASS |
-| P08-a | Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed) | measurements recorded | package verification (rev A, 6 files): 1.54 ms; ledger verification (SN-0001, 16 records): 4.67 ms; ledger verification per record: 0.29 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 232.4 ms; large ledger verification per re | PASS |
+| P08-b | A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately | verified; 45 units closed | verified; 45 units closed; 242 ms | PASS |
+| P08-a | Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed) | measurements recorded | package verification (rev A, 6 files): 1.6 ms; ledger verification (SN-0001, 16 records): 4.94 ms; ledger verification per record: 0.31 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 242 ms; large ledger verification per recor | PASS |
 | P06-g | Signed evidence bundle: verifies as exported, fails after any edit | valid; altered copy refused | signed by Casey Configuration Manager (demo); altered: signature does not verify (bundle altered?) | PASS |
 
 ## Measured software performance (this machine)
 
 | Metric | Value | Note |
 |---|---|---|
-| package verification (rev A, 6 files) | 1.54 ms | mean of 5, this machine |
-| ledger verification (SN-0001, 16 records) | 4.67 ms | mean of 5, includes every gate re-evaluation |
-| ledger verification per record | 0.29 ms | full chain re-verified from genesis |
+| package verification (rev A, 6 files) | 1.6 ms | mean of 5, this machine |
+| ledger verification (SN-0001, 16 records) | 4.94 ms | mean of 5, includes every gate re-evaluation |
+| ledger verification per record | 0.31 ms | full chain re-verified from genesis |
 | ledger size | 27601 bytes | 16 signed records |
-| large ledger verification (45 units, 681 records) | 232.4 ms | one lot, 3 failed builds per unit before success; single run |
-| large ledger verification per record | 0.34 ms | scales linearly in this range |
+| large ledger verification (45 units, 681 records) | 242 ms | one lot, 3 failed builds per unit before success; single run |
+| large ledger verification per record | 0.36 ms | scales linearly in this range |
 
 49 of 49 demonstrations passed.
