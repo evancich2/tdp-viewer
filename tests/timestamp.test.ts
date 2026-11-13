@@ -10,9 +10,9 @@ import { criticalRanges, loadTsaCertificates, requestTimestamp, timestampRequest
 const F = "tests/fixtures/tsa";
 const resp = readFileSync(`${F}/response.der`);
 const digest = readFileSync(`${F}/digest.txt`, "utf8").trim();
-const root = loadTsaCertificates(readFileSync(`${F}/ca.pem`));
-const tsa = loadTsaCertificates(readFileSync(`${F}/tsa.pem`));
-const other = loadTsaCertificates(readFileSync(`${F}/other-root.pem`));
+const root = loadTsaCertificates(readFileSync(`${F}/ca.crt`));
+const tsa = loadTsaCertificates(readFileSync(`${F}/tsa.crt`));
+const other = loadTsaCertificates(readFileSync(`${F}/other-root.crt`));
 const NONCE = "102030405060708";
 
 describe("RFC 3161 timestamps", () => {

@@ -44,7 +44,7 @@ mk other "/CN=Unrelated Root (fixture)" ca
 npx tsx -e "import { timestampRequest } from './tools/timestamp'; import { writeFileSync } from 'node:fs'; writeFileSync('$T/req.der', timestampRequest('$DIGEST', Buffer.from('0102030405060708', 'hex')).der);"
 openssl ts -reply -config "$T/ts.cnf" -queryfile "$T/req.der" -inkey "$T/tsa.key" -signer "$T/tsa.pem" -chain "$T/ca.pem" -out "$OUT/response.der" 2>/dev/null
 openssl ts -reply -config "$T/ts.cnf" -queryfile "$T/req.der" -inkey "$T/plain.key" -signer "$T/plain.pem" -out "$OUT/response-not-tsa.der" 2>/dev/null || true
-cp "$T/ca.pem" "$OUT/ca.pem"; cp "$T/tsa.pem" "$OUT/tsa.pem"; cp "$T/other.pem" "$OUT/other-root.pem"
+cp "$T/ca.pem" "$OUT/ca.crt"; cp "$T/tsa.pem" "$OUT/tsa.crt"; cp "$T/other.pem" "$OUT/other-root.crt"
 printf '%s\n' "$DIGEST" > "$OUT/digest.txt"
-openssl ts -verify -in "$OUT/response.der" -queryfile "$T/req.der" -CAfile "$OUT/ca.pem" >/dev/null && echo "openssl verifies the fixture response"
+openssl ts -verify -in "$OUT/response.der" -queryfile "$T/req.der" -CAfile "$OUT/ca.crt" >/dev/null && echo "openssl verifies the fixture response"
 ls "$OUT"
