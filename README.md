@@ -54,7 +54,7 @@ In the app, click **Use demo keys** (it pins the demo root and loads the root-si
 2. Leave **Printer** on *Bambu Lab H2C* (or pick another) and click **Export 3MF for Bambu Studio**. The browser saves `<part>_<rev>.3mf` and warns if a solid can't fit the build volume. The H2C check uses a conservative 300 × 320 × 320 mm, which holds in both single- and dual-nozzle modes. The H2C profile also records the lab printer's firmware, **01.03.00.00**, and the 3MF carries it as `tdp:TargetPrinterFirmware` beside `tdp:TargetPrinter`.
 3. Open the 3MF in Bambu Studio, choose the H2C profile, nozzles and filament, slice, and print over LAN or cloud as usual.
 
-The viewer itself never talks to the printer; see the roadmap for a separate LAN print bridge.
+The viewer itself never talks to the printer. A separate command-line bridge, `npm run printer`, can: it reads the H2C's status and firmware, uploads the sliced `.gcode.3mf`, starts and follows the print, and writes the queue/build record data for the workflow ledger. It needs LAN Only mode and Developer Mode on the printer, and pins the printer's certificates. So far it's tested against a simulated H2C only. See [docs/printer-bridge.md](docs/printer-bridge.md).
 
 Other commands:
 
@@ -64,6 +64,7 @@ npm run e2e          # build, then drive the app in headless Chrome (needs Googl
 npm run build        # typecheck + production build into dist/
 npm run sample       # regenerate the sample packages with fresh demo keys
 npm run lab          # regenerate samples/lab/ and run the P01–P08 laboratory demonstrations
+npm run printer      # LAN bridge to a Bambu Lab H2C (docs/printer-bridge.md)
 npm run tdp -- verify samples/sample.tdp --trust samples/trust-store.json
 npm run tdp -- diff samples/sample.tdp samples/sample-rev-c.tdp --trust samples/trust-store.json
 ```

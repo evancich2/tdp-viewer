@@ -161,6 +161,8 @@ TDP Viewer is installed in $DIR
               (on macOS you can double-click it in Finder)
   Then open:  http://localhost:4173  (it opens automatically)
   Update:     run this installer again
+  Printer:    cd "$DIR" && PATH="$NODE_BIN:\$PATH" npm run printer -- discover
+              (LAN bridge to a Bambu Lab H2C; see docs/printer-bridge.md)
 
 Sample packages are in $DIR/samples/
 EOF
