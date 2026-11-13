@@ -1,7 +1,7 @@
 import { zipSync } from "fflate";
 import { sha256Hex, utf8 } from "./bytes";
 import type { BomItem, Manifest, ManifestFile, ManifestPackage, SignatureFile, SignerRole } from "./schema";
-import { signEd25519 } from "./signing";
+import { signWith, type KeyHandle } from "./signing";
 import { MANIFEST_PATH, SIGNATURES_PATH, signingMessage } from "./verify";
 
 export interface PackInput {
@@ -13,11 +13,7 @@ export interface PackInput {
   revision?: string;
 }
 
-export interface Signer {
-  keyId: string;
-  privateKey: CryptoKey;
-  role: SignerRole;
-}
+export type Signer = KeyHandle & { role: SignerRole };
 
 export interface ManifestOptions {
   /**
@@ -53,7 +49,7 @@ export async function signManifest(
   const signedAt = now.toISOString();
   const signatures = [];
   for (const s of signers) {
-    const sig = await signEd25519(s.privateKey, signingMessage(manifestSha256, s.role, signedAt));
+    const sig = await signWith(s, signingMessage(manifestSha256, s.role, signedAt));
     signatures.push({ keyId: s.keyId, alg: "Ed25519" as const, role: s.role, signedAt, sig });
   }
   return { schema: "tdp-signatures/0.1", manifestSha256, signatures };

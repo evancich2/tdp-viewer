@@ -21,7 +21,7 @@ import {
 import { DECISION_RULES_ID, Measurement, evaluateInspection, type InspectionEvaluation } from "./inspection";
 import type { LoadedProcess, Transition } from "./process";
 import type { TrustStore, TrustedKey } from "./schema";
-import { signEd25519, verifyEd25519 } from "./signing";
+import { signWith, type KeyHandle, verifyEd25519 } from "./signing";
 import { SuitabilityInput, evaluateSuitability, type SuitabilityCheck } from "./suitability";
 import type { VerifyResult } from "./verify";
 
@@ -34,7 +34,8 @@ import type { VerifyResult } from "./verify";
 //
 // Limits, stated plainly: a signature proves who signed which bytes, not when. Record times are
 // the signer's claim. A hash chain detects edits, reordering and removal in the middle, but not
-// truncation of the newest records; that needs a checkpoint retained independently (see below).
+// truncation of the newest records; that needs tree heads (custody.ts) or a checkpoint held by
+// someone else, and RFC 3161 timestamps (tools/timestamp.ts) to bound time.
 
 const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
 const keyId = z.string().regex(/^[0-9a-f]{32}$/);
@@ -713,7 +714,7 @@ export function newLedger(ctx: WorkflowContext, item?: ItemRef, instanceId: stri
 export async function appendRecord(
   ledger: LedgerFile,
   ctx: WorkflowContext,
-  signer: { keyId: string; privateKey: CryptoKey },
+  signer: KeyHandle,
   input: RecordInput,
   opts: { recordId?: string; at?: Date } = {},
 ): Promise<{ ledger: LedgerFile; record: WorkflowRecord; sha256: string }> {
@@ -745,7 +746,7 @@ export async function appendRecord(
   const ev = evaluateRecord(before.records, parsed.data, ctx, "create");
   if (ev.fatal) throw new TransitionDenied(ev.fatal);
   const sha = await canonicalSha256(raw);
-  const signature: RecordSignature = { schema: "tdp-record-signature/0.1", recordSha256: sha, keyId: key.keyId, alg: "Ed25519", sig: await signEd25519(signer.privateKey, recordSigningMessage(sha)) };
+  const signature: RecordSignature = { schema: "tdp-record-signature/0.1", recordSha256: sha, keyId: key.keyId, alg: "Ed25519", sig: await signWith(signer, recordSigningMessage(sha)) };
   const out: LedgerFile = { ...ledger, entries: [...ledger.entries, { record: raw, signature }] };
   const after = await verifyLedger(out, ctx);
   if (after.verdict === "rejected") throw new Error(`record would make the ledger fail: ${after.checks.filter((c) => c.status === "fail").map((c) => c.message).join("; ")}`);

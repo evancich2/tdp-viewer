@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { sha256Hex, utf8 } from "../src/core/bytes";
 import { canonicalSha256 } from "../src/core/canonical";
 import { loadAuthority, type LoadedAuthority } from "../src/core/authority";
+import { checkLedgerAgainstHeads, consistencyProof, findForks, inclusionProof, leavesOf, signTreeHead, verifyConsistency, verifyInclusion, witnessHead, type ConsistencyProofFile, type TreeHead, type Witness } from "../src/core/custody";
 import { buildEvidenceBundle, signEvidenceBundle, verifySignedEvidence, type Demonstration, type SignedEvidence } from "../src/core/evidence";
 import {
   LocalFixtureAdapter,
@@ -306,6 +307,7 @@ export interface LabRun {
   performance: { metric: string; value: number; unit: string; note: string }[];
   bundle: ReturnType<typeof buildEvidenceBundle>;
   signedBundle: SignedEvidence;
+  custody: { witness: Witness; head8: TreeHead; head16: TreeHead; proof: ConsistencyProofFile; forkHead: TreeHead };
 }
 
 const failures = (r: { checks: { status: string; message: string }[] }) => r.checks.filter((c) => c.status === "fail").map((c) => c.message).join("; ");
@@ -471,6 +473,40 @@ export async function runLab(opts: { legacySample?: { tdp: Uint8Array; trustJson
     demo("P06-f", "Recovery: re-verifying the retained ledger and evidence from scratch", "verified, same head as the checkpoint", `${recovered.verdict}, head ${recovered.head?.slice(0, 16)}…`, recovered.verdict === "verified" && recovered.head === checkpoint.head);
   }
 
+  // P06 continued: Merkle custody log witnessed by another organization.
+  let custody!: LabRun["custody"];
+  {
+    const L = lab.ledgers["SN-0001"]!;
+    const ctx = lab.ctx("printed-part", lab.revA);
+    const witnessKey = k.quality!; // Lab Inspection: not the ledger's holder
+    const at8 = await verifyLedger({ ...L, entries: L.entries.slice(0, 8) }, ctx);
+    const head8 = await signTreeHead(at8, witnessKey, { now: at(115) });
+    const full = results["SN-0001"]!;
+    const head16 = await signTreeHead(full, witnessKey, { now: at(365) });
+    const proof = await consistencyProof(8, leavesOf(full));
+    let witness: Witness = { schema: "tdp-witness/0.1", heads: [] };
+    witness = await witnessHead(witness, head8, lab.trustStore);
+    witness = await witnessHead(witness, head16, lab.trustStore, proof);
+    const truncated = await verifyLedger({ ...L, entries: L.entries.slice(0, -2) }, ctx);
+    const tc = await checkLedgerAgainstHeads(truncated, witness.heads, lab.trustStore);
+    demo("P06-h", "The newest records dropped from SN-0001; heads signed by another organization (the inspection lab) still hold the full history", "truncation detected from signed heads, no hand-kept checkpoint needed", tc.map((c) => `${c.status}: ${c.message}`).join(" | ").slice(0, 260), tc.some((c) => c.status === "truncated") && tc.some((c) => c.status === "consistent"));
+    // The holder rewrites the last record and signs a head over the rewritten history.
+    const forked = JSON.parse(JSON.stringify(L)) as LedgerFile;
+    forked.entries.pop();
+    const rewritten = await appendRecord(forked, lab.ctx("printed-part", lab.revA, at(400)), k["config-mgr"]!, { action: "close-evidence", role: "configuration-manager", outcome: "closed", unit: { serial: "SN-0001" }, reason: "rewritten closure", data: { kind: "closure", summary: "rewritten (synthetic fork)" } }, { recordId: await uuidFor("fork-closure") });
+    const forkHead = await signTreeHead(await verifyLedger(rewritten.ledger, ctx), k["config-mgr"]!, { now: at(400) });
+    let refused = "";
+    try { await witnessHead(witness, forkHead, lab.trustStore); } catch (e) { refused = (e as Error).message; }
+    const forks = findForks([...witness.heads, forkHead]);
+    demo("P06-i", "The holder rewrites a record and signs a head over the rewritten 16-record history", "witness refuses it; the two signed heads are themselves proof of a fork", `${refused.slice(0, 120)}; forks found: ${forks.length}`, /fork/.test(refused) && forks.length === 1);
+    const consistent = await verifyConsistency(head8.treeSize, head8.rootHash, head16.treeSize, head16.rootHash, proof);
+    const forgedProof = await consistencyProof(8, leavesOf(await verifyLedger(rewritten.ledger, ctx)));
+    const forkConsistent = await verifyConsistency(head8.treeSize, head8.rootHash, forkHead.treeSize, forkHead.rootHash, forgedProof);
+    const incl = await verifyInclusion(full.records[13]!.sha256, 13, head16.treeSize, head16.rootHash, await inclusionProof(13, leavesOf(full)));
+    demo("P06-j", "Without the ledger: a consistency proof shows the 16-record head extends the 8-record head; an inclusion proof shows the inspection record is in it", "consistency verifies; inclusion verifies", `consistency 8→16: ${consistent}; inclusion of record 14: ${incl}; (the forked head is still consistent with 8: ${forkConsistent}, since the fork is after record 8)`, consistent && incl);
+    custody = { witness, head8, head16, proof: { schema: "tdp-consistency-proof/0.1", instance: full.instance!.id, fromSize: 8, toSize: 16, proof }, forkHead };
+  }
+
   // P07 exchange boundary
   const packageHashBefore = await sha256Hex(lab.revA.tdp);
   const ledgerHashBefore = await canonicalSha256(lab.ledgers["SN-0002"]);
@@ -593,7 +629,7 @@ export async function runLab(opts: { legacySample?: { tdp: Uint8Array; trustJson
   demos.push({ id: "P06-g", scenario: "Signed evidence bundle: verifies as exported, fails after any edit", expected: "valid; altered copy refused", actual: `signed by ${good.signer}; altered: ${bad.problem}`, pass: !!good.signer && /does not verify/.test(bad.problem ?? "") });
   bundle.demonstrations = demos;
   const finalSigned = await signEvidenceBundle(bundle, lab.world.keys["config-mgr"]!, LAB_NOW);
-  return { lab, demonstrations: demos, results, signedBundle: finalSigned, exchange: { recipe, initial, after: adapter.state, proposals, acks, replay, proposals2, acks2 }, checkpoint, invalid, performance, bundle };
+  return { lab, demonstrations: demos, results, signedBundle: finalSigned, custody, exchange: { recipe, initial, after: adapter.state, proposals, acks, replay, proposals2, acks2 }, checkpoint, invalid, performance, bundle };
 }
 
 const performance_now = () => globalThis.performance.now();

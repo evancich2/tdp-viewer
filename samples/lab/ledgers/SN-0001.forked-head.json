@@ -1,0 +1,14 @@
+{
+  "schema": "tdp-tree-head/0.1",
+  "instance": "a1e8949d-57e9-42b4-be91-19d4182f0b2b",
+  "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+  "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+  "treeSize": 16,
+  "rootHash": "6caa0549a7766129266aabb3b723dd299ffdd9e90eb64a9b6f31887aaea651c2",
+  "issuedAt": "2026-11-10T19:40:00.000Z",
+  "signature": {
+    "keyId": "45c74edb2764c39a76fb50033c3ac95e",
+    "alg": "Ed25519",
+    "sig": "z92PBXruBhRNfpBUD7mOmiHF+kllEjSGugOz/nUxg5j3Nm0JwUFCF+ATD2DK2zxhHzqMKGVSHIR2/mU208DxBA=="
+  }
+}

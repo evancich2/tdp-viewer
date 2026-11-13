@@ -23,3 +23,4 @@ export * from "./records";
 export * from "./exchange";
 export * from "./evidence";
 export * from "./keyfile";
+export * from "./custody";

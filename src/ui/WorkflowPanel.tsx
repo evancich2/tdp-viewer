@@ -14,6 +14,9 @@ import {
   trackOf,
   unitLabel,
   verifyPackage,
+  checkLedgerAgainstHeads,
+  findForks,
+  Witness,
   AckSet,
   ProposalSet,
   type Anchors,
@@ -26,6 +29,7 @@ import {
   type ReconciliationRow,
   type StatusLevel,
   type Successor,
+  type HeadCheck,
   type TrustStore,
   type WorkflowContext,
 } from "../core";
@@ -70,6 +74,8 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
   const [sync, setSync] = useState<{ rows: ReconciliationRow[]; problems: string[]; changeRequests: number; signedBy?: string } | null>(null);
   const [successors, setSuccessors] = useState<Successor[]>([]);
   const [selUnit, setSelUnit] = useState("");
+  const [witness, setWitness] = useState<{ name: string; w: Witness } | null>(null);
+  const [custody, setCustody] = useState<{ checks: HeadCheck[]; forks: number } | null>(null);
   const [proposals, setProposals] = useState<ProposalSet | null>(null);
   const [error, setError] = useState<string | null>(null);
   const eng = session.engineering;
@@ -142,6 +148,19 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
     if (ledger) void verify(ledger.name, ledger.raw);
   }, [evidence, authority, processes, successors]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Custody: does this ledger still contain every history a witness signed a head over?
+  useEffect(() => {
+    if (!witness || !ledger?.result.instance) { setCustody(null); return; }
+    const heads = witness.w.heads.filter((h) => h.instance === ledger.result.instance!.id);
+    void checkLedgerAgainstHeads(ledger.result, heads, trustStore).then(async (checks) => {
+      const forks = findForks(heads).length;
+      setCustody({ checks, forks });
+      const bad = checks.filter((c) => c.status !== "consistent").length + forks;
+      await audit.append(bad ? "deny" : "verify", witness.name, `${checks.length} witnessed heads checked against ${ledger.name}: ${bad ? `${bad} problem(s)` : "consistent"}`);
+      onAudit();
+    });
+  }, [witness, ledger]); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function loadNewer(fileList: FileList) {
     const files = [...fileList];
     const results = await Promise.all(files.map(async (f) => verifyPackage(await read(f), trustStore, session.policy)));
@@ -199,6 +218,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
         <Badge label="Source release" level={st?.sourceRelease.level ?? "none"} text={st?.sourceRelease.text ?? "Not established: load a ledger with source release evidence"} />
         <Badge label="Operation authorized" level={st?.operation.level ?? "none"} text={st?.operation.text ?? "Not authorized: possessing a package grants nothing"} />
         <Badge label="Inspection" level={st?.inspection.level ?? "none"} text={st?.inspection.text ?? "Not inspected"} />
+        <Badge label="Custody" level={!custody ? "none" : custody.forks || custody.checks.some((c) => c.status !== "consistent") ? "fail" : custody.checks.length ? "ok" : "none"} text={!custody ? "No witnessed heads loaded: dropped newest records can't be detected" : custody.forks ? `${custody.forks} fork(s): contradictory signed heads` : custody.checks.find((c) => c.status !== "consistent")?.message ?? (custody.checks.length ? `Consistent with ${custody.checks.length} head(s) signed by ${[...new Set(custody.checks.map((c) => c.organization ?? c.signer))].join(", ")}` : "The witness file has no heads for this ledger")} />
         <Badge label="Disposition" level={st?.disposition.level ?? "none"} text={st?.disposition.text ?? "No disposition"} />
       </div>
 
@@ -258,6 +278,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
       <div className="row">
         <label className={`button ${authority ? "" : "disabled"}`}>Open ledger…<input type="file" accept=".json" className="file-input" disabled={!authority} onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { await verify(f.name, JSON.parse(await f.text())); } catch (err) { setError(`Ledger unreadable: ${(err as Error).message}`); } } }} /></label>
         <label className="button">Add evidence files…<input type="file" multiple className="file-input" onChange={(e) => { if (e.target.files?.length) void loadEvidence(e.target.files); e.target.value = ""; }} /></label>
+        <label className="button">Check against witnessed heads…<input type="file" accept=".json" className="file-input" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { setWitness({ name: f.name, w: Witness.parse(JSON.parse(await f.text())) }); } catch (err) { setError(`Witness file rejected: ${(err as Error).message}`); } } }} /></label>
         {evidence && <span className="muted">{evidence.count} evidence files hashed</span>}
       </div>
       {error && <div className="banner fail" role="alert">{error}</div>}

@@ -30,6 +30,7 @@ import {
 } from "../src/core/records";
 import { loadAnchors, loadTrustStoreFile } from "../src/core/truststore";
 import { verifyPackage, type VerifyResult } from "../src/core/verify";
+import type { KeyHandle } from "../src/core/signing";
 
 export interface ContextArgs {
   package: string;
@@ -113,7 +114,7 @@ export async function evidenceRefs(specs: string[], synthetic: boolean): Promise
 export async function addRecord(
   ledger: LedgerFile,
   c: LoadedContext,
-  key: { keyId: string; privateKey: CryptoKey },
+  key: KeyHandle,
   opts: { action: string; role: string; outcome: string; reason: string; dataJson: string; serial?: string; lot?: string; evidence: EvidenceRef[] },
 ) {
   const data = RecordData.parse(JSON.parse(opts.dataJson));
@@ -174,7 +175,7 @@ export async function syncExport(ledgerJson: string, c: LoadedContext, recipeJso
   return buildProposals(PublishingRecipe.parse(JSON.parse(recipeJson)), c.ctx.baseline, r, adapter.describe(), { now: c.ctx.now, knownVersions: known });
 }
 
-export async function syncApplyFixture(proposalsJson: string, fixtureJson: string, now = new Date(), signer?: { keyId: string; privateKey: CryptoKey }) {
+export async function syncApplyFixture(proposalsJson: string, fixtureJson: string, now = new Date(), signer?: KeyHandle) {
   const adapter = new LocalFixtureAdapter(FixtureState.parse(JSON.parse(fixtureJson)), signer);
   const acks = await adapter.reconcile(ProposalSet.parse(JSON.parse(proposalsJson)), now);
   return { acks, state: adapter.state };

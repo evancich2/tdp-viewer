@@ -3,7 +3,7 @@ import { canonicalSha256 } from "./canonical";
 import type { AuthorityConfig } from "./authority";
 import { utf8 } from "./bytes";
 import type { TrustStore } from "./schema";
-import { signEd25519, verifyEd25519 } from "./signing";
+import { signWith, type KeyHandle, verifyEd25519 } from "./signing";
 import { ArtifactClass, RelationshipType, SourceSystem, itemKey, type EngineeringModel } from "./engineering";
 import { RecordKind } from "./process";
 import type { BaselineContext, LedgerResult, VerifiedRecord } from "./records";
@@ -266,7 +266,7 @@ const sameAttributes = (a: Record<string, unknown>, b: Record<string, unknown>) 
 
 /** A stand-in source system kept in a JSON file. Clearly a fixture: it is labeled as one in every acknowledgement. */
 export class LocalFixtureAdapter implements SourceAdapter {
-  constructor(public state: FixtureState, private signer?: { keyId: string; privateKey: CryptoKey }) {}
+  constructor(public state: FixtureState, private signer?: KeyHandle) {}
 
   describe(): AdapterDescriptor {
     return { system: this.state.system, label: this.state.label, fixture: true, objectTypes: this.state.objectTypes };
@@ -339,7 +339,7 @@ export class LocalFixtureAdapter implements SourceAdapter {
     };
     if (!this.signer) return out;
     const signedAt = now.toISOString();
-    const sig = await signEd25519(this.signer.privateKey, ackSigningMessage(await unsignedDigest(out), signedAt));
+    const sig = await signWith(this.signer, ackSigningMessage(await unsignedDigest(out), signedAt));
     return { ...out, signature: { keyId: this.signer.keyId, alg: "Ed25519", signedAt, sig } };
   }
 }

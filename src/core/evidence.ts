@@ -3,7 +3,7 @@ import { utf8 } from "./bytes";
 import { canonicalSha256 } from "./canonical";
 import { DECISION_RULES_ID } from "./inspection";
 import type { TrustStore } from "./schema";
-import { signEd25519, verifyEd25519 } from "./signing";
+import { signWith, type KeyHandle, verifyEd25519 } from "./signing";
 import type { ProposalSet, ReconciliationRow } from "./exchange";
 import { workflowStatus, type LedgerResult, type WorkflowContext } from "./records";
 import type { VerifyResult } from "./verify";
@@ -13,8 +13,8 @@ import type { VerifyResult } from "./verify";
 // files, passphrases, printer access codes or API credentials: none of those are inputs here.
 
 export const STANDARD_LIMITATIONS = [
-  "Signatures prove which key signed which bytes, not when: record times are the signer's claim and are not independently time-stamped.",
-  "The record hash chain detects edits, reordering and removal in the middle of a ledger; it detects dropped newest records only against an independently retained checkpoint.",
+  "Signatures prove which key signed which bytes, not when: record times are the signer's claim. Time is bounded only where a tree head carries an RFC 3161 timestamp from a TSA you trust, and only as 'no later than'.",
+  "The record hash chain detects edits, reordering and removal in the middle of a ledger; dropped newest records are detected only against tree heads (or checkpoints) held by someone other than the ledger's holder.",
   "Offline verification can't learn of revocations issued after the loaded trust store and authority configuration; actions that need current revocation status are denied beyond the configuration's offline validity window.",
   "A valid package signature establishes integrity and signer authorization under the trust policy; it does not authorize manufacture or prove source-system release.",
   "Source release evidence from a laboratory fixture authority is not evidence of release in Onshape or Windchill; no live integration with either exists in this increment.",
@@ -137,10 +137,10 @@ export type SignedEvidence = z.infer<typeof SignedEvidence>;
 export const evidenceSigningMessage = (digest: string, signedAt: string) => utf8.encode(`tdp-evidence-signature/0.1\n${signedAt}\n${digest}`);
 
 /** Signs the bundle (as canonical JSON). The signature says who exported it, not that its contents are true. */
-export async function signEvidenceBundle(bundle: EvidenceBundle, signer: { keyId: string; privateKey: CryptoKey }, now = new Date()): Promise<SignedEvidence> {
+export async function signEvidenceBundle(bundle: EvidenceBundle, signer: KeyHandle, now = new Date()): Promise<SignedEvidence> {
   const plain = JSON.parse(JSON.stringify(bundle)) as Record<string, unknown>;
   const signedAt = now.toISOString();
-  const sig = await signEd25519(signer.privateKey, evidenceSigningMessage(await canonicalSha256(plain), signedAt));
+  const sig = await signWith(signer, evidenceSigningMessage(await canonicalSha256(plain), signedAt));
   return { schema: "tdp-signed-evidence/0.1", bundle: plain, signature: { keyId: signer.keyId, alg: "Ed25519", signedAt, sig } };
 }
 

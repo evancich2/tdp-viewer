@@ -22,7 +22,7 @@ import {
   type RecordData,
 } from "../src/core/records";
 import type { SignerRole, TrustStore } from "../src/core/schema";
-import { signEd25519 } from "../src/core/signing";
+import { signWith } from "../src/core/signing";
 import { signTrustStore, type Anchors } from "../src/core/truststore";
 import { samplePdf } from "./sample-data";
 import { writeStep, type Prism } from "./step-writer";
@@ -374,7 +374,7 @@ export async function ref(f: EvidenceFile, id?: string): Promise<EvidenceRef> {
  */
 export async function forceAppend(ledger: LedgerFile, signer: DemoKey, record: Record<string, unknown>): Promise<LedgerFile> {
   const sha = await canonicalSha256(record);
-  const sig = await signEd25519(signer.privateKey, recordSigningMessage(sha));
+  const sig = await signWith(signer, recordSigningMessage(sha));
   return { ...ledger, entries: [...ledger.entries, { record, signature: { schema: "tdp-record-signature/0.1", recordSha256: sha, keyId: signer.keyId, alg: "Ed25519", sig } }] };
 }
 

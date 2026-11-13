@@ -1113,6 +1113,27 @@
         "pass": true
       },
       {
+        "id": "P06-h",
+        "scenario": "The newest records dropped from SN-0001; heads signed by another organization (the inspection lab) still hold the full history",
+        "expected": "truncation detected from signed heads, no hand-kept checkpoint needed",
+        "actual": "consistent: contains the 8-record history Quinn Quality Engineer (demo) (Lab Inspection (synthetic)) signed at 2026-11-10T14:55:00.000Z | truncated: Quinn Quality Engineer (demo) (Lab Inspection (synthetic)) signed a head over 16 records; this ledger has 14 ve",
+        "pass": true
+      },
+      {
+        "id": "P06-i",
+        "scenario": "The holder rewrites a record and signs a head over the rewritten 16-record history",
+        "expected": "witness refuses it; the two signed heads are themselves proof of a fork",
+        "actual": "fork: a head of size 16 with a different root is already witnessed (signed by 0e33e41d7697201e31ec5d9a00bc8dd6); forks found: 1",
+        "pass": true
+      },
+      {
+        "id": "P06-j",
+        "scenario": "Without the ledger: a consistency proof shows the 16-record head extends the 8-record head; an inclusion proof shows the inspection record is in it",
+        "expected": "consistency verifies; inclusion verifies",
+        "actual": "consistency 8→16: true; inclusion of record 14: true; (the forked head is still consistent with 8: true, since the fork is after record 8)",
+        "pass": true
+      },
+      {
         "id": "P07-a",
         "scenario": "SN-0001 proposals to the fixture PLM: AsBuiltUnit create then update (expected version 1), lossy-but-accepted InspectionResult, held lossy ProcessReview, unsupported ProcessPlan",
         "expected": "accepted ×4, rejected (lossy held) ×1, unsupported ×1",
@@ -1193,14 +1214,14 @@
         "id": "P08-b",
         "scenario": "A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately",
         "expected": "verified; 45 units closed",
-        "actual": "verified; 45 units closed; 301.78 ms",
+        "actual": "verified; 45 units closed; 224.72 ms",
         "pass": true
       },
       {
         "id": "P08-a",
         "scenario": "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)",
         "expected": "measurements recorded",
-        "actual": "package verification (rev A, 6 files): 2.03 ms; ledger verification (SN-0001, 16 records): 6.06 ms; ledger verification per record: 0.38 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 301.78 ms; large ledger verification per record: 0.44 ms",
+        "actual": "package verification (rev A, 6 files): 1.51 ms; ledger verification (SN-0001, 16 records): 4.66 ms; ledger verification per record: 0.29 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 224.72 ms; large ledger verification per record: 0.33 ms",
         "pass": true
       },
       {
@@ -1214,19 +1235,19 @@
     "performance": [
       {
         "metric": "package verification (rev A, 6 files)",
-        "value": 2.03,
+        "value": 1.51,
         "unit": "ms",
         "note": "mean of 5, this machine"
       },
       {
         "metric": "ledger verification (SN-0001, 16 records)",
-        "value": 6.06,
+        "value": 4.66,
         "unit": "ms",
         "note": "mean of 5, includes every gate re-evaluation"
       },
       {
         "metric": "ledger verification per record",
-        "value": 0.38,
+        "value": 0.29,
         "unit": "ms",
         "note": "full chain re-verified from genesis"
       },
@@ -1238,20 +1259,20 @@
       },
       {
         "metric": "large ledger verification (45 units, 681 records)",
-        "value": 301.78,
+        "value": 224.72,
         "unit": "ms",
         "note": "one lot, 3 failed builds per unit before success; single run"
       },
       {
         "metric": "large ledger verification per record",
-        "value": 0.44,
+        "value": 0.33,
         "unit": "ms",
         "note": "scales linearly in this range"
       }
     ],
     "limitations": [
-      "Signatures prove which key signed which bytes, not when: record times are the signer's claim and are not independently time-stamped.",
-      "The record hash chain detects edits, reordering and removal in the middle of a ledger; it detects dropped newest records only against an independently retained checkpoint.",
+      "Signatures prove which key signed which bytes, not when: record times are the signer's claim. Time is bounded only where a tree head carries an RFC 3161 timestamp from a TSA you trust, and only as 'no later than'.",
+      "The record hash chain detects edits, reordering and removal in the middle of a ledger; dropped newest records are detected only against tree heads (or checkpoints) held by someone other than the ledger's holder.",
       "Offline verification can't learn of revocations issued after the loaded trust store and authority configuration; actions that need current revocation status are denied beyond the configuration's offline validity window.",
       "A valid package signature establishes integrity and signer authorization under the trust policy; it does not authorize manufacture or prove source-system release.",
       "Source release evidence from a laboratory fixture authority is not evidence of release in Onshape or Windchill; no live integration with either exists in this increment.",
@@ -1262,6 +1283,6 @@
     "keyId": "45c74edb2764c39a76fb50033c3ac95e",
     "alg": "Ed25519",
     "signedAt": "2026-11-12T13:00:00.000Z",
-    "sig": "6OIdW0WVgR4fcQLv/EMuqy0WlCYQQ+e5MWEE3y33AiaC0yZu3dTzPDJYJzYZyDO/JZ6LXoHSeE+qjsveK2JqDA=="
+    "sig": "9TfT6zOPwsluJXZ/VVYQC6afng+FciAcMvmCQyX+pQPVloldx/VhcXiGivog9NCg97XL6ttImPYT96x/M0EHAA=="
   }
 }

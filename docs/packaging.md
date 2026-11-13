@@ -17,6 +17,8 @@ Each command asks for a passphrase (at least 12 characters) and writes two files
 
 For scripts, set `TDP_PASSPHRASE` instead of typing it.
 
+**Keys on a hardware token.** Instead of a key file, any signing command accepts `--agent <keyId|comment>` and signs through `SSH_AUTH_SOCK`: for a YubiKey's OpenPGP Ed25519 key, point it at gpg-agent (`export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)`). `npm run tdp -- agent list` shows usable keys; `npm run tdp -- agent entry --agent <keyId> --roles approver --org "Acme" --out keys/abe.pub.json` writes the trust-store entry (`--roles root` for an anchors entry).
+
 ## 2. Build the trust store (the people the viewer will trust)
 
 ```sh

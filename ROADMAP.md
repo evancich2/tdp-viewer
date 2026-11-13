@@ -33,10 +33,12 @@ Decided: the source PLM governs release (Onshape first, Windchill preferred late
 
 ### Next in software
 - [ ] Run the Onshape adapter against a live account and settle its revision-field handling; then Windchill
-- [ ] Merkle custody log with exchanged tree heads (replaces checkpoints as the truncation defense); RFC 3161 time-stamps
+- [x] Merkle custody log: signed tree heads, witness files, consistency and inclusion proofs, fork detection
+- [x] RFC 3161 timestamps over tree heads (CLI), verified against a pinned TSA certificate
+- [ ] Choose a TSA for the program and run timestamps against it; anchoring to a public log
 - [ ] Bambu LAN bridge as a separate CLI producing automated build records (needs LAN-only and Developer Mode decisions)
 - [ ] Allow 3MF as a process-input artifact class in packages; print settings carried into the 3MF
-- [ ] Hardware-backed keys for workflow records
+- [x] Hardware-backed keys through an SSH agent (`--agent`); test on an actual YubiKey
 
 ## Done: v0.1 foundation
 - [x] Package format: signed manifest, detached Ed25519 signatures, trust store
@@ -91,13 +93,13 @@ Decided: the source PLM governs release (Onshape first, Windchill preferred late
 - [x] Sample rev C package with a change order
 
 ## Chain of custody ([design](docs/chain-of-custody.md))
-- [ ] Signed custody events (packaged, signed, transferred, received, inspected, printed), hash-linked and carried in the package
-- [ ] Viewer: verify and show the custody timeline for a package
-- [ ] CLI: `tdp custody add` to record a handoff with your key
-- [ ] Merkle-tree custody log with signed tree heads, inclusion and consistency proofs (Certificate Transparency style)
-- [ ] Exchange and compare signed tree heads between organizations; flag any inconsistency
-- [ ] Record 3D-print exports as custody events
-- [ ] Optional anchoring of tree heads: RFC 3161 timestamps, public transparency logs, or a blockchain where required (root hash only, never package data)
+- [x] Signed, hash-linked records of each step, kept in a ledger beside the package (workflow records; not inside the package, so the baseline stays immutable)
+- [x] Viewer: verify and show the record timeline
+- [x] Merkle-tree custody log with signed tree heads, inclusion and consistency proofs (Certificate Transparency style)
+- [x] Exchange and compare signed tree heads between organizations (witness files); flag truncation, rewrites and forks
+- [x] RFC 3161 timestamps over tree heads (head digest only)
+- [ ] Transfer/receipt handoffs as their own record kinds; record 3D-print exports as records
+- [ ] Optional anchoring to a public transparency log or a blockchain where required (root hash only, never package data)
 
 ## Configuration control
 - [x] Drawing overlay compare for revised drawings, with changed areas boxed

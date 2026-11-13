@@ -1,0 +1,9 @@
+{
+  "schema": "tdp-consistency-proof/0.1",
+  "instance": "a1e8949d-57e9-42b4-be91-19d4182f0b2b",
+  "fromSize": 8,
+  "toSize": 16,
+  "proof": [
+    "8442ecc0b739a2c72c29da2d5e0787309cf2250e22e4f7f34ee5bcb74956369c"
+  ]
+}

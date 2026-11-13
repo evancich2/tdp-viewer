@@ -1,6 +1,6 @@
 # Chain of custody (design)
 
-Status: partly built. Signed, hash-chained workflow records bound to a baseline digest now exist as ledgers beside the package ([engineering-workflow.md](engineering-workflow.md)), with checkpoints that detect truncation against an independently retained copy. The Merkle log, exchanged tree heads and anchoring below are still planned (see [ROADMAP.md](../ROADMAP.md)). This note records the design and why it isn't a blockchain.
+Status: built, except public anchoring. Workflow ledgers are signed and hash-chained ([engineering-workflow.md](engineering-workflow.md)); a Merkle log over each ledger with signed tree heads, inclusion and consistency proofs, witness files and fork detection is in `src/core/custody.ts`; RFC 3161 timestamps over tree heads are in `tools/timestamp.ts` (CLI). Anchoring to a public transparency log or a blockchain is not built. This note records the design and why it isn't a blockchain.
 
 ## The goal
 
@@ -12,7 +12,12 @@ For any package, anyone holding it should be able to answer, without trusting a 
 
 ### What exists today, and its limits
 
-Workflow ledgers (`tdp-ledger/0.1`) are signed and hash-chained, and every record names the baseline manifest digest. They detect edits, reordering and removals in the middle. They detect truncation or a fork only when checked against a checkpoint (`tdp record checkpoint`) kept by someone other than the ledger's holder. Record times are the signer's claim. None of this is a Merkle log yet, and nothing is anchored.
+- **Ledger chain:** detects edits, reordering and removals in the middle.
+- **Signed tree heads** (`tdp-tree-head/0.1`): a party that does not hold the ledger (the receiving organization, an inspection lab) signs or receives a head over the records so far and keeps it in a witness file (`tdp tree witness`). `tdp tree check` then proves the ledger still contains every witnessed history: dropped newest records show as *truncated*, a rewritten history as *rewritten*. Two signed heads of the same size with different roots are proof of a fork by themselves, and a witness refuses the second.
+- **Consistency proofs** (`tdp tree prove`) let a witness accept a newer head only if it extends the one it holds, without receiving the ledger; **inclusion proofs** show one record is under a head.
+- **RFC 3161 timestamps** (`tdp tree timestamp`, `verify-timestamp`) over a head prove it existed no later than the TSA's time, so records under it can't later be backdated past that point. Only the head's SHA-256 is sent to the TSA. The TSA certificate is pinned by the verifier.
+
+Limits: detection depends on someone actually keeping heads and comparing them; a party that has never seen a head can't detect anything. Timestamps bound time from above only. Heads say nothing about whether a record's content is true.
 
 Today, signatures pin who approved which exact bytes, and the audit log is hash-chained. The gap is that each audit log lives on one machine, and whoever holds it could throw it away and start a new one.
 

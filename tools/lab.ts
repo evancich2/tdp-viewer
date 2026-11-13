@@ -27,6 +27,10 @@ for (const f of Object.values(lab.evidence)) writeFileSync(`${OUT}/evidence/${f.
 for (const [name, L] of Object.entries(lab.ledgers)) writeFileSync(`${OUT}/ledgers/${name}.ledger.json`, json(L));
 for (const [name, L] of Object.entries(run.invalid)) writeFileSync(`${OUT}/ledgers/${name}.ledger.json`, json(L));
 writeFileSync(`${OUT}/ledgers/SN-0001.checkpoint.json`, json(run.checkpoint));
+writeFileSync(`${OUT}/ledgers/SN-0001.witness.json`, json(run.custody.witness));
+writeFileSync(`${OUT}/ledgers/SN-0001.head-16.json`, json(run.custody.head16));
+writeFileSync(`${OUT}/ledgers/SN-0001.proof-8-16.json`, json(run.custody.proof));
+writeFileSync(`${OUT}/ledgers/SN-0001.forked-head.json`, json(run.custody.forkHead));
 writeFileSync(`${OUT}/exchange/recipe.json`, json(exchange.recipe));
 writeFileSync(`${OUT}/exchange/fixture-source.initial.json`, json(exchange.initial));
 writeFileSync(`${OUT}/exchange/fixture-source.after.json`, json(exchange.after));

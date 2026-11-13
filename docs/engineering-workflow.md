@@ -50,14 +50,16 @@ The record is hashed as canonical JSON, and the signature is Ed25519 over `tdp-r
 
 **One unit or many.** A ledger may carry one physical unit or several (a lot, a batch of serials). Records with no unit (approvals, source release, suitability, planning, authorization) are shared. Records with a unit move that unit along its own track: state, prerequisites, independence rules, inspections and dispositions are judged per unit, so one unit's accepted inspection can never disposition another. Job ids, NCR ids and CIP ids are unique across the whole ledger.
 
+**Hardware-backed keys.** Every CLI command that signs takes `--agent <keyId|comment>` instead of `--key`: the signature is made by an SSH agent, so the private key can live on a token: a YubiKey or other OpenPGP card with an Ed25519 key through gpg-agent's SSH support, or PIV Ed25519 (YubiKey firmware 5.7+) through ssh-agent with a PKCS#11 module. Only plain `ssh-ed25519` keys qualify (their agent signatures are ordinary Ed25519 signatures over our bytes); FIDO `sk-` keys sign something else and are refused. Each agent signature is checked against the public key before use. `tdp agent list` shows usable keys and `tdp agent entry` writes their trust-store or anchors entry. Tested with a software key in a private agent; no hardware token was available to test with.
+
 **Recording in the browser.** The viewer can sign records too. Load a key file and its passphrase; the key is decrypted in memory with a dependency-free scrypt (`src/core/scrypt.ts`, tested against Node's) and imported non-extractable. It is never stored or sent. The form only collects inputs: `appendRecord` runs the same gate as the CLI, and a forbidden step is refused with nothing signed. The updated ledger is downloaded as a file.
 
 The viewer's hash-chained audit log (`audit.ts`) is different: it is a local, unsigned record of what one browser session did. The signed ledger is the portable engineering record.
 
 ### What signatures and chains do not prove
 
-- **Time.** A signature proves who signed which bytes, not when. Record times are the signer's claim; nothing here is a trusted timestamp.
-- **Truncation.** The chain detects edits, reordering and removals in the middle. It cannot detect that the newest records were dropped. `tdp record checkpoint` writes the count and head digest; kept somewhere the ledger's holder can't change, it detects truncation and forks (`--checkpoint`).
+- **Time.** A signature proves who signed which bytes, not when. Record times are the signer's claim. An RFC 3161 timestamp over a tree head (`tdp tree timestamp`) proves the records under it existed no later than the TSA's time; nothing gives a lower bound.
+- **Truncation.** The chain detects edits, reordering and removals in the middle. It cannot detect that the newest records were dropped. That takes something held by another party: a signed tree head in a witness file (`tdp tree head`, `tdp tree witness`, `tdp tree check`; see [chain-of-custody.md](chain-of-custody.md)) or, more simply, a checkpoint (`tdp record checkpoint`, `--checkpoint`).
 - **Revocation freshness.** Offline, nothing newer than the loaded trust store and authority configuration can be known. See the offline validity window below.
 
 ## Authorization

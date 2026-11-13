@@ -148,6 +148,11 @@ try {
   await page.locator('.workflow .states li[aria-current="step"]', { hasText: "closed" }).waitFor();
   console.log("ok  SN-0001 ledger held until evidence was supplied, then verified: 16 records, state closed, separate status badges");
 
+  await page.locator(".workflow label", { hasText: "Check against witnessed heads" }).locator("input").setInputFiles("samples/lab/ledgers/SN-0001.witness.json");
+  await page.locator(".badge.ok[data-status='Custody']", { hasText: "Consistent with 2 head(s)" }).waitFor();
+  await ledgerInput.setInputFiles("samples/lab/ledgers/SN-0001-truncated.ledger.json");
+  await page.locator(".badge.fail[data-status='Custody']", { hasText: "history was truncated" }).waitFor();
+  console.log("ok  witnessed tree heads: full ledger consistent; truncated ledger caught");
   await ledgerInput.setInputFiles("samples/lab/ledgers/invalid-skip.ledger.json");
   await page.locator('[data-ledger-verdict="rejected"]').waitFor();
   await page.locator(".workflow .checks li.fail", { hasText: /not allowed from state source-released/ }).waitFor();

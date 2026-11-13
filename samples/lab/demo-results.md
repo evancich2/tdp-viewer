@@ -39,6 +39,9 @@ source-system release is represented; see docs/laboratory-demo.md for the eviden
 | P06-d | A measurement evidence file altered after recording | held: its hash can't be checked; nothing is accepted on the altered file | held: record 14 (inspect) by Ines Inspector (demo) (Lab Inspection (synthetic)) as inspector: accept; held: evidence EV-MEAS (… | PASS |
 | P06-e | An inspection limit widened inside the signed engineering model | package rejected; no ledger can bind to it | rejected: 1 of 6 files failed; package is not trusted; records can't be checked against it | PASS |
 | P06-f | Recovery: re-verifying the retained ledger and evidence from scratch | verified, same head as the checkpoint | verified, head 772d8b8dad3ff9dd… | PASS |
+| P06-h | The newest records dropped from SN-0001; heads signed by another organization (the inspection lab) still hold the full history | truncation detected from signed heads, no hand-kept checkpoint needed | consistent: contains the 8-record history Quinn Quality Engineer (demo) (Lab Inspection (synthetic)) signed at 2026-11-10T14:55:00.000Z \| truncated: Quinn Quality Engineer (demo) (Lab Inspection (synthetic)) signed a head over 16 records; this ledger has 14 v | PASS |
+| P06-i | The holder rewrites a record and signs a head over the rewritten 16-record history | witness refuses it; the two signed heads are themselves proof of a fork | fork: a head of size 16 with a different root is already witnessed (signed by 0e33e41d7697201e31ec5d9a00bc8dd6); forks found: 1 | PASS |
+| P06-j | Without the ledger: a consistency proof shows the 16-record head extends the 8-record head; an inclusion proof shows the inspection record is in it | consistency verifies; inclusion verifies | consistency 8→16: true; inclusion of record 14: true; (the forked head is still consistent with 8: true, since the fork is after record 8) | PASS |
 | P07-a | SN-0001 proposals to the fixture PLM: AsBuiltUnit create then update (expected version 1), lossy-but-accepted InspectionResult, held lossy ProcessReview, unsupported ProcessPlan | accepted ×4, rejected (lossy held) ×1, unsupported ×1 | {"rejected":1,"unsupported":1,"accepted":4} | PASS |
 | P07-b | Replaying the same transactions | all duplicate; source objects unchanged | {"duplicate":6}; objects unchanged | PASS |
 | P07-c | Reusing a transaction id with different content | rejected: transaction id reused with different content | transaction id reused with different content | PASS |
@@ -50,19 +53,19 @@ source-system release is represented; see docs/laboratory-demo.md for the eviden
 | P05-i | A CIP that allows at most two dispatches: a third attempt needs a new authorization | DENIED: at most 2 dispatch-build, 2 already used | DENIED: dispatch-build is not authorized: CIP CIP-SN-0001 allows at most 2 dispatch-build record(s), and 2 already used it | PASS |
 | P02-d | A lot of two serials in one ledger: shared approvals and CIP, separate unit tracks (one accepted and incorporated, one scrapped) | SN-0004 closed, SN-0005 scrapped; statuses per unit | verified; SN-0004=closed, SN-0005=scrapped; Dispositioned accept (SN-0004) by Mel Disposition Authority (demo); Dispositioned scrap (SN-0005) by Mel Disposition Authority (demo) | PASS |
 | P03-f | Dispositioning SN-0005 by citing SN-0004's accepted inspection | DENIED: a unit is dispositioned against its own latest inspection | DENIED: disposition: must disposition the latest inspection | PASS |
-| P08-b | A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately | verified; 45 units closed | verified; 45 units closed; 301.78 ms | PASS |
-| P08-a | Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed) | measurements recorded | package verification (rev A, 6 files): 2.03 ms; ledger verification (SN-0001, 16 records): 6.06 ms; ledger verification per record: 0.38 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 301.78 ms; large ledger verification per r | PASS |
+| P08-b | A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately | verified; 45 units closed | verified; 45 units closed; 224.72 ms | PASS |
+| P08-a | Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed) | measurements recorded | package verification (rev A, 6 files): 1.51 ms; ledger verification (SN-0001, 16 records): 4.66 ms; ledger verification per record: 0.29 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 224.72 ms; large ledger verification per r | PASS |
 | P06-g | Signed evidence bundle: verifies as exported, fails after any edit | valid; altered copy refused | signed by Casey Configuration Manager (demo); altered: signature does not verify (bundle altered?) | PASS |
 
 ## Measured software performance (this machine)
 
 | Metric | Value | Note |
 |---|---|---|
-| package verification (rev A, 6 files) | 2.03 ms | mean of 5, this machine |
-| ledger verification (SN-0001, 16 records) | 6.06 ms | mean of 5, includes every gate re-evaluation |
-| ledger verification per record | 0.38 ms | full chain re-verified from genesis |
+| package verification (rev A, 6 files) | 1.51 ms | mean of 5, this machine |
+| ledger verification (SN-0001, 16 records) | 4.66 ms | mean of 5, includes every gate re-evaluation |
+| ledger verification per record | 0.29 ms | full chain re-verified from genesis |
 | ledger size | 27601 bytes | 16 signed records |
-| large ledger verification (45 units, 681 records) | 301.78 ms | one lot, 3 failed builds per unit before success; single run |
-| large ledger verification per record | 0.44 ms | scales linearly in this range |
+| large ledger verification (45 units, 681 records) | 224.72 ms | one lot, 3 failed builds per unit before success; single run |
+| large ledger verification per record | 0.33 ms | scales linearly in this range |
 
-46 of 46 demonstrations passed.
+49 of 49 demonstrations passed.

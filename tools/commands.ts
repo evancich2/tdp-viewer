@@ -8,7 +8,7 @@ import { sha256Hex, utf8 } from "../src/core/bytes";
 import { buildManifest, type PackInput } from "../src/core/pack";
 import type { Policy } from "../src/core/policy";
 import { BomItem, FileRole, Manifest, ManifestPackage, SignatureFile, TrustStore, type SignerRole } from "../src/core/schema";
-import { signEd25519 } from "../src/core/signing";
+import { signWith, type KeyHandle } from "../src/core/signing";
 import { MANIFEST_PATH, SIGNATURES_PATH, checkContents, signingMessage } from "../src/core/verify";
 
 /** `tdp-package.json`: what `tdp pack` reads from the source folder. */
@@ -92,7 +92,7 @@ export async function pack(dir: string, now = new Date()): Promise<Uint8Array> {
  */
 export async function sign(
   tdp: Uint8Array,
-  key: { keyId: string; privateKey: CryptoKey },
+  key: KeyHandle,
   role: SignerRole,
   policy: Policy,
   now = new Date(),
@@ -116,7 +116,7 @@ export async function sign(
   if (signatures.some((s) => s.keyId === key.keyId && s.role === role)) throw new Error(`already signed by this key as ${role}`);
 
   const signedAt = now.toISOString();
-  const sig = await signEd25519(key.privateKey, signingMessage(manifestSha256, role, signedAt));
+  const sig = await signWith(key, signingMessage(manifestSha256, role, signedAt));
   const sigFile: SignatureFile = {
     schema: "tdp-signatures/0.1",
     manifestSha256,

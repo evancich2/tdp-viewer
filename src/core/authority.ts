@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { fromBase64, sha256Hex, toBase64, utf8 } from "./bytes";
 import { Organization, type TrustStore, type TrustedKey } from "./schema";
-import { signEd25519, verifyEd25519 } from "./signing";
+import { signWith, type KeyHandle, verifyEd25519 } from "./signing";
 import type { Anchors, RootKey } from "./truststore";
 
 // Workflow authority: which keys may act in which engineering workflow roles, for which
@@ -98,9 +98,9 @@ export type SignedConfig = z.infer<typeof SignedConfig>;
 export const configSigningMessage = (payloadSchema: string, payloadSha256: string, signedAt: string) =>
   utf8.encode(`tdp-config-signature/0.1\n${payloadSchema}\n${signedAt}\n${payloadSha256}`);
 
-export async function signConfig(payloadSchema: string, payloadBytes: Uint8Array, root: { keyId: string; privateKey: CryptoKey }, now = new Date()): Promise<SignedConfig> {
+export async function signConfig(payloadSchema: string, payloadBytes: Uint8Array, root: KeyHandle, now = new Date()): Promise<SignedConfig> {
   const signedAt = now.toISOString();
-  const sig = await signEd25519(root.privateKey, configSigningMessage(payloadSchema, await sha256Hex(payloadBytes), signedAt));
+  const sig = await signWith(root, configSigningMessage(payloadSchema, await sha256Hex(payloadBytes), signedAt));
   return { schema: "tdp-signed-config/0.1", payloadSchema, payload: toBase64(payloadBytes), signatures: [{ keyId: root.keyId, alg: "Ed25519", signedAt, sig }] };
 }
 

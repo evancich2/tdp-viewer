@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { fromBase64, sha256Hex, toBase64, utf8 } from "./bytes";
 import { TrustStore } from "./schema";
-import { keyIdFor, signEd25519, verifyEd25519 } from "./signing";
+import { keyIdFor, signWith, type KeyHandle, verifyEd25519 } from "./signing";
 import { loadTrustStore } from "./verify";
 
 // Signed trust stores. An organization's root key signs the trust store; viewers pin the root
@@ -100,7 +100,7 @@ export async function loadTrustStoreFile(json: string, opts: LoadOptions = {}): 
 /** Signs a trust store as a root. Stamps serial, issuer and validity into the signed bytes. */
 export async function signTrustStore(
   store: TrustStore,
-  root: { keyId: string; name: string; privateKey: CryptoKey },
+  root: KeyHandle & { name: string },
   opts: { serial: number; validDays: number; now?: Date },
 ): Promise<SignedTrustStore> {
   const now = opts.now ?? new Date();
@@ -113,7 +113,7 @@ export async function signTrustStore(
   };
   const payload = utf8.encode(JSON.stringify(stamped, null, 2));
   const signedAt = now.toISOString();
-  const sig = await signEd25519(root.privateKey, trustStoreSigningMessage(await sha256Hex(payload), signedAt));
+  const sig = await signWith(root, trustStoreSigningMessage(await sha256Hex(payload), signedAt));
   return {
     schema: "tdp-signed-truststore/0.1",
     payload: toBase64(payload),

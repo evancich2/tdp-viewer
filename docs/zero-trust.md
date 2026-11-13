@@ -85,8 +85,9 @@ Remembering the trust store is opt-in. It is stored in the browser's site storag
 
 ## Threats not yet covered
 
-- Trusted time: record and signature times are the signer's claim; nothing is timestamped by a third party.
-- Truncated ledgers: dropping the newest records is detected only against an independently retained checkpoint.
+- Trusted time: record and signature times are the signer's claim unless a tree head carries an RFC 3161 timestamp, which bounds time from above only.
+- Truncated ledgers: dropping the newest records is detected only by parties who kept a tree head or checkpoint.
+- Hardware keys are supported through an SSH agent but were tested only with a software key.
 
 These are tracked in [ROADMAP.md](../ROADMAP.md):
 

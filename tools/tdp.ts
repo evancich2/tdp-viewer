@@ -22,6 +22,15 @@
 //   tdp sync apply-fixture <proposals.json> --fixture <fixture.json> --out <acks.json> [--key <ack-key.json>]   (local fixture adapter; updates the fixture file)
 //   tdp sync import <proposals.json> <acks.json> [--trust <trust-store> --authority <authority> [--anchors <anchors.json>]]   (with trust: acks must be signed)
 //   tdp sync check-publication --package <package.tdp> (--fixture <fixture.json> | --onshape) <context>
+//   tdp tree head <ledger.json> --package <tdp> (--key <key.json> | --agent <keyId>) --out <head.json> <context>
+//   tdp tree prove <ledger.json> --package <tdp> --from <size> --out <proof.json> <context>      (consistency proof, size → now)
+//   tdp tree witness <witness.json> <head.json> --trust <trust-store> [--anchors ...] [--proof <proof.json>]   (keep heads you receive)
+//   tdp tree check <ledger.json> --package <tdp> --witness <witness.json> <context>              (truncation, rewrites, forks)
+//   tdp tree timestamp <head.json> --tsa <url> --tsa-cert <tsa.pem> --out <ts.json>             (RFC 3161; network call)
+//   tdp tree verify-timestamp <head.json> <ts.json> --tsa-cert <tsa.pem>
+//   tdp agent list                                          (ssh-ed25519 keys in SSH_AUTH_SOCK, e.g. a YubiKey via gpg-agent)
+//   tdp agent entry --agent <keyId|comment> --out <entry.pub.json> (--roles <roles> | --org <org>) [--name ...] [--org ...]
+//   Any command that takes --key also takes --agent <keyId|comment> to sign with an agent-held key.
 //   tdp source onshape-ref --id <source-id> --document <did> --version <vid> --element <eid> --revision <rev> [--part-number <pn>] [--out <ref.json>]
 //                          (Onshape commands read ONSHAPE_ACCESS_KEY / ONSHAPE_SECRET_KEY from the environment; read-only)
 //
@@ -44,6 +53,10 @@ import { TransitionDenied as RecordDenied, verifyLedger } from "../src/core/reco
 import { utf8 } from "../src/core/bytes";
 import * as wf from "./workflow-commands";
 import { OnshapeClient, OnshapeReadAdapter, credentialsFromEnv } from "./onshape";
+import { agentKeys, agentSigner } from "./agent";
+import { ConsistencyProofFile, TreeHead, Witness, checkLedgerAgainstHeads, consistencyProof, findForks, leavesOf, signTreeHead, treeHeadDigest, witnessHead } from "../src/core/custody";
+import { TimestampFile, loadTsaCertificates, requestTimestamp, verifyTimestampFile } from "./timestamp";
+import type { KeyHandle } from "../src/core/signing";
 import { KeyRole, MIN_PASSPHRASE, createKey, unlockKey } from "./keys";
 
 const USAGE = readFileSync(new URL(import.meta.url), "utf8")
@@ -111,6 +124,7 @@ const { values, positionals } = parseArgs({
     days: { type: "string", default: "365" },
     out: { type: "string" },
     key: { type: "string" },
+    agent: { type: "string" },
     trust: { type: "string" },
     anchors: { type: "string" },
     org: { type: "string" },
@@ -137,6 +151,11 @@ const { values, positionals } = parseArgs({
     "known-proposals": { type: "string" },
     "known-acks": { type: "string" },
     successor: { type: "string", multiple: true },
+    from: { type: "string" },
+    witness: { type: "string" },
+    proof: { type: "string" },
+    tsa: { type: "string" },
+    "tsa-cert": { type: "string" },
     onshape: { type: "boolean", default: false },
     id: { type: "string" },
     document: { type: "string" },
@@ -146,6 +165,22 @@ const { values, positionals } = parseArgs({
     "part-number": { type: "string" },
   },
 });
+
+/**
+ * The signing key: an encrypted key file (--key, passphrase from TDP_PASSPHRASE or a prompt), or a
+ * key held by an ssh-agent / gpg-agent (--agent <keyId or comment>), e.g. on a hardware token.
+ * Agent keys carry no role list here; role checks happen where they always do, at verification.
+ */
+async function signerFromArgs(): Promise<KeyHandle & { name: string; roles?: KeyRole[] }> {
+  if (values.agent) {
+    const s = await agentSigner(values.agent);
+    console.log(`signing with agent key ${s.keyId} (${s.name}); the private key stays in the agent`);
+    return s;
+  }
+  if (!values.key) die("needs --key <key.json> or --agent <keyId|comment>");
+  return unlockKey(readFileSync(values.key, "utf8"), await passphrase(false));
+}
+const hasSigner = () => !!(values.key || values.agent);
 
 /** Everything a workflow decision depends on, verified. */
 async function workflowContext() {
@@ -190,10 +225,10 @@ switch (command) {
       break;
     }
     if (action === "sign") {
-      if (!storePath || !values.key || !values.out) die("usage: tdp trust sign <store.json> --key <root.key.json> [--days 365] --out <signed.json>");
+      if (!storePath || !hasSigner() || !values.out) die("usage: tdp trust sign <store.json> (--key <root.key.json> | --agent <keyId>) [--days 365] --out <signed.json>");
       const store = TrustStore.parse(JSON.parse(readFileSync(storePath, "utf8")));
-      const key = await unlockKey(readFileSync(values.key, "utf8"), await passphrase(false));
-      if (!key.roles.includes("root")) die(`${key.name}'s key is not a root key`);
+      const key = await signerFromArgs();
+      if (key.roles && !key.roles.includes("root")) die(`${key.name}'s key is not a root key`);
       const serial = (store.serial ?? 0) + 1;
       const signed = await signTrustStore(store, key, { serial, validDays: Number(values.days) });
       writeFileSync(values.out, JSON.stringify(signed, null, 2) + "\n");
@@ -222,10 +257,10 @@ switch (command) {
   }
   case "sign": {
     const [file] = positionals;
-    if (!file || !values.key || !values.role) die("usage: tdp sign <package.tdp> --key <key.json> --role <role>");
+    if (!file || !hasSigner() || !values.role) die("usage: tdp sign <package.tdp> (--key <key.json> | --agent <keyId>) --role <role>");
     const role = signerRoles(values.role)[0]!;
-    const key = await unlockKey(readFileSync(values.key, "utf8"), await passphrase(false));
-    if (!key.roles.includes(role)) die(`${key.name}'s key is only for: ${key.roles.join(", ")}`);
+    const key = await signerFromArgs();
+    if (key.roles && !key.roles.includes(role)) die(`${key.name}'s key is only for: ${key.roles.join(", ")}`);
     const signed = await sign(new Uint8Array(readFileSync(file)), key, role, defaultPolicy);
     writeFileSync(values.out ?? file, signed);
     console.log(`signed ${values.out ?? file} as ${role} with ${key.name} (${key.keyId})`);
@@ -257,11 +292,11 @@ switch (command) {
   }
   case "authority": {
     const [action, file] = positionals;
-    if (action !== "sign" || !file || !values.key || !values.out) die("usage: tdp authority sign <authority.json> --key <root.key.json> --out <signed.json>");
+    if (action !== "sign" || !file || !hasSigner() || !values.out) die("usage: tdp authority sign <authority.json> (--key <root.key.json> | --agent <keyId>) --out <signed.json>");
     const bytes = new Uint8Array(readFileSync(file));
     const config = AuthorityConfig.parse(JSON.parse(utf8.decode(bytes)));
-    const key = await unlockKey(readFileSync(values.key, "utf8"), await passphrase(false));
-    if (!key.roles.includes("root")) die(`${key.name}'s key is not a root key`);
+    const key = await signerFromArgs();
+    if (key.roles && !key.roles.includes("root")) die(`${key.name}'s key is not a root key`);
     writeJson(values.out, await signConfig("tdp-authority/0.1", bytes, key));
     console.log(`signed ${values.out}: authority ${config.id} serial ${config.serial}${config.fixture ? " (LABORATORY FIXTURE)" : ""}, by ${key.name}`);
     break;
@@ -280,11 +315,11 @@ switch (command) {
     }
     if (!file) die("usage: tdp record add|verify|checkpoint <ledger.json> ... (run tdp with no arguments for details)");
     if (action === "add") {
-      if (!values.key || !values.action || !values.role || !values.outcome || !values.reason || !values.data)
+      if (!hasSigner() || !values.action || !values.role || !values.outcome || !values.reason || !values.data)
         die("usage: tdp record add <ledger.json> --package <tdp> --key <key.json> --action <transition> --role <workflow-role> --outcome <outcome> --reason <text> --data <data.json> <context>");
       const c = await workflowContext();
       const evidence = await wf.evidenceRefs(values.evidence ?? [], values.synthetic);
-      const key = await unlockKey(readFileSync(values.key, "utf8"), await passphrase(false));
+      const key = await signerFromArgs();
       try {
         const { ledger, record, sha256 } = await wf.addRecord(wf.readLedger(file), c, key, {
           action: values.action, role: values.role, outcome: values.outcome, reason: values.reason, dataJson: readFileSync(values.data, "utf8"),
@@ -336,8 +371,8 @@ switch (command) {
     if (action !== "export" || !file || !values.out) die("usage: tdp evidence export <ledger.json> --package <tdp> --out <bundle.json> [--key <key.json>] <context>");
     const c = await workflowContext();
     const bundle = await wf.exportEvidence(readFileSync(file, "utf8"), c, { proposals: values.proposals, acks: values.acks });
-    if (values.key) {
-      const key = await unlockKey(readFileSync(values.key, "utf8"), await passphrase(false));
+    if (hasSigner()) {
+      const key = await signerFromArgs();
       writeJson(values.out, await signEvidenceBundle(bundle, key, c.ctx.now));
       console.log(`signed by ${key.name}`);
     } else writeJson(values.out, bundle);
@@ -361,7 +396,7 @@ switch (command) {
     }
     if (action === "apply-fixture") {
       if (!a1 || !values.fixture || !values.out) die("usage: tdp sync apply-fixture <proposals.json> --fixture <fixture.json> --out <acks.json>");
-      const signer = values.key ? await unlockKey(readFileSync(values.key, "utf8"), await passphrase(false)) : undefined;
+      const signer = hasSigner() ? await signerFromArgs() : undefined;
       const { acks, state } = await wf.syncApplyFixture(readFileSync(a1, "utf8"), readFileSync(values.fixture, "utf8"), new Date(), signer);
       if (signer) console.log(`acknowledgements signed by ${signer.name}`);
       writeJson(values.out, acks);
@@ -395,6 +430,110 @@ switch (command) {
       process.exit(checks.every((ch) => ch.status === "current") ? 0 : 1);
     }
     die("usage: tdp sync export|apply-fixture|import|check-publication ...");
+    break;
+  }
+  case "tree": {
+    const [action, a1, a2] = positionals;
+    if (action === "head" || action === "prove" || action === "check") {
+      if (!a1) die(`usage: tdp tree ${action} <ledger.json> --package <tdp> ... <context>`);
+      const c = await workflowContext();
+      const r = await verifyLedger(JSON.parse(readFileSync(a1, "utf8")), c.ctx);
+      if (r.verdict === "rejected") die(`ledger doesn't verify: ${r.checks.filter((x) => x.status === "fail").map((x) => x.message).join("; ")}`);
+      if (action === "head") {
+        if (!hasSigner() || !values.out) die("usage: tdp tree head <ledger.json> --package <tdp> (--key <key.json> | --agent <keyId>) --out <head.json> <context>");
+        const signer = await signerFromArgs();
+        const head = await signTreeHead(r, signer, { now: c.ctx.now });
+        writeJson(values.out, head);
+        console.log(`tree head ${values.out}: ${head.treeSize} records, root ${head.rootHash}, signed by ${signer.name}. Give it to a party that doesn't hold the ledger.`);
+      } else if (action === "prove") {
+        const from = Number(values.from);
+        if (!values.out || !Number.isInteger(from) || from < 1) die("usage: tdp tree prove <ledger.json> --package <tdp> --from <size> --out <proof.json> <context>");
+        const proof = await consistencyProof(from, leavesOf(r));
+        writeJson(values.out, { schema: "tdp-consistency-proof/0.1", instance: r.instance!.id, fromSize: from, toSize: r.records.length, proof });
+        console.log(`consistency proof ${from} → ${r.records.length}: ${values.out}`);
+      } else {
+        if (!values.witness) die("usage: tdp tree check <ledger.json> --package <tdp> --witness <witness.json> <context>");
+        const w = Witness.parse(JSON.parse(readFileSync(values.witness, "utf8")));
+        const checks = await checkLedgerAgainstHeads(r, w.heads.filter((h) => h.instance === r.instance!.id), c.ctx.trustStore);
+        for (const ch of checks) console.log(`${ch.status === "consistent" ? "PASS" : "FAIL"}  ${ch.message}`);
+        const forks = findForks(w.heads);
+        for (const [x, y] of forks) console.log(`FAIL  fork: two signed heads of size ${x.treeSize} disagree (${x.signature.keyId} vs ${y.signature.keyId})`);
+        if (!checks.length) console.log("no witnessed heads for this ledger: truncation can't be detected");
+        const bad = checks.some((ch) => ch.status !== "consistent") || forks.length > 0;
+        console.log(bad ? "REJECTED" : "CONSISTENT");
+        process.exit(bad ? 1 : 0);
+      }
+      break;
+    }
+    if (action === "witness") {
+      if (!a1 || !a2 || !values.trust) die("usage: tdp tree witness <witness.json> <head.json> --trust <trust-store> [--anchors ...] [--proof <proof.json>]");
+      const store = await trustStoreFromArgs();
+      const w = existsSync(a1) ? Witness.parse(JSON.parse(readFileSync(a1, "utf8"))) : { schema: "tdp-witness/0.1" as const, heads: [] };
+      const head = TreeHead.parse(JSON.parse(readFileSync(a2, "utf8")));
+      const proof = values.proof ? ConsistencyProofFile.parse(JSON.parse(readFileSync(values.proof, "utf8"))) : undefined;
+      if (proof && (proof.instance !== head.instance || proof.toSize !== head.treeSize)) die("the proof is for a different instance or size");
+      try {
+        const next = await witnessHead(w, head, store, proof?.proof);
+        writeJson(a1, next);
+        console.log(`witnessed: ${head.treeSize}-record head for ${head.instance}; ${a1} now holds ${next.heads.length} heads`);
+      } catch (e) {
+        console.error(`REFUSED  ${(e as Error).message}`);
+        process.exit(1);
+      }
+      break;
+    }
+    if (action === "timestamp" || action === "verify-timestamp") {
+      if (!a1 || !values["tsa-cert"]) die("usage: tdp tree timestamp <head.json> --tsa <url> --tsa-cert <tsa.pem> --out <ts.json> | tdp tree verify-timestamp <head.json> <ts.json> --tsa-cert <tsa.pem>");
+      const head = TreeHead.parse(JSON.parse(readFileSync(a1, "utf8")));
+      const digest = await treeHeadDigest(head);
+      const pinned = loadTsaCertificates(readFileSync(values["tsa-cert"]));
+      if (action === "timestamp") {
+        if (!values.tsa || !values.out) die("usage: tdp tree timestamp <head.json> --tsa <url> --tsa-cert <tsa.pem> --out <ts.json>");
+        console.log(`sending the head's SHA-256 (${digest}) to ${values.tsa}; nothing else leaves this machine`);
+        const { file, result } = await requestTimestamp(values.tsa, digest, pinned);
+        writeJson(values.out, file);
+        console.log(`timestamped: the ${head.treeSize}-record head existed no later than ${result.genTime} (TSA ${result.tsa})`);
+      } else {
+        if (!a2) die("usage: tdp tree verify-timestamp <head.json> <ts.json> --tsa-cert <tsa.pem>");
+        try {
+          let tsFile: TimestampFile;
+          try { tsFile = TimestampFile.parse(JSON.parse(readFileSync(a2, "utf8"))); } catch { throw new Error(`${a2} is not a tdp-timestamp/0.1 file (as written by tdp tree timestamp)`); }
+          const result = verifyTimestampFile(tsFile, digest, pinned);
+          console.log(`PASS  the ${head.treeSize}-record head existed no later than ${result.genTime} (TSA ${result.tsa}, serial ${result.serial})`);
+        } catch (e) {
+          console.log(`FAIL  ${(e as Error).message}`);
+          process.exit(1);
+        }
+      }
+      break;
+    }
+    die("usage: tdp tree head|prove|witness|check|timestamp|verify-timestamp ...");
+    break;
+  }
+  case "agent": {
+    const [action] = positionals;
+    if (action === "list") {
+      const keys = await agentKeys();
+      if (!keys.length) console.log("no ssh-ed25519 keys in the agent (other key types can't sign for this tool)");
+      for (const k of keys) console.log(`${k.keyId}  ${k.comment}`);
+      break;
+    }
+    if (action === "entry") {
+      if (!values.agent || !values.out || (!values.roles && !values.org)) die("usage: tdp agent entry --agent <keyId|comment> --out <entry.pub.json> (--roles <roles> | --roles root | --org <org>) [--name <name>] [--org <org>] [--cage <cage>] [--days 365]");
+      const k = (await agentKeys()).find((x) => x.keyId === values.agent || x.comment === values.agent);
+      if (!k) die(`no ssh-ed25519 key "${values.agent}" in the agent`);
+      refuseExisting(values.out);
+      const roles = values.roles ? keyRoles(values.roles) : [];
+      const name = values.name ?? k.comment ?? k.keyId;
+      const now = new Date();
+      const entry = roles.includes("root")
+        ? { keyId: k.keyId, name, publicKey: k.publicKey }
+        : { keyId: k.keyId, name, ...(values.org ? { organization: { name: values.org, ...(values.cage ? { cage: values.cage } : {}) } } : {}), publicKey: k.publicKey, roles, notBefore: now.toISOString(), notAfter: new Date(now.getTime() + Number(values.days) * 86_400_000).toISOString(), revoked: false };
+      writeFileSync(values.out, JSON.stringify(entry, null, 2) + "\n", { flag: "wx" });
+      console.log(`${roles.includes("root") ? "anchors" : "trust-store"} entry for agent key ${k.keyId} (${k.comment}): ${values.out}`);
+      break;
+    }
+    die("usage: tdp agent list | tdp agent entry ...");
     break;
   }
   case "source": {
