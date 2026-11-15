@@ -5,10 +5,25 @@
 | Type check | `npm run typecheck` | CI |
 | Lint | `npm run lint` | CI |
 | Unit tests | `npm test` | CI |
+| Shared digest vectors | `npm run vectors -- --check` | CI; published fixture must match code |
 | Laboratory demonstrations | `npm run lab` | CI (and byte-for-byte reproducible) |
 | End-to-end, real Chrome, production CSP | `npm run e2e` | CI |
 | Known vulnerabilities in dependencies | `npm audit` | CI (`--audit-level=high`) |
 | All of type check, lint and tests | `npm run check` | local |
+
+## Build size and byte preservation
+
+The November 15 production build measured the on-demand `ModelViewer` chunk at about 561 kB
+minified (140 kB gzip). `FilePreview.tsx` loads it with `React.lazy`; PDF rendering is also behind
+a lazy boundary. The warning threshold is 600 kB so further growth remains visible. The separate
+OCCT worker includes roughly 10.2 MB of WASM/glue, and the PDF worker is roughly 1.26 MB.
+Lazy rendering does not shrink these files or the service worker's full offline precache download.
+Production Chrome tests cover both model rendering and offline loading under the CSP.
+
+Git checkout must preserve signed fixture bytes: `.gitattributes` fixes text files to LF on Windows
+as well as Linux. Reproducibility allows timings in `demo-results.*` and the SN-0001 bundle to vary;
+replacement-article bundles are included in the strict comparison rather than broadly exempted.
+Windows skips Unix SSH-agent and POSIX CLI tests; Linux CI must run them before merge.
 
 ## Lint
 
