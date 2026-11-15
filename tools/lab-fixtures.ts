@@ -54,7 +54,7 @@ export interface DemoKey {
 /** Ed25519 key from a public seed. DEMO ONLY: the seed is in this source file. */
 export async function demoKey(name: string): Promise<DemoKey> {
   const seed = new Uint8Array(await crypto.subtle.digest("SHA-256", utf8.encode(`tdp-lab-demo-key/${name}`)));
-  const pkcs8 = new Uint8Array([...[0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20], ...seed]);
+  const pkcs8 = new Uint8Array([0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20, ...seed]);
   const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8 as BufferSource, { name: "Ed25519" }, true, ["sign"]);
   const jwk = await crypto.subtle.exportKey("jwk", privateKey);
   const raw = fromBase64(jwk.x!.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (jwk.x!.length % 4)) % 4));
@@ -359,6 +359,11 @@ export function labEvidence(): Record<string, EvidenceFile> {
     { name: "measurements-SN-0003.csv", tag: "measurement-data", mediaType: "text/csv", description: "Measurement data SN-0003 (synthetic)", bytes: synthetic("measurement sheet", "characteristic,value,unit\nCH-001,6.198,mm\nCH-002,40.01,mm\nCH-003,20.02,mm") },
     { name: "job-J-0101.txt", tag: "build-file", mediaType: "text/plain", description: "Placeholder job file J-0101 (synthetic)", bytes: synthetic("sliced job", "Job J-0101 placeholder.") },
     { name: "build-log-J-0101.txt", tag: "build-log", mediaType: "text/plain", description: "Build log J-0101 (synthetic)", bytes: synthetic("build log", "J-0101: completed (INVENTED)") },
+    // Replacement-article scenario (REPL-SN-0020): shaped like a real first-article discrepancy and rebuild, with invented values.
+    { name: "measurements-SN-0020.csv", tag: "measurement-data", mediaType: "text/csv", description: "Measurement data SN-0020, first article (synthetic)", bytes: synthetic("measurement sheet", "characteristic,value,unit\nCH-001,6.27,mm\nCH-002,40.06,mm\nCH-003,19.96,mm") },
+    { name: "measurements-SN-0021-1.csv", tag: "measurement-data", mediaType: "text/csv", description: "Measurement data SN-0021, replacement article, before the caliper accuracy check (synthetic)", bytes: synthetic("measurement sheet", "characteristic,value,unit,instrument\nCH-001,6.03,mm,MIC-07\nCH-002,1.576,in,CAL-21 (resolution 0.001 in; accuracy not yet checked)\nCH-003,0.786,in,CAL-21") },
+    { name: "measurements-SN-0021-2.csv", tag: "measurement-data", mediaType: "text/csv", description: "Measurement data SN-0021, re-measured after the caliper accuracy check (synthetic)", bytes: synthetic("measurement sheet", "characteristic,value,unit,instrument\nCH-001,6.03,mm,MIC-07\nCH-002,1.576,in,CAL-21\nCH-003,0.786,in,CAL-21") },
+    { name: "caliper-CAL-21-gauge-check.txt", tag: "instrument-accuracy-check", mediaType: "text/plain", description: "Caliper CAL-21 accuracy check against gauge blocks (synthetic)", bytes: synthetic("instrument accuracy check", "Instrument CAL-21 0-6 in dial caliper, resolution 0.001 in\nReference: gauge blocks GB-1.000 in and GB-2.000 in (INVENTED ids)\nReadings: 1.000, 1.000, 1.001 / 2.000, 2.001, 2.000 in (INVENTED)\nAcceptance: within +/-0.001 in; valid until 2027-05-01 (INVENTED)") },
   ];
   return Object.fromEntries(files.map((f) => [f.name, f]));
 }

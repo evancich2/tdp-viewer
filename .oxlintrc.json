@@ -1,0 +1,49 @@
+{
+  // oxlint: ESLint-compatible rules (eslint, typescript, react, react-hooks, import, promise,
+  // vitest, jsx-a11y, node, unicorn). Used instead of typescript-eslint, which doesn't support
+  // TypeScript 7 (the native compiler this project builds with). `npm run lint`.
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "react", "import", "promise", "vitest", "jsx-a11y", "node"],
+  "env": { "browser": true, "node": true, "es2022": true },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+  "rules": {
+    // The automatic JSX runtime (tsconfig "jsx": "react-jsx") needs no React import.
+    "react/react-in-jsx-scope": "off",
+    // Effects here are deliberately keyed on their inputs (each one is commented in the source)
+    // and reset state when those inputs change; reviewed 2026-11-15.
+    "react/exhaustive-effect-dependencies": "off",
+    "react/set-state-in-effect": "off",
+    // False positive: flags `new Date()` inside an async event handler, not during render.
+    "react/purity": "off",
+    // toSorted()/toReversed() are ES2023; the build targets ES2022. Sorts here are on fresh copies.
+    "unicorn/no-array-sort": "off",
+    "unicorn/no-array-reverse": "off",
+    // Style only.
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/prefer-add-event-listener": "off",
+    "promise/always-return": "off",
+    "eslint/no-shadow": "off",
+    // Protocol byte strings in tests are concatenated field by field so they read like the spec.
+    "eslint/no-useless-concat": "off",
+    // Worker and ServiceWorker postMessage take no targetOrigin (that's window.postMessage).
+    "unicorn/require-post-message-target-origin": "off",
+    // role="status" on a div is the correct live region here; <output> is a form control.
+    "jsx-a11y/prefer-tag-over-role": "off",
+    // readline's _writeToOutput is overridden on purpose to mask passphrase input.
+    "eslint/no-underscore-dangle": "off",
+    // Vitest's expect(value, message) takes a message; this rule is written for Jest.
+    "vitest/valid-expect": "off",
+    // Fuzz tests assert that *any* error is raised for a corrupted input; the message varies.
+    "vitest/require-to-throw-message": "off",
+    // Reviewed: every conditional expect has an assertion on each branch.
+    "vitest/no-conditional-expect": "off"
+  },
+  "overrides": [
+    // Vite asset imports: "?url" has a default export, and the CSS import is for its side effect.
+    { "files": ["src/ui/pdf.ts", "src/ui/main.tsx"], "rules": { "import/default": "off", "import/no-unassigned-import": "off" } }
+  ],
+  "ignorePatterns": ["dist/**", "node_modules/**", "public/**", "samples/**", "coverage/**"]
+}

@@ -98,7 +98,13 @@ Decision rules `core/decision-rules/0.1` (`src/core/inspection.ts`):
 
 Values convert within a unit family (mm, µm, in; g, kg; deg) and round to 1e-9 before comparison. A missing measurement, incompatible unit, missing instrument, missing or expired calibration, or missing uncertainty makes the result **indeterminate (held)**: never an automatic pass. A record's stated outcome must equal the rules' result.
 
+An instrument may state its **resolution** (for example 0.001 in for a dial caliper). A resolution is a readout increment, not evidence of accuracy: without calibration evidence (a certificate, or an accuracy check against a reference standard such as gauge blocks, if the program accepts one) the result is still indeterminate. When a resolution is stated, the expanded uncertainty may not be smaller than the readout alone contributes, `k · r / √12` (GUM F.2.2.1). A smaller `U` means the uncertainty budget is incomplete, so the result is indeterminate.
+
+**Replacement articles.** A queue or build-start record may carry `replaces: { unit, ncrId }`: this unit is built to replace a unit that has a nonconformance. The gate requires that NCR to have been raised in the same ledger against that unit. A unit can't replace itself, and its claim can't change once made. One NCR is answered by one replacement at a time, and a further one may follow only once the earlier replacement has its own NCR. The replaced unit's track is untouched: its NCR stays open (held) until its own disposition, however the replacement turns out. Evidence bundles list per unit what it replaces, what replaced it, its inspections, NCRs and disposition.
+
 The measurement outcome is not a disposition. Only a `disposition-authority` (a different key from the inspector) dispositions. `accept` requires an accepted inspection, and any other decision requires an NCR raised against that inspection.
+
+Hashing rules (raw bytes for original files, RFC 8785 for structured records, strict loading for everything from outside): [canonical-json.md](canonical-json.md).
 
 ## Publishing and reconciliation
 

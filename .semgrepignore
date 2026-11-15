@@ -1,0 +1,7 @@
+# Semgrep scope (replaces the default ignore list, which skips tests/).
+dist/
+node_modules/
+samples/
+public/
+coverage/
+.git/

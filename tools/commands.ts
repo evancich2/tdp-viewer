@@ -10,6 +10,7 @@ import type { Policy } from "../src/core/policy";
 import { BomItem, FileRole, Manifest, ManifestPackage, SignatureFile, TrustStore, type SignerRole } from "../src/core/schema";
 import { signWith, type KeyHandle } from "../src/core/signing";
 import { MANIFEST_PATH, SIGNATURES_PATH, checkContents, signingMessage } from "../src/core/verify";
+import { parseJson } from "../src/core/json";
 
 /** `tdp-package.json`: what `tdp pack` reads from the source folder. */
 export const PackageSpec = z
@@ -51,7 +52,7 @@ function listFiles(dir: string): string[] {
  * and dotfiles); media type and role come from the extension unless the spec overrides them.
  */
 export async function pack(dir: string, now = new Date()): Promise<Uint8Array> {
-  const spec = PackageSpec.parse(JSON.parse(readFileSync(join(dir, SPEC_FILE), "utf8")));
+  const spec = PackageSpec.parse(parseJson(readFileSync(join(dir, SPEC_FILE), "utf8")));
   const inputs: PackInput[] = [];
   for (const full of listFiles(dir).sort()) {
     const path = relative(dir, full).split(sep).join("/");
@@ -100,7 +101,7 @@ export async function sign(
   const entries = readArchive(tdp, policy);
   const manifestEntry = entries.find((e) => e.path === MANIFEST_PATH);
   if (!manifestEntry) throw new Error(`${MANIFEST_PATH} missing`);
-  const manifest = Manifest.parse(JSON.parse(utf8.decode(manifestEntry.bytes)));
+  const manifest = Manifest.parse(parseJson(utf8.decode(manifestEntry.bytes)));
   const { checks, files } = await checkContents(manifest, entries, policy);
   const failed = checks.filter((c) => c.status === "fail");
   if (failed.length) {
@@ -110,7 +111,7 @@ export async function sign(
 
   const manifestSha256 = await sha256Hex(manifestEntry.bytes);
   const existing = entries.find((e) => e.path === SIGNATURES_PATH);
-  const previous = existing ? SignatureFile.parse(JSON.parse(utf8.decode(existing.bytes))) : null;
+  const previous = existing ? SignatureFile.parse(parseJson(utf8.decode(existing.bytes))) : null;
   if (previous && previous.manifestSha256 !== manifestSha256) throw new Error("existing signatures are for a different manifest");
   const signatures = previous?.signatures ?? [];
   if (signatures.some((s) => s.keyId === key.keyId && s.role === role)) throw new Error(`already signed by this key as ${role}`);
@@ -129,15 +130,15 @@ export async function sign(
 }
 
 export function addToTrustStore(storeJson: string | null, entryJson: string): TrustStore {
-  const store: TrustStore = storeJson ? TrustStore.parse(JSON.parse(storeJson)) : { schema: "tdp-truststore/0.1", keys: [] };
-  const entry = TrustStore.shape.keys.element.parse(JSON.parse(entryJson));
+  const store: TrustStore = storeJson ? TrustStore.parse(parseJson(storeJson)) : { schema: "tdp-truststore/0.1", keys: [] };
+  const entry = TrustStore.shape.keys.element.parse(parseJson(entryJson));
   if (store.keys.some((k) => k.keyId === entry.keyId)) throw new Error(`key ${entry.keyId} is already in the trust store`);
   store.keys.push(entry);
   return store;
 }
 
 export function revokeInTrustStore(storeJson: string, keyId: string): TrustStore {
-  const store = TrustStore.parse(JSON.parse(storeJson));
+  const store = TrustStore.parse(parseJson(storeJson));
   const key = store.keys.find((k) => k.keyId === keyId);
   if (!key) throw new Error(`key ${keyId} is not in the trust store`);
   key.revoked = true;

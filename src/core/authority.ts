@@ -3,6 +3,7 @@ import { fromBase64, sha256Hex, toBase64, utf8 } from "./bytes";
 import { Organization, type TrustStore, type TrustedKey } from "./schema";
 import { signWith, type KeyHandle, verifyEd25519 } from "./signing";
 import type { Anchors, RootKey } from "./truststore";
+import { parseJson } from "./json";
 
 // Workflow authority: which keys may act in which engineering workflow roles, for which
 // organizations and processes, and which source systems are authoritative for release. This is
@@ -130,7 +131,7 @@ export interface LoadedAuthority {
  * seen is refused as a rollback. Expiry is checked by the workflow engine against its clock.
  */
 export async function loadAuthority(json: string, opts: { anchors?: Anchors; seenSerial?: number } = {}): Promise<LoadedAuthority> {
-  const raw = JSON.parse(json) as { schema?: unknown };
+  const raw = parseJson(json) as { schema?: unknown };
   let bytes: Uint8Array;
   let signedBy: RootKey | undefined;
   if (raw.schema === "tdp-signed-config/0.1") {
@@ -140,7 +141,7 @@ export async function loadAuthority(json: string, opts: { anchors?: Anchors; see
     if (opts.anchors) throw new Error("this authority configuration isn't signed, and you've pinned a root key: only signed configurations are accepted");
     bytes = utf8.encode(json);
   }
-  const config = AuthorityConfig.parse(JSON.parse(utf8.decode(bytes)));
+  const config = AuthorityConfig.parse(parseJson(utf8.decode(bytes)));
   if (opts.seenSerial && config.serial < opts.seenSerial)
     throw new Error(`authority serial ${config.serial} is older than serial ${opts.seenSerial} already seen (possible rollback)`);
   for (const g of config.grants)

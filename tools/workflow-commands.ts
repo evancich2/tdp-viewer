@@ -31,6 +31,7 @@ import {
 import { loadAnchors, loadTrustStoreFile } from "../src/core/truststore";
 import { verifyPackage, type VerifyResult } from "../src/core/verify";
 import type { KeyHandle } from "../src/core/signing";
+import { parseJson } from "../src/core/json";
 
 export interface ContextArgs {
   package: string;
@@ -90,7 +91,7 @@ export async function loadContext(a: ContextArgs): Promise<LoadedContext> {
   };
 }
 
-export const readLedger = (path: string) => LedgerFile.parse(JSON.parse(readFileSync(path, "utf8")));
+export const readLedger = (path: string) => LedgerFile.parse(parseJson(readFileSync(path, "utf8")));
 
 export function createLedger(c: LoadedContext, item?: string): LedgerFile {
   const ref = item ? (([itemId, revision]) => ({ itemId: itemId!, revision: revision! }))(item.split("@")) : undefined;
@@ -117,7 +118,7 @@ export async function addRecord(
   key: KeyHandle,
   opts: { action: string; role: string; outcome: string; reason: string; dataJson: string; serial?: string; lot?: string; evidence: EvidenceRef[] },
 ) {
-  const data = RecordData.parse(JSON.parse(opts.dataJson));
+  const data = RecordData.parse(parseJson(opts.dataJson));
   const unit = opts.serial || opts.lot ? { ...(opts.serial ? { serial: opts.serial } : {}), ...(opts.lot ? { lot: opts.lot } : {}) } : undefined;
   return appendRecord(ledger, c.ctx, key, { action: opts.action, role: opts.role, outcome: opts.outcome, reason: opts.reason, data, unit, evidence: opts.evidence });
 }
@@ -153,39 +154,39 @@ export async function checkpointFor(r: LedgerResult, now = new Date()) {
 }
 
 export function checkAgainst(r: LedgerResult, checkpointJson: string): string | null {
-  return checkCheckpoint(r, Checkpoint.parse(JSON.parse(checkpointJson)));
+  return checkCheckpoint(r, Checkpoint.parse(parseJson(checkpointJson)));
 }
 
 export async function exportEvidence(ledgerJson: string, c: LoadedContext, opts: { proposals?: string; acks?: string } = {}) {
-  const ledger = JSON.parse(ledgerJson);
+  const ledger = parseJson(ledgerJson);
   const r = await verifyLedger(ledger, c.ctx);
   let reconciliation;
   if (opts.proposals) {
-    const proposals = ProposalSet.parse(JSON.parse(readFileSync(opts.proposals, "utf8")));
-    const rows = opts.acks ? (await importAcknowledgements(proposals, AckSet.parse(JSON.parse(readFileSync(opts.acks, "utf8"))))).rows : undefined;
+    const proposals = ProposalSet.parse(parseJson(readFileSync(opts.proposals, "utf8")));
+    const rows = opts.acks ? (await importAcknowledgements(proposals, AckSet.parse(parseJson(readFileSync(opts.acks, "utf8"))))).rows : undefined;
     reconciliation = { proposals, rows };
   }
   return buildEvidenceBundle({ verify: c.verify, trustStoreSha256: c.trustStoreSha256, ledger: r, ctx: c.ctx, ledgerSha256: await canonicalSha256(ledger), reconciliation, now: c.ctx.now });
 }
 
 export async function syncExport(ledgerJson: string, c: LoadedContext, recipeJson: string, fixtureJson: string, knownAcksJson?: string, proposalsJson?: string) {
-  const r = await verifyLedger(JSON.parse(ledgerJson), c.ctx);
-  const adapter = new LocalFixtureAdapter(FixtureState.parse(JSON.parse(fixtureJson)));
-  const known = knownAcksJson && proposalsJson ? (await importAcknowledgements(ProposalSet.parse(JSON.parse(proposalsJson)), AckSet.parse(JSON.parse(knownAcksJson)))).versions : undefined;
-  return buildProposals(PublishingRecipe.parse(JSON.parse(recipeJson)), c.ctx.baseline, r, adapter.describe(), { now: c.ctx.now, knownVersions: known });
+  const r = await verifyLedger(parseJson(ledgerJson), c.ctx);
+  const adapter = new LocalFixtureAdapter(FixtureState.parse(parseJson(fixtureJson)));
+  const known = knownAcksJson && proposalsJson ? (await importAcknowledgements(ProposalSet.parse(parseJson(proposalsJson)), AckSet.parse(parseJson(knownAcksJson)))).versions : undefined;
+  return buildProposals(PublishingRecipe.parse(parseJson(recipeJson)), c.ctx.baseline, r, adapter.describe(), { now: c.ctx.now, knownVersions: known });
 }
 
 export async function syncApplyFixture(proposalsJson: string, fixtureJson: string, now = new Date(), signer?: KeyHandle) {
-  const adapter = new LocalFixtureAdapter(FixtureState.parse(JSON.parse(fixtureJson)), signer);
-  const acks = await adapter.reconcile(ProposalSet.parse(JSON.parse(proposalsJson)), now);
+  const adapter = new LocalFixtureAdapter(FixtureState.parse(parseJson(fixtureJson)), signer);
+  const acks = await adapter.reconcile(ProposalSet.parse(parseJson(proposalsJson)), now);
   return { acks, state: adapter.state };
 }
 
 export async function syncImport(proposalsJson: string, acksJson: string, trust?: { trustStore: TrustStore; authority: AuthorityConfig; now?: Date }) {
-  return importAcknowledgements(ProposalSet.parse(JSON.parse(proposalsJson)), AckSet.parse(JSON.parse(acksJson)), trust);
+  return importAcknowledgements(ProposalSet.parse(parseJson(proposalsJson)), AckSet.parse(parseJson(acksJson)), trust);
 }
 
 export async function checkPublication(c: LoadedContext, adapter: SourceAdapter | string) {
-  const a = typeof adapter === "string" ? new LocalFixtureAdapter(FixtureState.parse(JSON.parse(adapter))) : adapter;
+  const a = typeof adapter === "string" ? new LocalFixtureAdapter(FixtureState.parse(parseJson(adapter))) : adapter;
   return a.checkPublication(c.ctx.baseline.model);
 }

@@ -26,7 +26,7 @@ import {
 } from "../src/core";
 import { utf8 } from "../src/core/bytes";
 import { ORG, PART, at, buildLabPackage, buildWorld, iso, printedPartProcess, rezip, uuidFor } from "../tools/lab-fixtures";
-import { buildLedgers, fixtureSource, labRecipe, legacySample, runLab, setupLab, type Lab, type LabRun } from "../tools/lab-scenario";
+import { buildLedgers, demoCategory, fixtureSource, labRecipe, legacySample, runLab, setupLab, type Lab, type LabRun } from "../tools/lab-scenario";
 import { addRecord, formatLedger, loadContext } from "../tools/workflow-commands";
 
 let run: LabRun;
@@ -37,15 +37,26 @@ beforeAll(async () => {
   lab = run.lab;
 }, 60_000);
 
-describe("laboratory demonstrations P01–P08", () => {
+describe("laboratory demonstrations P01–P09", () => {
   it("all pass, with the expected outcome recorded for each", () => {
-    expect(run.demonstrations.length).toBeGreaterThanOrEqual(45);
+    expect(run.demonstrations.length).toBeGreaterThanOrEqual(54);
     for (const d of run.demonstrations) expect(d.pass, `${d.id}: ${d.scenario}\n expected ${d.expected}\n actual   ${d.actual}`).toBe(true);
-    for (const p of ["P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08"]) expect(run.demonstrations.some((d) => d.id.startsWith(p))).toBe(true);
+    for (const p of ["P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09"]) expect(run.demonstrations.some((d) => d.id.startsWith(p))).toBe(true);
+    expect(new Set(run.demonstrations.map((d) => d.id)).size).toBe(run.demonstrations.length);
+  });
+
+  it("form an acceptance matrix: every demonstration is classified allowed, denied, reconciliation or measurement", () => {
+    for (const d of run.demonstrations) expect(demoCategory(d), `${d.id} is not classified in DEMO_CATEGORIES`).not.toBe("unclassified");
+    const count = (c: string) => run.demonstrations.filter((d) => demoCategory(d) === c).length;
+    expect(count("allowed")).toBeGreaterThanOrEqual(10);
+    expect(count("denied")).toBeGreaterThanOrEqual(30);
+    expect(count("reconciliation")).toBeGreaterThanOrEqual(7);
+    // Each P0x group the RFI gap list asks about has at least one refusal.
+    for (const p of ["P01", "P03", "P04", "P05", "P06", "P09"]) expect(run.demonstrations.some((d) => d.id.startsWith(p) && demoCategory(d) === "denied"), p).toBe(true);
   });
 
   it("verifies every generated ledger, and the second process runs on the same engine", () => {
-    for (const name of ["SN-0001", "SN-0002", "SN-0003", "LOT-0004", "FAI-SN-0010"]) expect(run.results[name]!.verdict, name).toBe("verified");
+    for (const name of ["SN-0001", "SN-0002", "SN-0003", "LOT-0004", "FAI-SN-0010", "REPL-SN-0020"]) expect(run.results[name]!.verdict, name).toBe("verified");
     expect(run.results["FAI-SN-0010"]!.state).toBe("closed");
     expect(run.results["FAI-SN-0010"]!.records.filter((r) => r.record.data.kind === "inspection").map((r) => r.key.name)).toHaveLength(2);
   });
@@ -53,6 +64,8 @@ describe("laboratory demonstrations P01–P08", () => {
   it("matches the committed lab samples byte for byte (reproducible)", async () => {
     expect(new Uint8Array(readFileSync("samples/lab/SYN-PH-2000_A.tdp"))).toEqual(lab.revA.tdp);
     expect(JSON.parse(readFileSync("samples/lab/ledgers/SN-0001.ledger.json", "utf8"))).toEqual(lab.ledgers["SN-0001"]);
+    expect(JSON.parse(readFileSync("samples/lab/ledgers/REPL-SN-0020.ledger.json", "utf8"))).toEqual(lab.ledgers["REPL-SN-0020"]);
+    expect(JSON.parse(readFileSync("samples/lab/exchange/REPL-SN-0020.proposals.json", "utf8"))).toEqual(run.replacement.proposals);
   });
 });
 
@@ -256,15 +269,23 @@ describe("ledger integrity", () => {
     const text = JSON.stringify(lab.ledgers["SN-0002"]);
     let seed = 7;
     const rand = (n: number) => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) % n);
+    let checked = 0;
+    let rejected = 0;
     for (let i = 0; i < 60; i++) {
       const pos = rand(text.length);
       const mutated = text.slice(0, pos) + String.fromCharCode(33 + rand(90)) + text.slice(pos + 1);
       if (mutated === text) continue;
+      // The text form goes through the strict parser; it must never throw either.
+      const fromText = await verifyLedger(mutated, lab.ctx("printed-part", lab.revA));
       let parsed: unknown;
-      try { parsed = JSON.parse(mutated); } catch { continue; }
+      try { parsed = JSON.parse(mutated); } catch { expect(fromText.verdict).toBe("rejected"); continue; }
       const r = await verifyLedger(parsed, lab.ctx("printed-part", lab.revA));
-      if (r.verdict !== "rejected") expect(canonicalJson(parsed)).toBe(canonicalJson(JSON.parse(text)));
+      checked++;
+      if (r.verdict === "rejected") rejected++;
+      else expect(canonicalJson(parsed)).toBe(canonicalJson(JSON.parse(text)));
     }
+    expect(checked).toBeGreaterThan(10);
+    expect(rejected).toBeGreaterThan(0);
   });
 
   it("is independent of key order and whitespace in the stored file", async () => {

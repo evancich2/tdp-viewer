@@ -58,6 +58,7 @@ import { ConsistencyProofFile, TreeHead, Witness, checkLedgerAgainstHeads, consi
 import { TimestampFile, loadTsaCertificates, requestTimestamp, verifyTimestampFile } from "./timestamp";
 import type { KeyHandle } from "../src/core/signing";
 import { KeyRole, MIN_PASSPHRASE, createKey, unlockKey } from "./keys";
+import { parseJson } from "../src/core/json";
 
 const USAGE = readFileSync(new URL(import.meta.url), "utf8")
   .split("\n")
@@ -215,8 +216,8 @@ switch (command) {
     const [action, storePath, arg] = positionals;
     if (action === "anchor") {
       if (!storePath || !arg) die("usage: tdp trust anchor <anchors.json> <root.pub.json>");
-      const root = JSON.parse(readFileSync(arg, "utf8"));
-      const roots = existsSync(storePath) ? Anchors.parse(JSON.parse(readFileSync(storePath, "utf8"))).roots : [];
+      const root = Anchors.shape.roots.element.parse(parseJson(readFileSync(arg, "utf8")));
+      const roots = existsSync(storePath) ? Anchors.parse(parseJson(readFileSync(storePath, "utf8"))).roots : [];
       if (roots.some((r) => r.keyId === root.keyId)) die(`root ${root.keyId} is already pinned`);
       const updated = Anchors.parse({ schema: "tdp-anchors/0.1", roots: [...roots, root] });
       await loadAnchors(JSON.stringify(updated)); // checks key ids
@@ -226,7 +227,7 @@ switch (command) {
     }
     if (action === "sign") {
       if (!storePath || !hasSigner() || !values.out) die("usage: tdp trust sign <store.json> (--key <root.key.json> | --agent <keyId>) [--days 365] --out <signed.json>");
-      const store = TrustStore.parse(JSON.parse(readFileSync(storePath, "utf8")));
+      const store = TrustStore.parse(parseJson(readFileSync(storePath, "utf8")));
       const key = await signerFromArgs();
       if (key.roles && !key.roles.includes("root")) die(`${key.name}'s key is not a root key`);
       const serial = (store.serial ?? 0) + 1;
@@ -294,7 +295,7 @@ switch (command) {
     const [action, file] = positionals;
     if (action !== "sign" || !file || !hasSigner() || !values.out) die("usage: tdp authority sign <authority.json> (--key <root.key.json> | --agent <keyId>) --out <signed.json>");
     const bytes = new Uint8Array(readFileSync(file));
-    const config = AuthorityConfig.parse(JSON.parse(utf8.decode(bytes)));
+    const config = AuthorityConfig.parse(parseJson(utf8.decode(bytes)));
     const key = await signerFromArgs();
     if (key.roles && !key.roles.includes("root")) die(`${key.name}'s key is not a root key`);
     writeJson(values.out, await signConfig("tdp-authority/0.1", bytes, key));
@@ -338,7 +339,7 @@ switch (command) {
     }
     if (action === "verify" || action === "checkpoint") {
       const c = await workflowContext();
-      const r = await verifyLedger(JSON.parse(readFileSync(file, "utf8")), c.ctx);
+      const r = await verifyLedger(parseJson(readFileSync(file, "utf8")), c.ctx);
       if (action === "checkpoint") {
         if (!values.out) die("usage: tdp record checkpoint <ledger.json> --out <checkpoint.json> <context>");
         const cp = await wf.checkpointFor(r, c.ctx.now);
@@ -363,7 +364,7 @@ switch (command) {
     if (action === "verify") {
       if (!file || !values.trust) die("usage: tdp evidence verify <bundle.signed.json> --trust <trust-store.json> [--anchors <anchors.json>]");
       const store = await trustStoreFromArgs();
-      const r = await verifySignedEvidence(JSON.parse(readFileSync(file, "utf8")), store);
+      const r = await verifySignedEvidence(parseJson(readFileSync(file, "utf8")), store);
       if (r.problem) { console.log(`FAIL  ${r.problem}`); process.exit(1); }
       console.log(`PASS  evidence bundle signed by ${r.signer}, sha256 ${r.sha256} (the signature says who exported it, not that its contents are true)`);
       break;
@@ -437,7 +438,7 @@ switch (command) {
     if (action === "head" || action === "prove" || action === "check") {
       if (!a1) die(`usage: tdp tree ${action} <ledger.json> --package <tdp> ... <context>`);
       const c = await workflowContext();
-      const r = await verifyLedger(JSON.parse(readFileSync(a1, "utf8")), c.ctx);
+      const r = await verifyLedger(parseJson(readFileSync(a1, "utf8")), c.ctx);
       if (r.verdict === "rejected") die(`ledger doesn't verify: ${r.checks.filter((x) => x.status === "fail").map((x) => x.message).join("; ")}`);
       if (action === "head") {
         if (!hasSigner() || !values.out) die("usage: tdp tree head <ledger.json> --package <tdp> (--key <key.json> | --agent <keyId>) --out <head.json> <context>");
@@ -453,7 +454,7 @@ switch (command) {
         console.log(`consistency proof ${from} → ${r.records.length}: ${values.out}`);
       } else {
         if (!values.witness) die("usage: tdp tree check <ledger.json> --package <tdp> --witness <witness.json> <context>");
-        const w = Witness.parse(JSON.parse(readFileSync(values.witness, "utf8")));
+        const w = Witness.parse(parseJson(readFileSync(values.witness, "utf8")));
         const checks = await checkLedgerAgainstHeads(r, w.heads.filter((h) => h.instance === r.instance!.id), c.ctx.trustStore);
         for (const ch of checks) console.log(`${ch.status === "consistent" ? "PASS" : "FAIL"}  ${ch.message}`);
         const forks = findForks(w.heads);
@@ -468,9 +469,9 @@ switch (command) {
     if (action === "witness") {
       if (!a1 || !a2 || !values.trust) die("usage: tdp tree witness <witness.json> <head.json> --trust <trust-store> [--anchors ...] [--proof <proof.json>]");
       const store = await trustStoreFromArgs();
-      const w = existsSync(a1) ? Witness.parse(JSON.parse(readFileSync(a1, "utf8"))) : { schema: "tdp-witness/0.1" as const, heads: [] };
-      const head = TreeHead.parse(JSON.parse(readFileSync(a2, "utf8")));
-      const proof = values.proof ? ConsistencyProofFile.parse(JSON.parse(readFileSync(values.proof, "utf8"))) : undefined;
+      const w = existsSync(a1) ? Witness.parse(parseJson(readFileSync(a1, "utf8"))) : { schema: "tdp-witness/0.1" as const, heads: [] };
+      const head = TreeHead.parse(parseJson(readFileSync(a2, "utf8")));
+      const proof = values.proof ? ConsistencyProofFile.parse(parseJson(readFileSync(values.proof, "utf8"))) : undefined;
       if (proof && (proof.instance !== head.instance || proof.toSize !== head.treeSize)) die("the proof is for a different instance or size");
       try {
         const next = await witnessHead(w, head, store, proof?.proof);
@@ -484,7 +485,7 @@ switch (command) {
     }
     if (action === "timestamp" || action === "verify-timestamp") {
       if (!a1 || !values["tsa-cert"]) die("usage: tdp tree timestamp <head.json> --tsa <url> --tsa-cert <tsa.pem> --out <ts.json> | tdp tree verify-timestamp <head.json> <ts.json> --tsa-cert <tsa.pem>");
-      const head = TreeHead.parse(JSON.parse(readFileSync(a1, "utf8")));
+      const head = TreeHead.parse(parseJson(readFileSync(a1, "utf8")));
       const digest = await treeHeadDigest(head);
       const pinned = loadTsaCertificates(readFileSync(values["tsa-cert"]));
       if (action === "timestamp") {
@@ -497,7 +498,7 @@ switch (command) {
         if (!a2) die("usage: tdp tree verify-timestamp <head.json> <ts.json> --tsa-cert <tsa.pem>");
         try {
           let tsFile: TimestampFile;
-          try { tsFile = TimestampFile.parse(JSON.parse(readFileSync(a2, "utf8"))); } catch { throw new Error(`${a2} is not a tdp-timestamp/0.1 file (as written by tdp tree timestamp)`); }
+          try { tsFile = TimestampFile.parse(parseJson(readFileSync(a2, "utf8"))); } catch { throw new Error(`${a2} is not a tdp-timestamp/0.1 file (as written by tdp tree timestamp)`); }
           const result = verifyTimestampFile(tsFile, digest, pinned);
           console.log(`PASS  the ${head.treeSize}-record head existed no later than ${result.genTime} (TSA ${result.tsa}, serial ${result.serial})`);
         } catch (e) {

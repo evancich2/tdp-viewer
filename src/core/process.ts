@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { sha256Hex, utf8 } from "./bytes";
 import { WorkflowRole } from "./authority";
+import { parseJson } from "./json";
 
 // A process definition (`tdp-process/0.1`) is configuration, not code: states, transitions, who may
 // take each one, what evidence and authorization it needs, and where each outcome leads. The engine
@@ -118,7 +119,7 @@ export interface LoadedProcess {
 }
 
 export async function loadProcess(json: string): Promise<LoadedProcess> {
-  const definition = ProcessDefinition.parse(JSON.parse(json));
+  const definition = ProcessDefinition.parse(parseJson(json));
   const problems = validateProcess(definition);
   if (problems.length) throw new Error(`process ${definition.id}: ${problems.join("; ")}`);
   return { definition, sha256: await sha256Hex(utf8.encode(json)) };

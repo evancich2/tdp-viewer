@@ -332,14 +332,42 @@
     "id": "P08-b",
     "scenario": "A 681-record ledger (45 units in one lot) verifies completely, every unit tracked separately",
     "expected": "verified; 45 units closed",
-    "actual": "verified; 45 units closed; 240.28 ms",
+    "actual": "verified; 45 units closed; 268.48 ms",
     "pass": true
   },
   {
     "id": "P08-a",
     "scenario": "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)",
     "expected": "measurements recorded",
-    "actual": "package verification (rev A, 6 files): 1.57 ms; ledger verification (SN-0001, 16 records): 4.75 ms; ledger verification per record: 0.3 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 240.28 ms; large ledger verification per record: 0.35 ms",
+    "actual": "package verification (rev A, 6 files): 1.71 ms; ledger verification (SN-0001, 16 records): 5.37 ms; ledger verification per record: 0.34 ms; ledger size: 27601 bytes; large ledger verification (45 units, 681 records): 268.48 ms; large ledger verification per record: 0.39 ms",
+    "pass": true
+  },
+  {
+    "id": "P09-a",
+    "scenario": "First article SN-0020 rejected, NCR-0020 left open; replacement SN-0021 built under a signed link to NCR-0020, inspected and accepted",
+    "expected": "ledger verified; SN-0020 nonconforming (held), replaced by SN-0021; SN-0021 dispositioned accept, replaces SN-0020 under NCR-0020",
+    "actual": "verified; SN-0020 nonconforming, replaced by SN-0021; SN-0021 dispositioned (accept), replaces SN-0020 under NCR-0020",
+    "pass": true
+  },
+  {
+    "id": "P09-b",
+    "scenario": "Replacement measured with a caliper that has a stated 0.001 in resolution but no accuracy evidence yet; then re-measured once a gauge-block check is attached",
+    "expected": "first inspection indeterminate (resolution is not calibration); second accepted; inch readings converted to the mm limits",
+    "actual": "indeterminate: instrument CAL-21 has no calibration evidence (its 0.001 in resolution is a readout increment, not evidence of accuracy); instrument CAL-21 calibration has no due date; then accept (CH-002 40.0304 mm)",
+    "pass": true
+  },
+  {
+    "id": "P09-c",
+    "scenario": "Replacement claims checked before signing: an NCR that doesn't exist, a unit replacing itself, an NCR raised against another unit, and a second replacement while the first is still good",
+    "expected": "four DENIED; the valid claim ALLOWED",
+    "actual": "DENIED: enter-queue: replaces SN-0030 under NCR NCR-9999, but no NCR NCR-9999 has been raised in this ledger | DENIED: enter-queue: unit SN-0031 can't replace itself | DENIED: enter-queue: NCR NCR-0030 was raised against SN-0030, not SN-0032 | ALLOWED | DENIED: enter-queue: NCR NCR-0030 is already answered by replacement SN-0031; a further replacement needs that one to have its own NCR first",
+    "pass": true
+  },
+  {
+    "id": "P09-d",
+    "scenario": "A validly signed queue record that claims to replace a unit under an NCR that was never raised",
+    "expected": "ledger rejected on verification",
+    "actual": "record 13 (enter-queue) by Pat Planner (demo): denied: enter-queue: replaces SN-0030 under NCR NCR-9999, but no NCR NCR-9999 has been raised in this ledger",
     "pass": true
   },
   {

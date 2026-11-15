@@ -3,6 +3,7 @@ key2
 key2.pub
 *.key
 *.key.json
+*.pat
 *.pem
 .env
 .env.*

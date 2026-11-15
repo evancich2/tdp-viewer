@@ -25,6 +25,7 @@ import { control, deleteFile, formatStatus, listFiles, pinPrinter, readFirmware,
 import { discover } from "./bambu/discover";
 import { PrinterFile } from "./bambu/h2c";
 import { inspectSliced } from "./bambu/sliced";
+import { parseJson } from "../src/core/json";
 
 const USAGE = readFileSync(new URL(import.meta.url), "utf8").split("\n").filter((l) => /^\/\/   (printer|  )/.test(l)).map((l) => l.slice(5)).join("\n");
 
@@ -51,7 +52,7 @@ const confirm = async (yes: boolean | undefined, what: string) => {
 
 function loadPrinter(path?: string): PrinterFile {
   if (!path) die("--printer <printer.json> is required (make one with: printer pin)");
-  const r = PrinterFile.safeParse(JSON.parse(readFileSync(path, "utf8")));
+  const r = PrinterFile.safeParse(parseJson(readFileSync(path, "utf8")));
   if (!r.success) die(`${path} is not a printer file: ${r.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`);
   return r.data;
 }

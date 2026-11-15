@@ -37,6 +37,7 @@ import labAuthority from "../../samples/lab/authority.signed.json?raw";
 import labProcessA from "../../samples/lab/processes/printed-part-v1.json?raw";
 import labProcessB from "../../samples/lab/processes/printed-part-fai-v1.json?raw";
 import { RecordStepForm } from "./RecordStepForm";
+import { parseJson } from "../core/json";
 
 interface Props {
   session: PackageSession;
@@ -158,7 +159,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
       const bad = checks.filter((c) => c.status !== "consistent").length + forks;
       await audit.append(bad ? "deny" : "verify", witness.name, `${checks.length} witnessed heads checked against ${ledger.name}: ${bad ? `${bad} problem(s)` : "consistent"}`);
       onAudit();
-    });
+    }).catch((e: Error) => { setCustody(null); setError(`Custody check failed: ${e.message}`); });
   }, [witness, ledger]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadNewer(fileList: FileList) {
@@ -176,7 +177,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
     try {
       // With an authority loaded, acknowledgements must carry a signature by the source system's configured key.
       const trust = authority ? { trustStore, authority: authority.config } : undefined;
-      const r = await importAcknowledgements(proposals, AckSet.parse(JSON.parse(await f.text())), trust);
+      const r = await importAcknowledgements(proposals, AckSet.parse(parseJson(await f.text())), trust);
       if (!trust) r.problems.push("no authority loaded: acknowledgement signatures were not checked");
       setSync({ rows: r.rows, problems: r.problems, changeRequests: r.changeRequests.length, signedBy: r.signedBy });
       await audit.append("load", f.name, `${r.rows.length} acknowledgements imported; baseline unchanged`);
@@ -276,9 +277,9 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
       <h3>Signed workflow records</h3>
       <p className="muted">Signed records travel in a ledger file beside the package, never inside it. They are separate from this viewer's local audit log below, which records only what this browser did.</p>
       <div className="row">
-        <label className={`button ${authority ? "" : "disabled"}`}>Open ledger…<input type="file" accept=".json" className="file-input" disabled={!authority} onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { await verify(f.name, JSON.parse(await f.text())); } catch (err) { setError(`Ledger unreadable: ${(err as Error).message}`); } } }} /></label>
+        <label className={`button ${authority ? "" : "disabled"}`}>Open ledger…<input type="file" accept=".json" className="file-input" disabled={!authority} onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { await verify(f.name, parseJson(await f.text())); } catch (err) { setError(`Ledger unreadable: ${(err as Error).message}`); } } }} /></label>
         <label className="button">Add evidence files…<input type="file" multiple className="file-input" onChange={(e) => { if (e.target.files?.length) void loadEvidence(e.target.files); e.target.value = ""; }} /></label>
-        <label className="button">Check against witnessed heads…<input type="file" accept=".json" className="file-input" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { setWitness({ name: f.name, w: Witness.parse(JSON.parse(await f.text())) }); } catch (err) { setError(`Witness file rejected: ${(err as Error).message}`); } } }} /></label>
+        <label className="button">Check against witnessed heads…<input type="file" accept=".json" className="file-input" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { setWitness({ name: f.name, w: Witness.parse(parseJson(await f.text())) }); } catch (err) { setError(`Witness file rejected: ${(err as Error).message}`); } } }} /></label>
         {evidence && <span className="muted">{evidence.count} evidence files hashed</span>}
       </div>
       {error && <div className="banner fail" role="alert">{error}</div>}
@@ -361,7 +362,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
       <h3>Synchronization proposals</h3>
       <p className="muted">Proposed transactions for a source system, and its acknowledgements, exchanged as files. Importing them never changes this package or its ledger; nothing is sent from this browser.</p>
       <div className="row">
-        <label className="button">Open proposals…<input type="file" accept=".json" className="file-input" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { setProposals(ProposalSet.parse(JSON.parse(await f.text()))); setSync(null); } catch (err) { setError(`Proposals rejected: ${(err as Error).message}`); } } }} /></label>
+        <label className="button">Open proposals…<input type="file" accept=".json" className="file-input" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { try { setProposals(ProposalSet.parse(parseJson(await f.text()))); setSync(null); } catch (err) { setError(`Proposals rejected: ${(err as Error).message}`); } } }} /></label>
         <label className={`button ${proposals ? "" : "disabled"}`}>Import acknowledgements…<input type="file" accept=".json" className="file-input" disabled={!proposals} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void loadAcks(f); }} /></label>
       </div>
       {proposals && (

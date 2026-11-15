@@ -61,7 +61,7 @@ export function DrawingViewer({ file, bytes }: { file: ManifestFile; bytes: Uint
         () => !cancelled && setRendered({ scale: s, width: viewport.width, height: viewport.height }),
         (e: Error) => e.name !== "RenderingCancelledException" && setError(e.message),
       );
-    });
+    }).catch((e: Error) => !cancelled && setError(e.message));
     return () => {
       cancelled = true;
       renderTask?.cancel();

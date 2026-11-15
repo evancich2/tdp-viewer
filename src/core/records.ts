@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { digestEquals, sha256Hex, utf8 } from "./bytes";
 import { canonicalSha256 } from "./canonical";
+import { parseJson } from "./json";
 import {
   WorkflowRole,
   checkIdentity,
@@ -45,6 +46,13 @@ const text = (max: number) => z.string().min(1).max(max);
 const recordRef = z.string().uuid();
 const settings = z.record(z.string().regex(/^[a-zA-Z][a-zA-Z0-9_.-]{0,63}$/), z.string().max(200)).refine((s) => Object.keys(s).length <= 64, "at most 64 settings");
 
+/**
+ * A unit built to replace another unit that has a nonconformance: names that unit and the NCR it
+ * answers. The NCR and the replaced unit's own track stay exactly as they are (open, held, scrapped
+ * or whatever its disposition says); the link only makes the rebuild traceable to the discrepancy.
+ */
+const Replaces = z.object({ unit: z.object({ serial: id.optional(), lot: id.optional() }).strict().refine((u) => u.serial || u.lot, "a unit needs a serial or a lot"), ncrId: id }).strict();
+
 // No `.default()` anywhere below: a record's digest is over the JSON as signed, and parsing must not add to it.
 export const RecordData = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("requirements-approval"), requirements: z.array(z.object({ id, version: z.number().int().positive() }).strict()).min(1).max(1000) }).strict(),
@@ -86,8 +94,8 @@ export const RecordData = z.discriminatedUnion("kind", [
       limits: z.array(z.object({ transition: z.string().min(1).max(64), max: z.number().int().positive() }).strict()).max(20).optional(),
     })
     .strict(),
-  z.object({ kind: z.literal("queue-entry"), jobId: id, submittedFile: z.object({ name: text(255), sha256 }).strict(), settings }).strict(),
-  z.object({ kind: z.literal("build-start"), jobId: id, resource: id, startedAt: isoTime }).strict(),
+  z.object({ kind: z.literal("queue-entry"), jobId: id, submittedFile: z.object({ name: text(255), sha256 }).strict(), settings, replaces: Replaces.optional() }).strict(),
+  z.object({ kind: z.literal("build-start"), jobId: id, resource: id, startedAt: isoTime, replaces: Replaces.optional() }).strict(),
   z
     .object({ kind: z.literal("build-complete"), jobId: id, submittedFileSha256: sha256, startedAt: isoTime, completedAt: isoTime, errors: z.array(text(500)).max(100), settings })
     .strict(),
@@ -470,6 +478,41 @@ export function evaluateRecord(history: readonly VerifiedRecord[], rec: Workflow
   return ev.fatal ? ev : { ...ev, authorizedBy };
 }
 
+/** The NCR a unit's queue or build record says it replaces, if any. */
+export function replacementOf(track: readonly VerifiedRecord[]): z.infer<typeof Replaces> | undefined {
+  for (const h of track) if ((h.record.data.kind === "queue-entry" || h.record.data.kind === "build-start") && h.record.data.replaces) return h.record.data.replaces;
+  return undefined;
+}
+
+/**
+ * Why `rec` may not claim to replace `r.unit` under `r.ncrId`, or null. The NCR must have been
+ * raised in this ledger against that unit; a unit can't replace itself; once a unit declares what
+ * it replaces it can't change its claim; and one NCR is answered by one replacement at a time: a
+ * second may follow only once the first has its own NCR.
+ */
+function replacementProblem(r: z.infer<typeof Replaces>, rec: WorkflowRecord, all: readonly VerifiedRecord[]): string | null {
+  if (!rec.unit) return "a replacement must name its own serial or lot";
+  const replaced = unitKey(r.unit);
+  const self = unitKey(rec.unit);
+  if (replaced === self) return `unit ${unitLabel(rec.unit)} can't replace itself`;
+  const ncr = all.find((h) => h.record.data.kind === "nonconformance" && h.record.data.ncrId === r.ncrId);
+  if (!ncr) return `replaces ${unitLabel(r.unit)} under NCR ${r.ncrId}, but no NCR ${r.ncrId} has been raised in this ledger`;
+  if (unitKey(ncr.record.unit) !== replaced) return `NCR ${r.ncrId} was raised against ${unitLabel(ncr.record.unit)}, not ${unitLabel(r.unit)}`;
+  const earlier = replacementOf(trackOf(all, rec.unit));
+  if (earlier && (earlier.ncrId !== r.ncrId || unitKey(earlier.unit) !== replaced))
+    return `${unitLabel(rec.unit)} already declared it replaces ${unitLabel(earlier.unit)} under NCR ${earlier.ncrId}`;
+  const units = new Map<string, VerifiedRecord[]>();
+  for (const h of all) if (h.record.unit) units.set(unitKey(h.record.unit), [...(units.get(unitKey(h.record.unit)) ?? []), h]);
+  for (const [k, track] of units) {
+    if (k === self) continue;
+    const other = replacementOf(track);
+    if (other?.ncrId !== r.ncrId) continue;
+    if (!track.some((h) => h.record.data.kind === "nonconformance"))
+      return `NCR ${r.ncrId} is already answered by replacement ${unitLabel(track[0]!.record.unit)}; a further replacement needs that one to have its own NCR first`;
+  }
+  return null;
+}
+
 /** `history` is the unit's track; `all` is the whole ledger, for uniqueness checks. */
 function semantics(t: Transition, rec: WorkflowRecord, history: readonly VerifiedRecord[], all: readonly VerifiedRecord[], ctx: WorkflowContext, mode: "create" | "verify", held: string[], via: string): Evaluation {
   const deny = (why: string): Evaluation => ({ fatal: `${t.id}: ${why}`, held });
@@ -547,6 +590,8 @@ function semantics(t: Transition, rec: WorkflowRecord, history: readonly Verifie
     }
     case "queue-entry": {
       if (!rec.evidence.some((e) => e.sha256 === d.submittedFile.sha256)) return deny("the submitted file must be attached as evidence");
+      const rp = d.replaces && replacementProblem(d.replaces, rec, all);
+      if (rp) return deny(rp);
       if (all.some((h) => h.record.data.kind === "queue-entry" && h.record.data.jobId === d.jobId)) return deny(`job ${d.jobId} was already queued`);
       return ok();
     }
@@ -557,6 +602,8 @@ function semantics(t: Transition, rec: WorkflowRecord, history: readonly Verifie
         if (!q || q.record.data.kind !== "queue-entry" || q.record.data.jobId !== d.jobId) return deny(`job ${d.jobId} is not the queued job`);
       }
       if (all.some((h) => h.record.data.kind === "build-start" && h.record.data.jobId === d.jobId)) return deny(`job ${d.jobId} was already started`);
+      const rp = d.replaces && replacementProblem(d.replaces, rec, all);
+      if (rp) return deny(rp);
       return ok();
     }
     case "build-complete": {
@@ -605,8 +652,8 @@ function semantics(t: Transition, rec: WorkflowRecord, history: readonly Verifie
         if (!occ) return deny(`occurrence ${d.incorporation.occurrence} is not in the baseline`);
         if (itemKey(occ.child) !== itemKey(rec.item)) return deny(`occurrence ${occ.occurrenceId} uses ${itemKey(occ.child)}, not ${itemKey(rec.item)}`);
       }
-      const all = [...history.flatMap((h) => h.record.evidence), ...rec.evidence];
-      const missing = ctx.evidence ? all.filter((e) => !ctx.evidence!.has(e.sha256)) : all;
+      const refs = [...history.flatMap((h) => h.record.evidence), ...rec.evidence];
+      const missing = ctx.evidence ? refs.filter((e) => !ctx.evidence!.has(e.sha256)) : refs;
       if (missing.length) {
         const why = `evidence closure: ${missing.length} referenced evidence file(s) not hash-verified (${missing.slice(0, 3).map((e) => e.id).join(", ")}${missing.length > 3 ? ", …" : ""})`;
         if (mode === "create") return deny(why);
@@ -633,7 +680,7 @@ export async function verifyLedger(json: string | unknown, ctx: WorkflowContext)
 
   let ledger: LedgerFile;
   try {
-    ledger = LedgerFile.parse(typeof json === "string" ? JSON.parse(json) : json);
+    ledger = LedgerFile.parse(typeof json === "string" ? parseJson(json) : json);
   } catch (e) {
     return fail("ledger", `invalid ledger: ${(e as Error).message}`);
   }
@@ -664,7 +711,12 @@ export async function verifyLedger(json: string | unknown, ctx: WorkflowContext)
       return fail(cid, `record ${seq}: invalid: ${(e as Error).message}`, { instance: inst });
     }
     const label = `record ${seq} (${rec.action})`;
-    const digest = await canonicalSha256(entry.record);
+    let digest: string;
+    try {
+      digest = await canonicalSha256(entry.record);
+    } catch (e) {
+      return fail(cid, `${label}: can't be canonicalized: ${(e as Error).message}`, { instance: inst });
+    }
     if (rec.seq !== seq) return fail(cid, `${label}: says it is record ${rec.seq}`, { instance: inst });
     if (rec.instance !== inst.id) return fail(cid, `${label}: belongs to workflow instance ${rec.instance}`, { instance: inst });
     if (itemKey(rec.item) !== itemKey(inst.item)) return fail(cid, `${label}: is for ${itemKey(rec.item)}, ledger is for ${itemKey(inst.item)}`, { instance: inst });

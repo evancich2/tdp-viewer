@@ -9,7 +9,8 @@ import { generateKeyPair, keyIdFor } from "../src/core/signing";
 export const MIN_PASSPHRASE = 12;
 const SCRYPT = { N: 1 << 17, r: 8, p: 1 };
 
-import { KeyFile, KeyRole } from "../src/core/keyfile";
+import { KeyFile, KeyRole, assertKeyPair } from "../src/core/keyfile";
+import { parseJson } from "../src/core/json";
 export { KeyFile, KeyRole };
 
 function deriveKey(passphrase: string, salt: Uint8Array, kdf: { N: number; r: number; p: number }): Buffer {
@@ -78,12 +79,13 @@ export async function unlockKey(
   json: string,
   passphrase: string,
 ): Promise<{ keyId: string; name: string; roles: KeyRole[]; privateKey: CryptoKey }> {
-  const file = KeyFile.parse(JSON.parse(json));
+  const file = KeyFile.parse(parseJson(json));
   if ((await keyIdFor(file.publicKey)) !== file.keyId) throw new Error("key file: key id does not match public key");
   const decipher = createDecipheriv(
     "aes-256-gcm",
     deriveKey(passphrase, fromBase64(file.kdf.salt), file.kdf),
     fromBase64(file.cipher.iv),
+    { authTagLength: 16 },
   );
   decipher.setAAD(Buffer.from(file.publicKey));
   decipher.setAuthTag(fromBase64(file.cipher.tag));
@@ -95,5 +97,6 @@ export async function unlockKey(
   }
   const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8 as BufferSource, { name: "Ed25519" }, false, ["sign"]);
   pkcs8.fill(0);
+  await assertKeyPair(privateKey, file.publicKey);
   return { keyId: file.keyId, name: file.name, roles: file.roles, privateKey };
 }

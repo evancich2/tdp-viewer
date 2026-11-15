@@ -8,7 +8,7 @@ Design reference: [engineering-workflow.md](engineering-workflow.md).
 
 ```sh
 npm install
-npm run lab        # regenerates samples/lab/ and runs P01–P08; exits non-zero if any demonstration fails
+npm run lab        # regenerates samples/lab/ and runs P01–P09; exits non-zero if any demonstration fails
 npm test           # includes tests/workflow.test.ts, which asserts every demonstration
 npm run e2e        # real Chrome, production CSP: drives the lab workflow in the viewer (needs Google Chrome)
 ```
@@ -29,6 +29,7 @@ npm run e2e        # real Chrome, production CSP: drives the lab workflow in the
 8. **Record a step:** with `SN-0003` open and the evidence loaded, open `samples/lab/keys/inspector.key.json` (written by `npm run lab`), enter the passphrase `lab-demo-passphrase (public, demo only)`, choose `raise-nonconformance`, and sign. A wrong characteristic is refused with nothing signed. Download the updated ledger.
 9. With `SN-0001` open, **Check against witnessed heads…** with `SN-0001.witness.json`: Custody shows consistent. Then open `SN-0001-truncated.ledger.json`: Custody shows the truncation.
 10. Open `LOT-0004.ledger.json` and switch **Unit** between SN-0004 and SN-0005. Then **Load newer baselines…** with `SYN-PH-2000_B.tdp` to mark rev A superseded.
+11. Open `REPL-SN-0020.ledger.json`. SN-0020 (first article) is held as nonconforming under NCR-0020. SN-0021 replaces it: first indeterminate (its caliper states a 0.001 in resolution but no accuracy evidence), then accepted after a gauge-block check is attached, and dispositioned separately. The signed bundle is `evidence-bundle-REPL-SN-0020.signed.json`.
 
 ### Onshape (needs your API keys; read-only)
 
@@ -93,10 +94,11 @@ npm run -s tdp -- sync check-publication --package $L/SYN-PH-2000_A.tdp --fixtur
 | `anchors.json`, `trust-store*.json` | Lab root and its signed trust store (17 demo keys, 3 synthetic organizations) |
 | `authority*.json` | Laboratory authority fixture (signed by the lab root): grants, sources, pinned processes, a revoked key, 168 h offline validity |
 | `processes/` | Reference process and the first-article variant |
-| `ledgers/` | SN-0001 (full path incl. failed build, delegation, accept, incorporation), SN-0002 (reject → NCR → scrap), SN-0003 (held), FAI-SN-0010 (second process), invalid and truncated ledgers, a checkpoint |
+| `ledgers/` | SN-0001 (full path incl. failed build, delegation, accept, incorporation), SN-0002 (reject → NCR → scrap), SN-0003 (held), LOT-0004 (two units), REPL-SN-0020 (discrepant first article held under its NCR, plus a traceable replacement), FAI-SN-0010 (second process), invalid and truncated ledgers, a checkpoint |
 | `evidence/` | Synthetic evidence files referenced by hash |
 | `exchange/` | Recipe, fixture source before and after, proposals, acknowledgements and a replay |
-| `evidence-bundle-SN-0001.json` | Exported evidence bundle: identifiers, digests, policy/schema versions, separate statuses, traceability, expected vs actual results, limitations; no keys or secrets |
+| `evidence-bundle-SN-0001.json` | Exported evidence bundle: identifiers, digests, policy/schema versions, separate statuses, traceability, per-unit results, expected vs actual results, limitations; no keys or secrets |
+| `evidence-bundle-REPL-SN-0020*.json`, `exchange/REPL-SN-0020.proposals.json` | Worked example of one versioned exchange: definition (baseline digest, requirements, characteristics) → first article → discrepancy (NCR) → replacement build → inspections → disposition, each by exact record digest; hashing rules in [canonical-json.md](canonical-json.md) |
 
 ## Evidence and gap matrix
 
@@ -111,6 +113,7 @@ Legend: **Software**, implemented behavior verified by tests. **Simulated**, dem
 | **P05 Authorization** | Hardware-backed signing through an SSH agent (`--agent`), tested with a software key in a private agent; workflow grants separate from signing roles; organization binding; delegation (one level, never self); revoked keys; expired authority; process pinned by digest; bounded CIP (operation, org, role, units, window, policy version, use limits); offline freshness window | Lab authority fixture, demo keys with public seeds | Real role assignments and delegations; the program's authority (PLM/IdP); hardware tokens provisioned with Ed25519 keys (not tested on hardware); an agreed offline validity window |
 | **P06 Integrity and recovery** | Edited, removed and reordered records detected; truncation and forks detected against tree heads signed by another organization (or a checkpoint); consistency and inclusion proofs; RFC 3161 timestamp verification (OpenSSL-made fixtures and a local TSA in tests); altered evidence → held; tampered baseline → no binding; full re-verification from retained files; signed evidence bundles fail after any edit | Witness heads signed by a demo key of another synthetic organization | Real organizations keeping witness files; a TSA chosen and its certificate pinned (no live TSA was called); public anchoring (not built) |
 | **P07 Exchange boundary** | Recipe, adapter interface, local fixture adapter: create, update with expected version, no-change, conflict (and dependent updates refused), unsupported, held lossy, duplicate replay, id reuse rejected, publication version check; signed acknowledgements; acknowledgements never alter baselines. Read-only Onshape adapter (CLI): request signing, publication check, reference capture, tested against a fake transport | Fixture source system and its objects | Running the Onshape adapter against a live account (needs API keys and a real document); Windchill adapter (not implemented); write-back to any source system |
+| **P09 Replacement articles** | A rebuild is signed as replacing a unit under a named NCR, gated (NCR must exist against that unit, no self-replacement, one claim per unit, one live replacement per NCR); the discrepant unit stays held; per-unit evidence; instrument resolution recorded and never accepted as calibration | The REPL-SN-0020 history, its values and the gauge check | The real first-article discrepancy, rebuild, photos and measurements (held by Khaled); the gauge accuracy check readings; the BasePlate's real limits |
 | **P08 Measured performance** | Verification timings measured each run (`demo-results.md`), including a 681-record, 45-unit ledger (about 0.4 ms per record, linear) | | Physical build time, cycle time, dimensional capability and yield from real runs |
 
 ## Remaining dependencies

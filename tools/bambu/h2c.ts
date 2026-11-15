@@ -217,7 +217,7 @@ export class BambuPrinter {
     const { socket } = await connectPinned({ host: cfg.host, port: cfg.mqttPort ?? MQTT_PORT, fingerprint: cfg.mqttFingerprint, timeoutMs });
     const mqtt = await MqttClient.connect(socket, { clientId: `tdp-${process.pid}-${Date.now() % 100000}`, username: LAN_USER, password: accessCode, timeoutMs });
     const p = new BambuPrinter(cfg, mqtt);
-    try { await mqtt.subscribe(`device/${cfg.serial}/report`, timeoutMs); } catch (e) { mqtt.close(); throw new Error(`${(e as Error).message}. Check the serial number in the printer file.`); }
+    try { await mqtt.subscribe(`device/${cfg.serial}/report`, timeoutMs); } catch (e) { mqtt.close(); throw new Error(`${(e as Error).message}. Check the serial number in the printer file.`, { cause: e }); }
     return p;
   }
 

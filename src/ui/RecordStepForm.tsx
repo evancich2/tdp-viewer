@@ -16,6 +16,7 @@ import {
   type WorkflowContext,
 } from "../core";
 import { PRINTERS } from "../core/printers";
+import { parseJson } from "../core/json";
 
 /** Starting points for each record kind's data. The gate, not this form, decides what is acceptable. */
 function template(kind: RecordKind, ctx: WorkflowContext, result: LedgerResult): unknown {
@@ -117,7 +118,7 @@ export function RecordStepForm({ ledgerName, raw, result, ctx, unit, audit, onRe
     setBusy("Checking and signing…");
     setMessage(null);
     try {
-      const parsed = RecordData.parse(JSON.parse(data));
+      const parsed = RecordData.parse(parseJson(data));
       const evidence: EvidenceRef[] = Object.entries(chosen).map(([sha, tag], i) => {
         const f = ctx.evidence!.get(sha)!;
         return { id: `EV-${i + 1}`, tag, sha256: sha, mediaType: mediaTypeFor(f.name), description: f.name, synthetic: false };

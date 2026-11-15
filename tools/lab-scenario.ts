@@ -112,7 +112,7 @@ async function step(lab: Lab, name: string, ledger: LedgerFile, processId: strin
   return (await appendRecord(ledger, ctx, lab.world.keys[who]!, input, { recordId: await uuidFor(`${name}/${seq}`) })).ledger;
 }
 
-const measurementsFor = (values: [number, number, number], instruments = { mic: "EV-MIC", cal: "EV-CAL" }, m: number): Measurement[] => {
+export const measurementsFor = (values: [number, number, number], instruments = { mic: "EV-MIC", cal: "EV-CAL" }, m: number): Measurement[] => {
   const mic = { id: "MIC-07", description: "0-25 mm outside micrometer (synthetic)", calibrationEvidence: instruments.mic, calibrationValidUntil: "2027-06-01T00:00:00.000Z" };
   const cal = { id: "CAL-12", description: "0-150 mm digital caliper (synthetic)", calibrationEvidence: instruments.cal, calibrationValidUntil: "2027-03-01T00:00:00.000Z" };
   const u = (expanded: number) => ({ expanded, k: 2, unit: "mm" as const, basis: "synthetic uncertainty budget: instrument spec + repeatability (INVENTED)" });
@@ -124,7 +124,7 @@ const measurementsFor = (values: [number, number, number], instruments = { mic: 
 };
 
 /** Steps 1–6 of the reference process for one unit: approvals, release evidence, suitability, plan, authorization. */
-async function prelude(lab: Lab, name: string, pkg: LabPackage & { result: VerifyResult }, serials: string[], opts: { firmware?: string | null; process?: string; geometryReview?: { link: string; resolution: string }[]; offset?: number; limits?: { transition: string; max: number }[] } = {}) {
+export async function prelude(lab: Lab, name: string, pkg: LabPackage & { result: VerifyResult }, serials: string[], opts: { firmware?: string | null; process?: string; geometryReview?: { link: string; resolution: string }[]; offset?: number; limits?: { transition: string; max: number }[] } = {}) {
   const processId = opts.process ?? "printed-part";
   const o = opts.offset ?? 0;
   const fai = processId === "printed-part-fai";
@@ -241,6 +241,41 @@ export async function buildLedgers(lab: Lab): Promise<void> {
     lab.ledgers["LOT-0004"] = p.get();
   }
 
+  // REPL-SN-0020: a first article is rejected and its NCR stays open (held); a replacement article
+  // is built under a signed link to that NCR. The replacement is first measured with a caliper that
+  // has a stated resolution but no accuracy evidence (indeterminate: resolution is not calibration),
+  // then re-measured once a gauge-block accuracy check is attached, and dispositioned separately.
+  // Shaped like a real discrepancy-and-rebuild history; every value here is invented.
+  {
+    const p = await prelude(lab, "REPL-SN-0020", lab.revA, ["SN-0020", "SN-0021"]);
+    const { s } = p;
+    const job = lab.evidence["job-J-0101.txt"]!;
+    const jobSha = await sha256Hex(job.bytes);
+    const build = async (serial: string, jobId: string, m: number, replaces?: { unit: { serial: string }; ncrId: string }) => {
+      await s("planner", m, { action: "enter-queue", role: "planner", outcome: "queued", unit: sn(serial), reason: replaces ? `Replacement for ${replaces.unit.serial} under ${replaces.ncrId}` : "Queued", data: { kind: "queue-entry", jobId, submittedFile: { name: job.name, sha256: jobSha }, settings: {}, ...(replaces ? { replaces } : {}) }, evidence: [await ev(job.name, "EV-JOB")] });
+      await s("operator", m + 10, { action: "dispatch-build", role: "operator", outcome: "started", unit: sn(serial), reason: "Dispatched by hand", data: { kind: "build-start", jobId, resource: "H2C-LAB-01", startedAt: iso(m + 10) } });
+      await s("operator", m + 60, { action: "complete-build", role: "operator", outcome: "completed", unit: sn(serial), reason: "Completed", data: { kind: "build-complete", jobId, submittedFileSha256: jobSha, startedAt: iso(m + 10), completedAt: iso(m + 55), errors: [], settings: {} }, evidence: [await ev("build-log-J-0101.txt", "EV-LOG")] });
+    };
+    await build("SN-0020", "J-2001", 100);
+    await s("inspector", 200, { action: "inspect", role: "inspector", outcome: "reject", unit: sn("SN-0020"), reason: "First article measured per plan (synthetic values)", data: { kind: "inspection", decisionRules: "core/decision-rules/0.1", measurements: measurementsFor([6.27, 40.06, 19.96], undefined, 200) }, evidence: [await ev("measurements-SN-0020.csv", "EV-MEAS"), await ev("micrometer-MIC-07-cal.txt", "EV-MIC"), await ev("caliper-CAL-12-cal.txt", "EV-CAL")] });
+    // Records: 1–6 prelude, 7–9 SN-0020 build, 10 inspection.
+    await s("inspector", 210, { action: "raise-nonconformance", role: "inspector", outcome: "raised", unit: sn("SN-0020"), reason: "Tab over maximum", data: { kind: "nonconformance", ncrId: "NCR-0020", inspectionRecord: await uuidFor("REPL-SN-0020/10"), characteristics: ["CH-001"], description: "CH-001 tab thickness 6.27 mm exceeds 6.20 mm + U; first article held, disposition open (synthetic)" } });
+    await build("SN-0021", "J-2002", 300, { unit: { serial: "SN-0020" }, ncrId: "NCR-0020" });
+    const mic = { id: "MIC-07", description: "0-25 mm outside micrometer (synthetic)", calibrationEvidence: "EV-MIC", calibrationValidUntil: "2027-06-01T00:00:00.000Z" };
+    const caliper = (checked: boolean) => ({ id: "CAL-21", description: "0-6 in dial caliper (synthetic)", resolution: { value: 0.001, unit: "in" as const }, ...(checked ? { calibrationEvidence: "EV-GAUGE", calibrationValidUntil: "2027-05-01T00:00:00.000Z" } : {}) });
+    const u = (expanded: number, unit: "mm" | "in") => ({ expanded, k: 2, unit, basis: "synthetic uncertainty budget: resolution, repeatability, reference (INVENTED)" });
+    const replacement = (checked: boolean, m: number): Measurement[] => [
+      { characteristic: "CH-001", value: 6.03, unit: "mm", method: "two-point micrometer, 3 readings averaged", instrument: mic, uncertainty: u(0.004, "mm"), measuredAt: iso(m) },
+      { characteristic: "CH-002", value: 1.576, unit: "in", method: "dial caliper, overall length", instrument: caliper(checked), uncertainty: u(0.0012, "in"), measuredAt: iso(m) },
+      { characteristic: "CH-003", value: 0.786, unit: "in", method: "dial caliper, hook height", instrument: caliper(checked), uncertainty: u(0.0012, "in"), measuredAt: iso(m) },
+    ];
+    await s("inspector", 400, { action: "inspect", role: "inspector", outcome: "indeterminate", unit: sn("SN-0021"), reason: "Replacement measured; caliper accuracy check not yet performed (synthetic values)", data: { kind: "inspection", decisionRules: "core/decision-rules/0.1", measurements: replacement(false, 400) }, evidence: [await ev("measurements-SN-0021-1.csv", "EV-MEAS"), await ev("micrometer-MIC-07-cal.txt", "EV-MIC")] });
+    await s("inspector", 500, { action: "inspect", role: "inspector", outcome: "accept", unit: sn("SN-0021"), reason: "Re-measured after the gauge-block accuracy check of CAL-21 (synthetic values)", data: { kind: "inspection", decisionRules: "core/decision-rules/0.1", measurements: replacement(true, 500) }, evidence: [await ev("measurements-SN-0021-2.csv", "EV-MEAS"), await ev("micrometer-MIC-07-cal.txt", "EV-MIC"), await ev("caliper-CAL-21-gauge-check.txt", "EV-GAUGE")] });
+    // Records: 12–14 SN-0021 build, 15 indeterminate inspection, 16 accepted inspection.
+    await s("mrb", 530, { action: "disposition", role: "disposition-authority", outcome: "accept", unit: sn("SN-0021"), reason: "Replacement conforming; accepted for laboratory use. SN-0020 stays held under NCR-0020 (synthetic)", data: { kind: "disposition", inspectionRecord: await uuidFor("REPL-SN-0020/16"), rationale: "All characteristics accepted once instrument accuracy evidence was attached" } });
+    lab.ledgers["REPL-SN-0020"] = p.get();
+  }
+
   // Second process configuration, same engine: first-article, two independent inspections.
   {
     const p = await prelude(lab, "FAI-SN-0010", lab.revA, ["SN-0010"], { process: "printed-part-fai", firmware: H2C_FIRMWARE });
@@ -300,6 +335,30 @@ export function fixtureSource(lab: Lab): FixtureState {
 
 // ---- Demonstrations ----
 
+/**
+ * The acceptance-test category of a demonstration (STDP-007): an *allowed* path the engine must
+ * accept; a *denied* or held case it must refuse before signing, reject on verification, or hold
+ * as indeterminate; a *reconciliation* case at the exchange boundary (idempotency, conflicts,
+ * signed acknowledgements, publication checks); or a *measurement* of the software itself.
+ */
+export type DemoCategory = "allowed" | "denied" | "reconciliation" | "measurement";
+/** Where a demonstration shows both, it is listed by the behaviour it exists to prove. */
+const DEMO_CATEGORIES: Record<Exclude<DemoCategory, "reconciliation" | "measurement">, readonly string[]> = {
+  allowed: ["P01-a", "P01-b", "P01-d", "P01-e", "P02-a", "P02-b", "P02-c", "P02-d", "P02-f", "P03-a", "P06-f", "P06-j", "P09-a"],
+  denied: [
+    "P01-c", "P01-f", "P03-b", "P03-c", "P03-d", "P03-e", "P03-f", "P04-a", "P04-b", "P04-c", "P04-d", "P04-e",
+    "P05-a", "P05-b", "P05-c", "P05-d", "P05-e", "P05-f", "P05-g", "P05-h", "P05-i",
+    "P06-a", "P06-b", "P06-c", "P06-d", "P06-e", "P06-g", "P06-h", "P06-i", "P09-b", "P09-c", "P09-d",
+  ],
+};
+export function demoCategory(d: Pick<Demonstration, "id">): DemoCategory | "unclassified" {
+  if (d.id.startsWith("P07")) return "reconciliation";
+  if (d.id.startsWith("P08")) return "measurement";
+  if (DEMO_CATEGORIES.allowed.includes(d.id)) return "allowed";
+  if (DEMO_CATEGORIES.denied.includes(d.id)) return "denied";
+  return "unclassified";
+}
+
 export interface LabRun {
   lab: Lab;
   demonstrations: Demonstration[];
@@ -311,6 +370,8 @@ export interface LabRun {
   bundle: ReturnType<typeof buildEvidenceBundle>;
   signedBundle: SignedEvidence;
   custody: { witness: Witness; head8: TreeHead; head16: TreeHead; proof: ConsistencyProofFile; forkHead: TreeHead };
+  /** The replacement-article example (REPL-SN-0020): its signed evidence bundle and exchange proposals. */
+  replacement: { bundle: ReturnType<typeof buildEvidenceBundle>; signed: SignedEvidence; proposals: ProposalSet };
 }
 
 const failures = (r: { checks: { status: string; message: string }[] }) => r.checks.filter((c) => c.status === "fail").map((c) => c.message).join("; ");
@@ -616,6 +677,51 @@ export async function runLab(opts: { legacySample?: { tdp: Uint8Array; trustJson
     demo("P08-a", "Software verification timings measured on this machine (no physical build time, cycle time or yield is claimed)", "measurements recorded", performance.map((p) => `${p.metric}: ${p.value} ${p.unit}`).join("; "), performance.every((p) => p.value > 0));
   }
 
+  // P09 replacement articles: a rebuild is traceable to the discrepancy it answers.
+  let replacement!: LabRun["replacement"];
+  {
+    const ctx = lab.ctx("printed-part", lab.revA);
+    const r = results["REPL-SN-0020"]!;
+    const unitState = (serial: string) => r.units.find((u) => u.unit.serial === serial)?.state;
+    const replProposals = await buildProposals(recipe, ctx.baseline, r, new LocalFixtureAdapter(JSON.parse(JSON.stringify(initial))).describe(), { now: LAB_NOW });
+    const replBundle = buildEvidenceBundle({ verify: lab.revA.result, trustStoreSha256: await canonicalSha256(lab.trustStore), ledger: r, ctx, ledgerSha256: await canonicalSha256(lab.ledgers["REPL-SN-0020"]), reconciliation: { proposals: replProposals }, now: LAB_NOW });
+    replacement = { bundle: replBundle, signed: await signEvidenceBundle(replBundle, lab.world.keys["config-mgr"]!, LAB_NOW), proposals: replProposals };
+    const first = replBundle.units.find((u) => u.unit.serial === "SN-0020")!;
+    const second = replBundle.units.find((u) => u.unit.serial === "SN-0021")!;
+    demo("P09-a", "First article SN-0020 rejected, NCR-0020 left open; replacement SN-0021 built under a signed link to NCR-0020, inspected and accepted", "ledger verified; SN-0020 nonconforming (held), replaced by SN-0021; SN-0021 dispositioned accept, replaces SN-0020 under NCR-0020",
+      `${r.verdict}; SN-0020 ${unitState("SN-0020")}, replaced by ${first.replacedBy.map((x) => x.unit.serial).join(", ") || "none"}; SN-0021 ${unitState("SN-0021")} (${second.disposition?.outcome}), replaces ${second.replaces?.unit.serial} under ${second.replaces?.ncrId}`,
+      r.verdict === "verified" && unitState("SN-0020") === "nonconforming" && first.replacedBy[0]?.unit.serial === "SN-0021" && unitState("SN-0021") === "dispositioned" && second.replaces?.ncrId === "NCR-0020" && first.disposition === null);
+    const pending = second.inspections[0]!;
+    const why = pending.results.find((x) => x.characteristic === "CH-002")!.reasons.join("; ");
+    demo("P09-b", "Replacement measured with a caliper that has a stated 0.001 in resolution but no accuracy evidence yet; then re-measured once a gauge-block check is attached", "first inspection indeterminate (resolution is not calibration); second accepted; inch readings converted to the mm limits",
+      `${pending.outcome}: ${why}; then ${second.inspections[1]?.outcome} (CH-002 ${second.inspections[1]?.results.find((x) => x.characteristic === "CH-002")?.value} mm)`,
+      pending.outcome === "indeterminate" && /not evidence of accuracy/.test(why) && second.inspections[1]?.outcome === "accept");
+
+    // The gate on replacement claims, on a fresh ledger with three authorized serials.
+    const g = await prelude(lab, "REPL-GATE", lab.revA, ["SN-0030", "SN-0031", "SN-0032"]);
+    const job = lab.evidence["job-J-0101.txt"]!;
+    const jobSha = await sha256Hex(job.bytes);
+    const jobEv = await E(lab, job.name, "EV-JOB");
+    const queue = (serial: string, jobId: string, m: number, replaces?: { unit: { serial: string }; ncrId: string }) =>
+      g.s("planner", m, { action: "enter-queue", role: "planner", outcome: "queued", unit: { serial }, reason: "Queued", data: { kind: "queue-entry", jobId, submittedFile: { name: job.name, sha256: jobSha }, settings: {}, ...(replaces ? { replaces } : {}) }, evidence: [jobEv] });
+    await queue("SN-0030", "J-3001", 100);
+    await g.s("operator", 110, { action: "dispatch-build", role: "operator", outcome: "started", unit: { serial: "SN-0030" }, reason: "Dispatched by hand", data: { kind: "build-start", jobId: "J-3001", resource: "H2C-LAB-01", startedAt: iso(110) } });
+    await g.s("operator", 160, { action: "complete-build", role: "operator", outcome: "completed", unit: { serial: "SN-0030" }, reason: "Completed", data: { kind: "build-complete", jobId: "J-3001", submittedFileSha256: jobSha, startedAt: iso(110), completedAt: iso(155), errors: [], settings: {} }, evidence: [await E(lab, "build-log-J-0101.txt", "EV-LOG")] });
+    await g.s("inspector", 200, { action: "inspect", role: "inspector", outcome: "reject", unit: { serial: "SN-0030" }, reason: "Measured (synthetic values)", data: { kind: "inspection", decisionRules: "core/decision-rules/0.1", measurements: measurementsFor([6.25, 40.05, 19.95], undefined, 200) }, evidence: [await E(lab, "measurements-SN-0002.csv", "EV-MEAS"), await E(lab, "micrometer-MIC-07-cal.txt", "EV-MIC"), await E(lab, "caliper-CAL-12-cal.txt", "EV-CAL")] });
+    await g.s("inspector", 210, { action: "raise-nonconformance", role: "inspector", outcome: "raised", unit: { serial: "SN-0030" }, reason: "Tab over maximum", data: { kind: "nonconformance", ncrId: "NCR-0030", inspectionRecord: await uuidFor("REPL-GATE/10"), characteristics: ["CH-001"], description: "CH-001 over maximum (synthetic)" } });
+    const noNcr = await denied(() => queue("SN-0031", "J-3101", 220, { unit: { serial: "SN-0030" }, ncrId: "NCR-9999" }));
+    const self = await denied(() => queue("SN-0031", "J-3102", 221, { unit: { serial: "SN-0031" }, ncrId: "NCR-0030" }));
+    const wrongUnit = await denied(() => queue("SN-0031", "J-3103", 222, { unit: { serial: "SN-0032" }, ncrId: "NCR-0030" }));
+    const ok = await denied(() => queue("SN-0031", "J-3104", 223, { unit: { serial: "SN-0030" }, ncrId: "NCR-0030" }));
+    const twice = await denied(() => queue("SN-0032", "J-3201", 224, { unit: { serial: "SN-0030" }, ncrId: "NCR-0030" }));
+    demo("P09-c", "Replacement claims checked before signing: an NCR that doesn't exist, a unit replacing itself, an NCR raised against another unit, and a second replacement while the first is still good", "four DENIED; the valid claim ALLOWED",
+      [noNcr, self, wrongUnit, ok, twice].join(" | "),
+      /no NCR NCR-9999/.test(noNcr) && /can't replace itself/.test(self) && /raised against SN-0030, not SN-0032/.test(wrongUnit) && ok === "ALLOWED" && /already answered by replacement SN-0031/.test(twice));
+    const forged = await forceAppend(g.get(), lab.world.keys.planner!, { ...(g.get().entries.at(-1)!.record as Record<string, unknown>), recordId: await uuidFor("REPL-GATE/forged"), seq: g.get().entries.length + 1, unit: { serial: "SN-0032" }, at: iso(230), prev: (await verifyLedger(g.get(), ctx)).head!, data: { kind: "queue-entry", jobId: "J-3202", submittedFile: { name: job.name, sha256: jobSha }, settings: {}, replaces: { unit: { serial: "SN-0030" }, ncrId: "NCR-9999" } } });
+    const rf = await verifyLedger(forged, ctx);
+    demo("P09-d", "A validly signed queue record that claims to replace a unit under an NCR that was never raised", "ledger rejected on verification", failures(rf), rf.verdict === "rejected" && /no NCR NCR-9999/.test(failures(rf)));
+  }
+
   const bundle = buildEvidenceBundle({
     verify: lab.revA.result,
     trustStoreSha256: await canonicalSha256(lab.trustStore),
@@ -635,7 +741,7 @@ export async function runLab(opts: { legacySample?: { tdp: Uint8Array; trustJson
   demos.push({ id: "P06-g", scenario: "Signed evidence bundle: verifies as exported, fails after any edit", expected: "valid; altered copy refused", actual: `signed by ${good.signer}; altered: ${bad.problem}`, pass: !!good.signer && /does not verify/.test(bad.problem ?? "") });
   bundle.demonstrations = demos;
   const finalSigned = await signEvidenceBundle(bundle, lab.world.keys["config-mgr"]!, LAB_NOW);
-  return { lab, demonstrations: demos, results, signedBundle: finalSigned, custody, exchange: { recipe, initial, after: adapter.state, proposals, acks, replay, proposals2, acks2 }, checkpoint, invalid, performance, bundle };
+  return { lab, demonstrations: demos, results, signedBundle: finalSigned, custody, replacement, exchange: { recipe, initial, after: adapter.state, proposals, acks, replay, proposals2, acks2 }, checkpoint, invalid, performance, bundle };
 }
 
 const performance_now = () => globalThis.performance.now();

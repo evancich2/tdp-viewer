@@ -176,7 +176,7 @@ export async function buildProposals(
   if (ledger.verdict === "rejected" || !ledger.instance) throw new Error("proposals are built only from a ledger that verifies");
   const problems = checkRecipe(recipe, baseline);
   if (problems.length) throw new Error(`recipe doesn't fit this baseline: ${problems.join("; ")}`);
-  const versions: Record<string, number> = { ...(opts.knownVersions ?? {}) };
+  const versions: Record<string, number> = { ...opts.knownVersions };
   const transactions: Transaction[] = [];
   const excluded: ProposalSet["excluded"] = [];
   for (const v of ledger.records) {

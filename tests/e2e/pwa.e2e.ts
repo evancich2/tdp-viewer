@@ -27,6 +27,7 @@ process.on("unhandledRejection", (e) => fail(String((e as Error)?.stack ?? e)));
 
 for (let i = 0; ; i++) {
   if (i > 100) fail("vite preview did not start");
+  // nosemgrep: typescript.react.security.react-insecure-request.react-insecure-request -- local vite preview server
   if (await fetch(ORIGIN).then((r) => r.ok, () => false)) break;
   await new Promise((r) => setTimeout(r, 200));
 }
@@ -52,6 +53,7 @@ async function waitForActiveWorker(context: BrowserContext) {
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 try {
   // 1. Manifest
+  // nosemgrep: typescript.react.security.react-insecure-request.react-insecure-request -- local vite preview server
   const manifest = await (await fetch(`${ORIGIN}/manifest.webmanifest`)).json();
   const sizes = manifest.icons.map((i: { sizes: string }) => i.sizes);
   if (!sizes.includes("192x192") || !sizes.includes("512x512") || manifest.display !== "standalone") fail("manifest not installable");

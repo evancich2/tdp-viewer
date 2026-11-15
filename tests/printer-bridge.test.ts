@@ -45,8 +45,8 @@ describe("MQTT codec (byte vectors from the 3.1.1 spec)", () => {
   it("encodes remaining lengths", () => {
     const hex = (n: number) => encodeLength(n).toString("hex");
     expect([0, 127, 128, 16383, 16384, 2097151, 2097152, 268435455].map(hex)).toEqual(["00", "7f", "8001", "ff7f", "808001", "ffff7f", "80808001", "ffffff7f"]);
-    expect(() => encodeLength(268435456)).toThrow();
-    expect(() => encodeLength(-1)).toThrow();
+    expect(() => encodeLength(268435456)).toThrow(/remaining length out of range/);
+    expect(() => encodeLength(-1)).toThrow(/remaining length out of range/);
   });
 
   it("encodes CONNECT with user name and password", () => {
@@ -278,6 +278,7 @@ live("against a simulated H2C", () => {
     const c = await FtpsClient.connect({ host: "127.0.0.1", port: f.ftpsPort, fingerprint: f.fingerprint, user: "bblp", password: CODE });
     const pasv = await c.cmd("PASV");
     const m = /(\d+),(\d+)\)/.exec(pasv.text)!;
+    // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification -- test client against the simulated printer
     const fresh = tls.connect({ host: "127.0.0.1", port: Number(m[1]) * 256 + Number(m[2]), rejectUnauthorized: false });
     fresh.on("error", () => {});
     expect((await c.cmd("STOR x.gcode.3mf")).code).toBe(150);

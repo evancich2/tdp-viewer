@@ -3,6 +3,7 @@ import { fromBase64, sha256Hex, toBase64, utf8 } from "./bytes";
 import { TrustStore } from "./schema";
 import { keyIdFor, signWith, type KeyHandle, verifyEd25519 } from "./signing";
 import { loadTrustStore } from "./verify";
+import { parseJson } from "./json";
 
 // Signed trust stores. An organization's root key signs the trust store; viewers pin the root
 // (the "anchors" file) instead of vetting every signer key by hand. Each signed release carries
@@ -36,7 +37,7 @@ export function trustStoreSigningMessage(payloadSha256: string, signedAt: string
 }
 
 export async function loadAnchors(json: string): Promise<Anchors> {
-  const anchors = Anchors.parse(JSON.parse(json));
+  const anchors = Anchors.parse(parseJson(json));
   for (const root of anchors.roots)
     if ((await keyIdFor(root.publicKey)) !== root.keyId) throw new Error(`anchors: key id mismatch for ${root.name}`);
   return anchors;
@@ -64,7 +65,7 @@ export interface LoadOptions {
  */
 export async function loadTrustStoreFile(json: string, opts: LoadOptions = {}): Promise<LoadedTrustStore> {
   const now = opts.now ?? new Date();
-  const raw = JSON.parse(json) as { schema?: unknown };
+  const raw = parseJson(json) as { schema?: unknown };
   if (raw.schema !== "tdp-signed-truststore/0.1") {
     if (opts.anchors) throw new Error("this trust store isn't signed, and you've pinned a root key: only signed trust stores are accepted");
     return { store: await loadTrustStore(json) };

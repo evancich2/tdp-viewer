@@ -23,6 +23,11 @@ Decided: the source PLM governs release (Onshape first, Windchill preferred late
 - [x] Record steps in the viewer (key unlocked in memory; same gate as the CLI)
 - [x] Read-only Onshape adapter in the CLI (publication check, reference capture); fake-transport tested only
 - [x] Workflow panel code-split; keyboard-reachable file pickers; large-ledger performance measured
+- [x] Replacement articles: a rebuild linked by signature to the NCR it answers; per-unit evidence bundles (STDP-012)
+- [x] Instrument resolution recorded, never treated as calibration; uncertainty floor from resolution (STDP-001/002)
+- [x] Hashing rules published: raw bytes for originals, RFC 8785 for records, strict I-JSON loading (STDP-012)
+- [x] Acceptance tests classified allowed / denied / reconciliation (STDP-007)
+- [x] Lint (oxlint), static analysis (Semgrep) and CVE scans (npm audit, osv-scanner); CI actions pinned
 
 ### Needs real inputs (not to be fabricated)
 - [ ] The controlled design of the demo part and its real requirement set and tolerances

@@ -1,0 +1,7 @@
+SYNTHETIC DEMONSTRATION EVIDENCE - NOT A REAL INSTRUMENT ACCURACY CHECK
+SYNTHETIC SURROGATE: not the controlled design. Demonstration data only; dimensions, limits, approvals, builds and measurements are invented.
+
+Instrument CAL-21 0-6 in dial caliper, resolution 0.001 in
+Reference: gauge blocks GB-1.000 in and GB-2.000 in (INVENTED ids)
+Readings: 1.000, 1.000, 1.001 / 2.000, 2.001, 2.000 in (INVENTED)
+Acceptance: within +/-0.001 in; valid until 2027-05-01 (INVENTED)

@@ -5,7 +5,7 @@ import { DECISION_RULES_ID } from "./inspection";
 import type { TrustStore } from "./schema";
 import { signWith, type KeyHandle, verifyEd25519 } from "./signing";
 import type { ProposalSet, ReconciliationRow } from "./exchange";
-import { workflowStatus, type LedgerResult, type WorkflowContext } from "./records";
+import { replacementOf, trackOf, unitKey, workflowStatus, type LedgerResult, type WorkflowContext } from "./records";
 import type { VerifyResult } from "./verify";
 
 // The evidence bundle: one JSON file a reviewer can check without the tool. Identifiers and digests
@@ -77,6 +77,27 @@ export function buildEvidenceBundle(i: EvidenceBundleInput) {
       };
     }),
   }));
+  // Per unit: its own inspections, NCRs, disposition and what it replaces. In a ledger with more
+  // than one unit, this (not the top-level traceability) is the per-article result.
+  const replacing = new Map(i.ledger.units.map((o) => [o.key, replacementOf(trackOf(i.ledger.records, o.unit))]));
+  const units = i.ledger.units.map((u) => {
+    const track = trackOf(i.ledger.records, u.unit).filter((v) => v.record.unit);
+    const replaces = replacing.get(u.key);
+    const lastInspection = [...track].reverse().find((v) => v.record.data.kind === "inspection");
+    const disposition = [...track].reverse().find((v) => v.record.data.kind === "disposition");
+    const st = workflowStatus(i.ledger, i.ctx, u.unit);
+    return {
+      unit: u.unit,
+      state: u.state,
+      status: { operation: st.operation.text, inspection: st.inspection.text, disposition: st.disposition.text },
+      replaces: replaces ?? null,
+      replacedBy: i.ledger.units.filter((o) => { const r = replacing.get(o.key); return o.key !== u.key && !!r && unitKey(r.unit) === u.key; }).map((o) => ({ unit: o.unit, state: o.state })),
+      inspections: track.filter((v) => v.record.data.kind === "inspection").map((v) => ({ seq: v.record.seq, outcome: v.record.outcome, results: v.inspection?.results.map((r) => ({ characteristic: r.characteristic, result: r.result, value: r.value ?? null, reasons: r.reasons })) ?? [] })),
+      latestInspection: lastInspection ? { seq: lastInspection.record.seq, outcome: lastInspection.record.outcome } : null,
+      nonconformances: track.flatMap((v) => (v.record.data.kind === "nonconformance" ? [{ seq: v.record.seq, ncrId: v.record.data.ncrId, characteristics: v.record.data.characteristics }] : [])),
+      disposition: disposition && disposition.record.data.kind === "disposition" ? { seq: disposition.record.seq, outcome: disposition.record.outcome, ncrId: disposition.record.data.ncrId ?? null } : null,
+    };
+  });
   return {
     schema: "tdp-evidence-bundle/0.1",
     generatedAt: (i.now ?? new Date()).toISOString(),
@@ -87,9 +108,10 @@ export function buildEvidenceBundle(i: EvidenceBundleInput) {
       packageIntegrity: i.verify.verdict === "trusted" ? "Package integrity verified" : "Package rejected",
       baseline: statuses.baseline.text,
       sourceRelease: statuses.sourceRelease.text,
-      operation: statuses.operation.text,
-      inspection: statuses.inspection.text,
-      disposition: statuses.disposition.text,
+      operation: units.length > 1 ? units.map((u) => u.status.operation).join("; ") : statuses.operation.text,
+      // With several units, the instance-level line would read "not inspected": list each unit's instead.
+      inspection: units.length > 1 ? units.map((u) => u.status.inspection).join("; ") : statuses.inspection.text,
+      disposition: units.length > 1 ? units.map((u) => u.status.disposition).join("; ") : statuses.disposition.text,
     },
     package: {
       id: m.package.id, schema: m.schema, partNumber: m.package.partNumber, revision: m.package.revision, manifestSha256: i.verify.manifestSha256,
@@ -105,7 +127,10 @@ export function buildEvidenceBundle(i: EvidenceBundleInput) {
     },
     ledger: { sha256: i.ledgerSha256, instance: i.ledger.instance?.id ?? null, verdict: i.ledger.verdict, state: i.ledger.state, records: i.ledger.records.length, head: i.ledger.head ?? null, checks: i.ledger.checks },
     records: recordsOut,
+    /** Results from the newest inspection in the ledger (named here); per-unit results are in `units`. */
+    traceabilityBasis: inspection ? { seq: inspection.record.seq, unit: inspection.record.unit ?? null } : null,
     traceability,
+    units,
     reconciliation: i.reconciliation
       ? {
           recipe: i.reconciliation.proposals.recipe,

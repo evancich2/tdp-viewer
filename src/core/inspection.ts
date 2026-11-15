@@ -32,7 +32,17 @@ export const Measurement = z
       .object({
         id: z.string().min(1).max(64),
         description: z.string().min(1).max(200),
-        /** Evidence id (in the record's evidence list) of the calibration certificate. */
+        /**
+         * Smallest increment the instrument displays (e.g. 0.001 in for a dial caliper). Recorded so
+         * the uncertainty can be checked against it. A resolution is not a calibration: it says
+         * nothing about accuracy, and never stands in for calibrationEvidence.
+         */
+        resolution: z.object({ value: z.number().positive(), unit: Unit }).strict().optional(),
+        /**
+         * Evidence id (in the record's evidence list) of the calibration certificate, or of an
+         * accuracy check against a reference standard (gauge block, ring gauge) that the program
+         * accepts in its place.
+         */
         calibrationEvidence: evidenceId.optional(),
         calibrationValidUntil: isoTime.optional(),
       })
@@ -82,9 +92,16 @@ export function evaluateMeasurement(c: Characteristic, m: Measurement | undefine
   const reasons: string[] = [];
   const x = convert(m.value, m.unit, c.unit);
   if (x === null) return out("indeterminate", [`measured in ${m.unit}, characteristic is in ${c.unit}: incompatible units`]);
+  let resolution: number | null = null;
   if (!m.instrument) reasons.push("no instrument identified");
   else {
-    if (!m.instrument.calibrationEvidence) reasons.push(`instrument ${m.instrument.id} has no calibration evidence`);
+    const r = m.instrument.resolution;
+    if (r) {
+      resolution = convert(r.value, r.unit, c.unit);
+      if (resolution === null) reasons.push(`instrument ${m.instrument.id} resolution is in ${r.unit}, incompatible with ${c.unit}`);
+    }
+    if (!m.instrument.calibrationEvidence)
+      reasons.push(`instrument ${m.instrument.id} has no calibration evidence${r ? ` (its ${r.value} ${r.unit} resolution is a readout increment, not evidence of accuracy)` : ""}`);
     else if (!evidenceIds.has(m.instrument.calibrationEvidence)) reasons.push(`calibration evidence ${m.instrument.calibrationEvidence} is not attached to the record`);
     if (!m.instrument.calibrationValidUntil) reasons.push(`instrument ${m.instrument.id} calibration has no due date`);
     else if (Date.parse(m.instrument.calibrationValidUntil) < Date.parse(m.measuredAt)) reasons.push(`instrument ${m.instrument.id} calibration expired ${m.instrument.calibrationValidUntil}, before the measurement`);
@@ -92,6 +109,11 @@ export function evaluateMeasurement(c: Characteristic, m: Measurement | undefine
   if (!m.uncertainty) reasons.push("no measurement uncertainty stated");
   const U = m.uncertainty ? convert(m.uncertainty.expanded, m.uncertainty.unit, c.unit) : null;
   if (m.uncertainty && U === null) reasons.push(`uncertainty in ${m.uncertainty.unit} is incompatible with ${c.unit}`);
+  if (m.uncertainty && U !== null && resolution !== null) {
+    // The readout alone contributes a rectangular distribution of half-width r/2: u = r/√12 (GUM F.2.2.1).
+    const floor = Math.round(((m.uncertainty.k * resolution) / Math.sqrt(12)) * 1e9) / 1e9;
+    if (U < floor) reasons.push(`stated expanded uncertainty U = ${U} ${c.unit} is smaller than the resolution contribution alone (k·r/√12 = ${floor} ${c.unit}): the uncertainty budget is incomplete`);
+  }
   if (reasons.length || U === null) return out("indeterminate", reasons, { value: x });
 
   if (c.decisionRule === "guard-banded") {

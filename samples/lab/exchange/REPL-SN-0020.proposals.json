@@ -1,0 +1,316 @@
+{
+  "schema": "tdp-sync-proposals/0.1",
+  "recipe": {
+    "id": "lab-asbuilt",
+    "version": 1
+  },
+  "baseline": {
+    "packageId": "2a395545-a7ca-42e0-b927-a8dfa9af4752",
+    "manifestSha256": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+    "baselineId": "BL-SYN-PH-2000-A"
+  },
+  "ledger": {
+    "instance": "c2a628e5-9991-4779-bf4e-e072dea26d9f",
+    "count": 17,
+    "head": "e816a8f8e6d125a2e1924db8833472eede251e55f7d77fc83d9ddbe5a5d3aa8a"
+  },
+  "generatedAt": "2026-11-12T13:00:00.000Z",
+  "transactions": [
+    {
+      "txId": "tx-a819504f0e3d74475197932f0a8b56ef",
+      "contentSha256": "136358f0fcc5e2ff2aeb5364e727c51b946d6f2591f247f32a1390502c332e2a",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "ProcessReview",
+        "objectId": "904e0a44-ccff-4f20-8d2b-f36e878b7de2"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "resource": "H2C-LAB-01",
+        "outcome": "review-required"
+      },
+      "source": {
+        "recordId": "904e0a44-ccff-4f20-8d2b-f36e878b7de2",
+        "recordSha256": "95f4c27a6b3105bca999ac2439315322cdb193fa347e665e2256278051128763",
+        "kind": "suitability"
+      },
+      "lossy": [
+        {
+          "field": "data.input.capabilities",
+          "reason": "capability evidence detail has no target field"
+        }
+      ],
+      "status": "held-lossy",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-ad7b3e90da20dbdc2d7a3ecb00a8f2db",
+      "contentSha256": "0c58c90573d24e379d670d4cfe7456babe0f101fd7641c5f6b338b1dbb34eedc",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "ProcessPlan",
+        "objectId": "6bc4199d-0dec-4722-9f56-22f07c622104"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "plan": "BP-REPL-SN-0020"
+      },
+      "source": {
+        "recordId": "6bc4199d-0dec-4722-9f56-22f07c622104",
+        "recordSha256": "e8d796e303f4811cafb308eb5a49c8c2c8c64edee8263eb4d6028a97b764717c",
+        "kind": "plan"
+      },
+      "lossy": [],
+      "status": "unsupported",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-7a69bc1f5da3d0d1b73af37aa4e2ce35",
+      "contentSha256": "7a3eb2472df89acf7c19650d7e92236f5b0349a18f7b169241d1317b860744f5",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "AsBuiltUnit",
+        "objectId": "SYN-PH-2001:SN-0020"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "serial": "SN-0020",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "baselineManifest": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+        "jobId": "J-2001",
+        "buildOutcome": "completed",
+        "completedAt": "2026-11-10T15:35:00.000Z"
+      },
+      "source": {
+        "recordId": "e680e941-906f-4d68-b08b-c5e2f9b95a77",
+        "recordSha256": "265a1001bcb8b626b06b6103ca7f763d60c974004e1ec41e345a37c0cb7e0853",
+        "kind": "build-complete"
+      },
+      "lossy": [],
+      "status": "proposed",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-6d91fb707f6c0f4cd7cca48626992152",
+      "contentSha256": "e68e547aad8d910648e991d9e064d22be19b1950cf9f05d7f1d150dfb09f10bf",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "InspectionResult",
+        "objectId": "0b72784f-e72f-4e61-a685-446e0273408b"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "serial": "SN-0020",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "outcome": "reject",
+        "decisionRules": "core/decision-rules/0.1",
+        "signedRecord": "0b72784f-e72f-4e61-a685-446e0273408b"
+      },
+      "source": {
+        "recordId": "0b72784f-e72f-4e61-a685-446e0273408b",
+        "recordSha256": "50ee1f603afb57151eb42ec6770bcf41e36004ffc1199178fd51190b96e5ff6f",
+        "kind": "inspection"
+      },
+      "lossy": [
+        {
+          "field": "data.measurements",
+          "reason": "the fixture's InspectionResult has no per-characteristic values, instruments or uncertainty; the signed record stays the authority"
+        }
+      ],
+      "status": "proposed",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-ce5c8fb7bdf81c324031010ab31ec11b",
+      "contentSha256": "6f20f51db79f1beb8ac02aa6e2f3de11aafcb4ec0ce396236e382a3a12915b46",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "ChangeRequest",
+        "objectId": "a6b5eefe-0c6f-4d1b-8019-69e41b129515"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "ncr": "NCR-0020",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "description": "CH-001 tab thickness 6.27 mm exceeds 6.20 mm + U; first article held, disposition open (synthetic)"
+      },
+      "source": {
+        "recordId": "a6b5eefe-0c6f-4d1b-8019-69e41b129515",
+        "recordSha256": "03094729ea0794181c5dc29535960411850a321769988236f582021b3c046054",
+        "kind": "nonconformance"
+      },
+      "lossy": [],
+      "status": "proposed",
+      "changesDefinition": true
+    },
+    {
+      "txId": "tx-70d75523c05fa31e672f87168099f9b7",
+      "contentSha256": "4ac4ea3c82bebb1b8bf4ffa7809b0b958b1e49c63bb6b183cead1a9560bec1a6",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "AsBuiltUnit",
+        "objectId": "SYN-PH-2001:SN-0021"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "serial": "SN-0021",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "baselineManifest": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+        "jobId": "J-2002",
+        "buildOutcome": "completed",
+        "completedAt": "2026-11-10T18:55:00.000Z"
+      },
+      "source": {
+        "recordId": "55a61f60-8038-407c-b49b-a4349fd324b8",
+        "recordSha256": "4158dac7ca24b842292be095526df76869290bc0b91fb8d9e1ac72e5f5340fac",
+        "kind": "build-complete"
+      },
+      "lossy": [],
+      "status": "proposed",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-8680403e5a73e00116a8e703b19f097d",
+      "contentSha256": "c8530ab15942157d488660820d4ff59e8a38dcc724ebb8749503bbf457da49b5",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "InspectionResult",
+        "objectId": "2d3e26a5-57ea-487b-a9ab-2700fda807de"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "serial": "SN-0021",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "outcome": "indeterminate",
+        "decisionRules": "core/decision-rules/0.1",
+        "signedRecord": "2d3e26a5-57ea-487b-a9ab-2700fda807de"
+      },
+      "source": {
+        "recordId": "2d3e26a5-57ea-487b-a9ab-2700fda807de",
+        "recordSha256": "f4cd94c1ca28d557c0739b9f285afa98feee329540d9f21b83ca92c65dcaffd0",
+        "kind": "inspection"
+      },
+      "lossy": [
+        {
+          "field": "data.measurements",
+          "reason": "the fixture's InspectionResult has no per-characteristic values, instruments or uncertainty; the signed record stays the authority"
+        }
+      ],
+      "status": "proposed",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-620b0a3c88a806e39acf57ba448c06f2",
+      "contentSha256": "95f12427ff3c55b1fb95fddf904d884df66e834b478238e54989a1c155996e80",
+      "operation": "create",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "InspectionResult",
+        "objectId": "b8b0704a-4d10-4753-b183-b89c37b2b607"
+      },
+      "expectedVersion": null,
+      "attributes": {
+        "serial": "SN-0021",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "outcome": "accept",
+        "decisionRules": "core/decision-rules/0.1",
+        "signedRecord": "b8b0704a-4d10-4753-b183-b89c37b2b607"
+      },
+      "source": {
+        "recordId": "b8b0704a-4d10-4753-b183-b89c37b2b607",
+        "recordSha256": "12c65b2d6581e981058b08d6ff1e56aeb13d0bbf996e5911e679e0528cee66bb",
+        "kind": "inspection"
+      },
+      "lossy": [
+        {
+          "field": "data.measurements",
+          "reason": "the fixture's InspectionResult has no per-characteristic values, instruments or uncertainty; the signed record stays the authority"
+        }
+      ],
+      "status": "proposed",
+      "changesDefinition": false
+    },
+    {
+      "txId": "tx-b423cd5fd01f22e7b10001258287aff8",
+      "contentSha256": "87a82d8d7c7debfc895dd65feb04064e6096316e511d86de3520758c82fd4cf3",
+      "operation": "update",
+      "target": {
+        "system": "lab-fixture",
+        "objectType": "AsBuiltUnit",
+        "objectId": "SYN-PH-2001:SN-0021"
+      },
+      "expectedVersion": 1,
+      "attributes": {
+        "serial": "SN-0021",
+        "item": "SYN-PH-2001",
+        "revision": "A",
+        "baselineManifest": "f13076f68d31ec9f456a7f8209d731a49c898a4cb07550677da9fce8e8488877",
+        "disposition": "accept",
+        "dispositionedBy": "Mel Disposition Authority (demo)"
+      },
+      "source": {
+        "recordId": "035a7f0f-d2d4-40a4-99d6-44057bfd90cc",
+        "recordSha256": "e816a8f8e6d125a2e1924db8833472eede251e55f7d77fc83d9ddbe5a5d3aa8a",
+        "kind": "disposition"
+      },
+      "lossy": [],
+      "status": "proposed",
+      "changesDefinition": false
+    }
+  ],
+  "excluded": [
+    {
+      "recordId": "ddbdfc8d-4288-4fdf-8267-251ba44242ab",
+      "kind": "requirements-approval",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "d936e0b5-3837-404c-af6c-e5f20c570b6f",
+      "kind": "source-release",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "2ca0fbff-ea88-4792-b554-2455ceb5a882",
+      "kind": "suitability-review",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "0c277ec7-6a0b-4d9e-b3c7-b8abaaa3cd93",
+      "kind": "authorization",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "fcd1b033-0efc-42de-ad2a-d263afd8b2c1",
+      "kind": "queue-entry",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "b4608ef9-ab8e-4344-a4bc-8d406220b7bc",
+      "kind": "build-start",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "fbe24f97-b5e6-401c-ac05-d1521ff4dc16",
+      "kind": "queue-entry",
+      "reason": "record kind not permitted by recipe"
+    },
+    {
+      "recordId": "f3de03cb-16fd-416e-b5ee-2ca5b3055bba",
+      "kind": "build-start",
+      "reason": "record kind not permitted by recipe"
+    }
+  ]
+}

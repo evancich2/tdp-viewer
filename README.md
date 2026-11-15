@@ -31,7 +31,7 @@ TDP Viewer opens a `.tdp` package in the browser and refuses to show anything un
 
 - **Integrity is not authorization.** The viewer reports package integrity, source release, operation authorized, inspection and disposition as separate statuses. A trusted package grants no manufacturing permission.
 
-Details: [docs/zero-trust.md](docs/zero-trust.md) · Workflow: [docs/engineering-workflow.md](docs/engineering-workflow.md) · Lab demo: [docs/laboratory-demo.md](docs/laboratory-demo.md) · Chain of custody (planned): [docs/chain-of-custody.md](docs/chain-of-custody.md) · Package format: [docs/package-format.md](docs/package-format.md) · Building packages: [docs/packaging.md](docs/packaging.md)
+Details: [docs/zero-trust.md](docs/zero-trust.md) · Workflow: [docs/engineering-workflow.md](docs/engineering-workflow.md) · Lab demo: [docs/laboratory-demo.md](docs/laboratory-demo.md) · Chain of custody (planned): [docs/chain-of-custody.md](docs/chain-of-custody.md) · Package format: [docs/package-format.md](docs/package-format.md) · Building packages: [docs/packaging.md](docs/packaging.md) · Hashing rules: [docs/canonical-json.md](docs/canonical-json.md) · Acceptance tests: [docs/acceptance-tests.md](docs/acceptance-tests.md) · Quality checks: [docs/quality-checks.md](docs/quality-checks.md)
 
 ## Built with
 
@@ -60,10 +60,12 @@ Other commands:
 
 ```sh
 npm test             # unit and fuzz tests (FUZZ_ITERATIONS=5000 npm test for a longer run)
+npm run lint         # oxlint (docs/quality-checks.md)
+npm run check        # typecheck + lint + tests
 npm run e2e          # build, then drive the app in headless Chrome (needs Google Chrome)
 npm run build        # typecheck + production build into dist/
 npm run sample       # regenerate the sample packages with fresh demo keys
-npm run lab          # regenerate samples/lab/ and run the P01–P08 laboratory demonstrations
+npm run lab          # regenerate samples/lab/ and run the P01–P09 laboratory demonstrations
 npm run printer      # LAN bridge to a Bambu Lab H2C (docs/printer-bridge.md)
 npm run tdp -- verify samples/sample.tdp --trust samples/trust-store.json
 npm run tdp -- diff samples/sample.tdp samples/sample-rev-c.tdp --trust samples/trust-store.json

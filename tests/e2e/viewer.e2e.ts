@@ -28,6 +28,7 @@ process.on("unhandledRejection", (e) => fail(String((e as Error)?.stack ?? e)));
 
 for (let i = 0; ; i++) {
   if (i > 100) fail("vite preview did not start");
+  // nosemgrep: typescript.react.security.react-insecure-request.react-insecure-request -- local vite preview server
   if (await fetch(ORIGIN).then((r) => r.ok, () => false)) break;
   await new Promise((r) => setTimeout(r, 200));
 }

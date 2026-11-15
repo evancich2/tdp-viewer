@@ -49,7 +49,9 @@ export function connectPinned(o: PinnedOptions, onSocket?: (s: tls.TLSSocket) =>
   if (!o.fingerprint && !o.allowUnpinned) return Promise.reject(new Error(`no certificate pin for ${o.host}; run "printer pin" first`));
   const want = o.fingerprint ? normalizeFingerprint(o.fingerprint) : undefined;
   return new Promise((resolve, reject) => {
-    // Chain validation is replaced by the exact-certificate pin checked below, before any bytes are sent.
+    // Chain validation is replaced by the exact-certificate pin checked below, before any bytes are sent
+    // (the printer's certificate is self-signed). Callers write nothing until this promise resolves.
+    // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
     const socket = tls.connect({ host: o.host, port: o.port, rejectUnauthorized: false, session: o.session, minVersion: "TLSv1.2" });
     const timer = setTimeout(() => { socket.destroy(); reject(new Error(`${o.host}:${o.port}: TLS connection timed out`)); }, o.timeoutMs ?? 10_000);
     socket.once("error", (e) => { clearTimeout(timer); reject(new Error(`${o.host}:${o.port}: ${e.message}`)); });

@@ -35,7 +35,7 @@ export function credentialsFromEnv(env: NodeJS.ProcessEnv = process.env): Onshap
   const secretKey = env.ONSHAPE_SECRET_KEY;
   if (!accessKey || !secretKey) throw new Error("set ONSHAPE_ACCESS_KEY and ONSHAPE_SECRET_KEY (API keys); they are read from the environment only and never stored");
   const baseUrl = (env.ONSHAPE_BASE_URL ?? "https://cad.onshape.com").replace(/\/+$/, "");
-  if (!/^https:\/\//.test(baseUrl)) throw new Error("ONSHAPE_BASE_URL must be https");
+  if (!baseUrl.startsWith("https://")) throw new Error("ONSHAPE_BASE_URL must be https");
   return { accessKey, secretKey, baseUrl, apiVersion: env.ONSHAPE_API_VERSION ?? "v10" };
 }
 

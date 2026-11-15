@@ -4,6 +4,7 @@ import { EngineeringModel, validateEngineering, type EngineeringIssue } from "./
 import type { Policy } from "./policy";
 import { Manifest, SignatureFile, TrustStore, type Signature, type SignerRole, type TrustedKey } from "./schema";
 import { keyIdFor, verifyEd25519 } from "./signing";
+import { parseJson } from "./json";
 
 export const MANIFEST_PATH = "tdp-manifest.json";
 export const SIGNATURES_PATH = "tdp-manifest.sig.json";
@@ -45,7 +46,7 @@ export function signingMessage(manifestSha256: string, role: SignerRole, signedA
 
 /** Parses a trust store and rejects any key whose id doesn't match its public key. */
 export async function loadTrustStore(json: string): Promise<TrustStore> {
-  const store = TrustStore.parse(JSON.parse(json));
+  const store = TrustStore.parse(parseJson(json));
   for (const key of store.keys) {
     if ((await keyIdFor(key.publicKey)) !== key.keyId) throw new Error(`trust store: key id mismatch for ${key.name}`);
   }
@@ -53,7 +54,7 @@ export async function loadTrustStore(json: string): Promise<TrustStore> {
 }
 
 function parseJsonEntry<T>(bytes: Uint8Array, parse: (v: unknown) => T): T {
-  return parse(JSON.parse(utf8.decode(bytes)));
+  return parse(parseJson(utf8.decode(bytes)));
 }
 
 export async function verifyPackage(

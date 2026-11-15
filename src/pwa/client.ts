@@ -25,6 +25,9 @@ export function registerServiceWorker(onUpdateReady: (apply: () => void) => void
       const worker = reg.installing;
       worker?.addEventListener("statechange", () => worker.state === "installed" && offer(worker));
     });
+  }).catch((e: Error) => {
+    // Registration can fail (private mode, storage blocked, a bad sw.js): the app still works online-only.
+    console.warn(`service worker not registered: ${e.message}`);
   });
 }
 
