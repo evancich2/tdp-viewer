@@ -121,6 +121,9 @@ const inlineOcctWasm = (): Plugin => ({
 export default defineConfig({
   // inlineOcctWasm is listed here too: the dev server transforms worker modules with the main plugins.
   plugins: [react(), contentSecurityPolicy(), previewHeaders(), serviceWorker(), inlineOcctWasm()],
-  build: { sourcemap: true },
+  // ModelViewer (three.js) is behind FilePreview's React.lazy boundary: ~561 kB minified.
+  // 600 kB leaves headroom for that on-demand chunk while still warning on further growth.
+  // This does not reduce the separate OCCT worker/WASM or offline precache download size.
+  build: { sourcemap: true, chunkSizeWarningLimit: 600 },
   worker: { format: "es", plugins: () => [inlineOcctWasm()] },
 });

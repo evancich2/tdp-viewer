@@ -1,5 +1,12 @@
 # Hashing rules for metadata and evidence
 
+Shared machine-readable cases: [`samples/vectors/canonical-json.json`](../samples/vectors/canonical-json.json).
+Regenerate with `npm run vectors`; verify without writing with `npm run vectors -- --check`.
+Each accepted case includes raw JSON text, canonical text and the SHA-256 of its UTF-8 bytes
+(no BOM or final newline). Negative cases name the parse or canonicalization boundary that must
+refuse them. RFC Appendix B number strings are checked against their IEEE-754 bits. The workflow
+record uses the actual record schema with explicitly synthetic laboratory data; it is not a real build.
+
 This is the rule set the tdp-viewer applies, written so other implementations (other prototypes,
 a PLM adapter, a reviewer's script) can compute the same digests and refuse the same inputs. It
 answers the "metadata hashing is key-order-sensitive" problem: two programs that serialize the same

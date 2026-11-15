@@ -1,0 +1,7 @@
+# Signatures and policy pins cover original bytes. Checkout must not rewrite fixtures on Windows.
+* text=auto eol=lf
+*.tdp binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.wasm binary
