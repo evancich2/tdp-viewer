@@ -75,6 +75,11 @@ must run for the shared coverage gate; missing OpenSSL is reported as skipped te
 validation. No real printer is contacted. The browser-isolation test walks source files directly
 and does not depend on `grep` being installed.
 
+CI additionally runs typecheck, lint and coverage on Windows. The local timestamp test shares
+OpenSSL discovery and uses a portable configuration path. Tests requiring an unavailable SSH agent
+or OpenSSL explicitly report skips instead of returning as apparent passes; the Linux job exercises
+the POSIX SSH-agent path. A passing Windows run does not prove hardware-token access.
+
 The backlog test additions exercise altered workflow identity/policy/evidence, process dependency
 validation, engineering consistency, serial effectivity and synthetic SSDP packets. Global coverage
 thresholds are raised, with additional branch floors for the workflow, engineering, process and

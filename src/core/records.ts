@@ -2,6 +2,7 @@ import { z } from "zod";
 import { digestEquals, sha256Hex, utf8 } from "./bytes";
 import { canonicalSha256 } from "./canonical";
 import { parseJson } from "./json";
+import { REFERENCE_HOLD } from "./references";
 import {
   WorkflowRole,
   checkIdentity,
@@ -178,13 +179,14 @@ export interface BaselineContext {
   manifestSha256: string;
   created: string;
   model: EngineeringModel;
+  referenceCount?:number;
 }
 
 /** The baseline a ledger can bind to: only a trusted `tdp-manifest/0.2` package with no engineering errors. */
 export function baselineFrom(result: VerifyResult): BaselineContext {
   if (result.verdict !== "trusted") throw new Error("package is not trusted; records can't be checked against it");
   if (!result.engineering) throw new Error(`${result.manifest?.schema ?? "package"} has no engineering model; workflow records need a tdp-manifest/0.2 package`);
-  return { packageId: result.manifest!.package.id, manifestSha256: result.manifestSha256!, created: result.manifest!.package.created, model: result.engineering.model };
+  return { packageId: result.manifest!.package.id, manifestSha256: result.manifestSha256!, created: result.manifest!.package.created, model: result.engineering.model,referenceCount:result.references?.references.length };
 }
 
 /** A trusted baseline that names this one in its `supersedes`. */
@@ -409,6 +411,11 @@ export function evaluateRecord(history: readonly VerifiedRecord[], rec: Workflow
   // Transition.
   const t = def.transitions.find((x) => x.id === rec.action);
   if (!t) return deny(`${rec.action} is not a transition of process ${def.id}`);
+  if(baseline.referenceCount&&NEW_WORK.has(t.kind)){
+    const why=REFERENCE_HOLD;
+    if(mode==="create")return deny(why);
+    held.push(why);
+  }
   if (t.requires.unit && !rec.unit) return deny(`${t.id} needs a serial or lot`);
   // State, prerequisites and independence are judged on this unit's track (or the instance track).
   const track = rec.unit ? trackOf(history, rec.unit) : history.filter((h) => !h.record.unit);
@@ -833,6 +840,7 @@ export function nextActions(result: LedgerResult, ctx: WorkflowContext, unit?: P
     .filter((t) => t.from.includes(sc.state))
     .map((t) => {
       const blockedBy: string[] = [];
+      if(ctx.baseline.referenceCount&&NEW_WORK.has(t.kind))blockedBy.push(REFERENCE_HOLD);
       for (const need of t.requires.actions)
         if (!latest(sc.track, (r) => r.action === need.id && (!need.outcomes || need.outcomes.includes(r.outcome)))) blockedBy.push(`needs ${need.id} first`);
       if (t.requires.freshAuthority) {

@@ -32,15 +32,15 @@ beforeAll(async () => {
 afterAll(() => { agent?.kill(); rmSync(dir, { recursive: true, force: true }); });
 
 describe("ssh-agent signer", () => {
-  it("lists only plain Ed25519 identities, with this tool's key ids", async () => {
-    if (!available) return console.warn("ssh-agent/ssh-keygen unavailable; skipped");
+  it("lists only plain Ed25519 identities, with this tool's key ids", async (context) => {
+    if (!available) return context.skip();
     const keys = await agentKeys(sock);
     expect(keys.map((k) => k.comment)).toEqual(["test-token-key"]);
     expect(keys[0]!.keyId).toMatch(/^[0-9a-f]{32}$/);
   });
 
-  it("signs through the agent; signatures verify as ordinary Ed25519 and sign real packages", async () => {
-    if (!available) return;
+  it("signs through the agent; signatures verify as ordinary Ed25519 and sign real packages", async (context) => {
+    if (!available) return context.skip();
     const s = await agentSigner("test-token-key", sock);
     const msg = utf8.encode("tdp agent test");
     expect(await verifyEd25519(s.publicKey, await s.sign(msg), msg)).toBe(true);
@@ -53,8 +53,8 @@ describe("ssh-agent signer", () => {
     expect((await verifyPackage(tdp, store, defaultPolicy, now)).verdict).toBe("trusted");
   });
 
-  it("refuses unknown keys, non-Ed25519 keys and a missing agent", async () => {
-    if (!available) return;
+  it("refuses unknown keys, non-Ed25519 keys and a missing agent", async (context) => {
+    if (!available) return context.skip();
     await expect(agentSigner("not-ed25519", sock)).rejects.toThrow(/no ssh-ed25519 key/);
     await expect(agentSigner("nope", sock)).rejects.toThrow(/no ssh-ed25519 key/);
     await expect(agentKeys(join(dir, "missing.sock"))).rejects.toThrow(/can't reach the ssh agent/);

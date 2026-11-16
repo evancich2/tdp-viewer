@@ -5,6 +5,7 @@ import type { Policy } from "./policy";
 import { Manifest, SignatureFile, TrustStore, type Signature, type SignerRole, type TrustedKey } from "./schema";
 import { keyIdFor, verifyEd25519 } from "./signing";
 import { parseJson } from "./json";
+import { ReferenceSet } from "./references";
 
 export const MANIFEST_PATH = "tdp-manifest.json";
 export const SIGNATURES_PATH = "tdp-manifest.sig.json";
@@ -32,6 +33,7 @@ export interface VerifyResult {
   files: FileResult[];
   /** The canonical engineering model, for `tdp-manifest/0.2` packages whose model parsed. */
   engineering?: { model: EngineeringModel; issues: EngineeringIssue[] };
+  references?: ReferenceSet;
   /** Archive bytes, kept only so a trusted package can be opened. */
   entries: ArchiveEntry[];
 }
@@ -152,9 +154,19 @@ export async function verifyPackage(
 
   // 7. Engineering model (0.2 only). It's a signed, listed file, so its digest was checked in step 5.
   const engineering = checkEngineering(manifest, byPath, checks);
+  let references:ReferenceSet|undefined;
+  if(manifest.schema==="tdp-manifest/0.3"){
+    const ref=manifest.references;
+    const listed=manifest.files.find(f=>f.path===ref.path),entry=byPath.get(ref.path);
+    if(!listed||!entry||listed.mediaType!=="application/json")fail("references","reference set must be a listed application/json file");
+    else try{
+      references=ReferenceSet.parse(parseJson(utf8.decode(entry.bytes)));
+      pass("references",`${references.references.length} signed references retained; identity resolution and engineering authority are separate`);
+    }catch(e){fail("references",`invalid reference set: ${(e as Error).message}`);}
+  }
 
   const verdict = checks.every((c) => c.status === "pass") ? "trusted" : "rejected";
-  return { verdict, checks, manifest, manifestSha256, files, engineering, entries };
+  return { verdict, checks, manifest, manifestSha256, files, engineering, references, entries };
 }
 
 function checkEngineering(

@@ -90,7 +90,7 @@ describe("compatibility and versioning", () => {
 
   it("rejects unknown manifest versions and never reinterprets one version as another", async () => {
     for (const [label, edit] of [
-      ["unknown 0.3", (m: Record<string, unknown>) => { m.schema = "tdp-manifest/0.3"; }],
+      ["unknown 0.4", (m: Record<string, unknown>) => { m.schema = "tdp-manifest/0.4"; }],
       ["0.1 carrying an engineering pointer", (m: Record<string, unknown>) => { m.schema = "tdp-manifest/0.1"; }],
       ["0.2 without its engineering pointer", (m: Record<string, unknown>) => { delete m.engineering; }],
     ] as const) {
