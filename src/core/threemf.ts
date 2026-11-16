@@ -20,8 +20,12 @@ export interface Provenance {
   printSettingsSha256?: string;
 }
 
+// XML 1.0 can't carry these at all, not even as character references; part names and titles come
+// from the package and the STEP file, so they're replaced rather than left to break the slicer's parse.
+// eslint-disable-next-line no-control-regex
+const NOT_XML = /[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]|\p{Surrogate}/gu;
 const xml = (s: string) =>
-  s.replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[c]!);
+  s.replace(NOT_XML, "�").replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[c]!);
 const n = (v: number) => (Math.round(v * 1e6) / 1e6).toString();
 
 /**

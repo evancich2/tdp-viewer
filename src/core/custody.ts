@@ -18,7 +18,15 @@ const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
 const keyId = z.string().regex(/^[0-9a-f]{32}$/);
 const isoTime = z.string().datetime({ offset: true });
 
-const hexBytes = (h: string) => Uint8Array.from(h.match(/../g)!.map((b) => parseInt(b, 16)));
+const HEX32 = /^[0-9a-f]{64}$/;
+const hexBytes = (h: string) => {
+  if (!HEX32.test(h)) throw new Error("not a lowercase SHA-256 hex digest");
+  return Uint8Array.from(h.match(/../g)!.map((b) => parseInt(b, 16)));
+};
+/** Tree sizes and leaf indexes are non-negative safe integers; anything else verifies nothing. */
+const isCount = (n: number) => Number.isSafeInteger(n) && n >= 0;
+/** Proof inputs arrive from files: malformed digests make a proof fail, never throw. */
+const wellFormed = (...hs: readonly string[]) => hs.every((h) => typeof h === "string" && HEX32.test(h));
 const H = async (...parts: Uint8Array[]) => {
   const all = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
   let o = 0;
@@ -64,7 +72,7 @@ export async function consistencyProof(m: number, leaves: readonly string[]): Pr
 
 /** RFC 9162 §2.1.3.2: does `proof` show leaf `index` with digest `recordSha256` is in the tree of `size` with `root`? */
 export async function verifyInclusion(recordSha256: string, index: number, size: number, root: string, proof: readonly string[]): Promise<boolean> {
-  if (index >= size) return false;
+  if (!isCount(index) || !isCount(size) || index >= size || !wellFormed(recordSha256, root, ...proof)) return false;
   let fn = index;
   let sn = size - 1;
   let r = await leafHash(recordSha256);
@@ -83,7 +91,7 @@ export async function verifyInclusion(recordSha256: string, index: number, size:
 
 /** RFC 9162 §2.1.4.2: does `proof` show the tree (size1, root1) is a prefix of (size2, root2)? */
 export async function verifyConsistency(size1: number, root1: string, size2: number, root2: string, proof: readonly string[]): Promise<boolean> {
-  if (size1 > size2) return false;
+  if (!isCount(size1) || !isCount(size2) || size1 > size2 || !wellFormed(root1, root2, ...proof)) return false;
   if (size1 === size2) return proof.length === 0 && root1 === root2;
   if (size1 === 0) return proof.length === 0;
   let path = proof.map(hexBytes);

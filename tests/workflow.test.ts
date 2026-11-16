@@ -268,7 +268,8 @@ describe("ledger integrity", () => {
   it("never throws on a mangled ledger and never verifies one", async () => {
     const text = JSON.stringify(lab.ledgers["SN-0002"]);
     let seed = 7;
-    const rand = (n: number) => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) % n);
+    // Math.imul keeps the low bits a float multiply drops (which made every position a multiple of 4).
+    const rand = (n: number) => ((seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff) % n);
     let checked = 0;
     let rejected = 0;
     for (let i = 0; i < 60; i++) {

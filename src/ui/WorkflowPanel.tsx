@@ -82,7 +82,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
   const eng = session.engineering;
   const m = eng?.model;
 
-  async function useLabConfig() {
+  async function loadLabConfig() {
     try {
       const a = await loadAuthority(labAuthority, { anchors });
       const ps = await Promise.all([labProcessA, labProcessB].map((t) => loadProcess(t)));
@@ -236,7 +236,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
       </table>
 
       <div className="row">
-        <button onClick={() => void useLabConfig()}>Use lab authority and processes</button>
+        <button onClick={() => void loadLabConfig()}>Use lab authority and processes</button>
         <label className="button">Load newer baselines…<input type="file" accept=".tdp,.zip" multiple className="file-input" onChange={(e) => { if (e.target.files?.length) void loadNewer(e.target.files); e.target.value = ""; }} /></label>
         <label className="button">Load authority…<input type="file" accept=".json" className="file-input" onChange={(e) => { const f = e.target.files?.[0]; if (f) void loadAuthorityFile(f); e.target.value = ""; }} /></label>
         <label className="button">Load process definitions…<input type="file" accept=".json" multiple className="file-input" onChange={(e) => { if (e.target.files?.length) void loadProcessFiles(e.target.files); e.target.value = ""; }} /></label>

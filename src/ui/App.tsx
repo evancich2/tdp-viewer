@@ -85,12 +85,12 @@ export function App() {
     }
   }
 
-  async function useDemoKeys() {
+  async function loadDemoKeys() {
     const pinned = await pinRoots(demoAnchors, "demo root (samples/anchors.json)");
     if (pinned) await applyTrustStore(demoTrustStore, "demo keys (samples/trust-store.signed.json)", false, pinned);
   }
 
-  async function useLabKeys() {
+  async function loadLabKeys() {
     const pinned = await pinRoots(labAnchors, "lab demo root (samples/lab/anchors.json)");
     if (pinned) await applyTrustStore(labTrustStore, "lab demo keys (samples/lab/trust-store.signed.json)", false, pinned);
   }
@@ -205,8 +205,8 @@ export function App() {
             <input type="file" accept=".json" className="file-input"
               onChange={async (e) => { const f = e.target.files?.[0]; if (f) await applyTrustStore(await f.text(), f.name); e.target.value = ""; }} />
           </label>
-          <button onClick={() => void useDemoKeys()}>Use demo keys</button>
-          <button onClick={() => void useLabKeys()}>Use lab demo keys</button>
+          <button onClick={() => void loadDemoKeys()}>Use demo keys</button>
+          <button onClick={() => void loadLabKeys()}>Use lab demo keys</button>
           {trust && <span>Using <strong>{trust.label}</strong>: {trust.store.keys.length} keys · fingerprint <code>{trust.fingerprint}</code></span>}
         </div>
         {trust && (

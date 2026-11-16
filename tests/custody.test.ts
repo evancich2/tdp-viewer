@@ -5,6 +5,19 @@ import { sha256Hex, utf8 } from "../src/core/bytes";
 const leaves = (n: number) => Promise.all(Array.from({ length: n }, (_, i) => sha256Hex(utf8.encode(`record ${i}`))));
 
 describe("Merkle tree (RFC 9162)", () => {
+  it("verifies nothing for impossible positions or malformed digests, without throwing", async () => {
+    const leaf = "a".repeat(64), root = await treeHash([leaf]);
+    expect(await verifyInclusion(leaf, 0, 1, root, [])).toBe(true);
+    for (const [index, size] of [[-1, 1], [0.5, 1], [0, 1.5], [Number.NaN, 1], [0, Infinity], [2 ** 53, 2 ** 53 + 2]] as const)
+      expect(await verifyInclusion(leaf, index, size, root, []), `index ${index} size ${size}`).toBe(false);
+    for (const bad of ["", "abc", "A".repeat(64), "g".repeat(64)]) {
+      expect(await verifyInclusion(leaf, 0, 2, root, [bad]), `proof ${bad}`).toBe(false);
+      expect(await verifyInclusion(bad, 0, 1, root, []), `leaf ${bad}`).toBe(false);
+      expect(await verifyConsistency(1, root, 2, root, [bad]), `consistency ${bad}`).toBe(false);
+    }
+    expect(await verifyInclusion(leaf, 0, 1, root.toUpperCase(), [])).toBe(false);
+    for (const [a, b] of [[-1, 1], [0.5, 2], [1, Number.NaN]] as const) expect(await verifyConsistency(a, root, b, root, [])).toBe(false);
+  });
   it("proves and verifies inclusion for every leaf of trees of size 1–20", async () => {
     for (let n = 1; n <= 20; n++) {
       const d = await leaves(n);

@@ -17,7 +17,11 @@ export function canonicalJson(value: unknown): string {
     if (!Number.isFinite(value)) throw new Error("canonical JSON: non-finite number");
     return JSON.stringify(value);
   }
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (Array.isArray(value)) {
+    // map() skips holes, and join() would write [1,,2], which isn't JSON.
+    for (let i = 0; i < value.length; i++) if (!(i in value)) throw new Error("canonical JSON: sparse array");
+    return `[${value.map(canonicalJson).join(",")}]`;
+  }
   if (typeof value === "object") {
     const proto = Object.getPrototypeOf(value);
     if (proto !== Object.prototype && proto !== null) throw new Error("canonical JSON: not a plain object");

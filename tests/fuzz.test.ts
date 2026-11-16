@@ -136,7 +136,7 @@ describe("hostile archives", () => {
     const r = await verdict({ "bomb.txt": new Uint8Array(64 * 1024 * 1024) });
     expect(archiveCheck(r)).toMatchObject({ status: "fail" });
     expect(archiveCheck(r).message).toMatch(/compression ratio/);
-  });
+  }, 30_000); // building the 64 MB fixture dominates; ~1 s normally, far slower under coverage
 
   it("rejects path traversal, absolute paths and backslashes", async () => {
     for (const name of ["../escape.txt", "/etc/passwd", "a\\..\\b.txt", "a/../../b.txt"]) {

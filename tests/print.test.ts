@@ -11,6 +11,7 @@ import {
   generateKeyPair,
   meshStats,
   weld,
+  write3mf,
   type Policy,
   type StepMesher,
   type TrustStore,
@@ -136,6 +137,21 @@ describe("exportForPrint", () => {
       return [{ ...m!, indices: Array.from(m!.indices).slice(3) }];
     };
     await expect(exportForPrint(session, "models/SMP-1001_A.stp", leaky, { now })).rejects.toThrow(/not watertight/);
+  });
+});
+
+describe("write3mf", () => {
+  it("keeps the model well-formed XML whatever the part name and title contain", () => {
+    const tetra = { positions: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1], indices: [0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3] };
+    const out = write3mf([{ name: "a\u0001<b>&\"'\ud800", ...tetra }], {
+      title: "T\u0000\u001f\uffff", partNumber: "P", revision: "A", packageId: "x", manifestSha256: "0".repeat(64),
+      sourcePath: "m.stp", sourceSha256: "0".repeat(64), exportedAt: now.toISOString(),
+    });
+    const model = utf8.decode(unzipSync(out)["3D/3dmodel.model"]!);
+    // eslint-disable-next-line no-control-regex
+    expect(model).not.toMatch(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]|\p{Surrogate}/u);
+    expect(model).toContain('name="a\ufffd&lt;b&gt;&amp;&quot;&apos;\ufffd"');
+    expect(model).toContain(">T\ufffd\ufffd\ufffd (P rev A)</metadata>");
   });
 });
 
