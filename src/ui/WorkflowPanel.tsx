@@ -212,6 +212,7 @@ export function WorkflowPanel({ session, trustStore, anchors, audit, onAudit }: 
     <section className="workflow">
       <h2>Engineering workflow</h2>
       {m.synthetic && <div className="banner info synthetic"><strong>SYNTHETIC</strong> {m.label}</div>}
+      {!!session.result.references?.references.length && <div className="banner info">Cross-package references are retained. New work is held for policy-aware engineering review; matching identities alone grants no authorization.</div>}
 
       <div className="status-strip" role="status" aria-live="polite" aria-label="Workflow status">
         <Badge label="Package integrity" level="ok" text={`Verified: signatures, digests and engineering model (${session.manifest?.schema})`} />

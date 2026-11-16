@@ -18,6 +18,7 @@ export const PackageSpec = z
     package: ManifestPackage.omit({ id: true, created: true }).extend({ id: z.string().uuid().optional() }),
     /** Path of a `tdp-engineering/0.1` model in the folder. Set it to build a `tdp-manifest/0.2` package. */
     engineering: z.string().min(1).max(255).optional(),
+    references:z.string().min(1).max(255).optional(),
     files: z
       .record(
         z.string(),
@@ -78,7 +79,7 @@ export async function pack(dir: string, now = new Date()): Promise<Uint8Array> {
     { ...spec.package, id: spec.package.id ?? crypto.randomUUID(), created: now.toISOString() },
     inputs,
     spec.bom,
-    { engineering: spec.engineering },
+    { engineering: spec.engineering,references:spec.references },
   );
   Manifest.parse(manifest);
   const zipFiles: Record<string, Uint8Array> = { [MANIFEST_PATH]: utf8.encode(JSON.stringify(manifest, null, 2)) };

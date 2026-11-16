@@ -42,7 +42,7 @@ Binding the role and time means a signature can't be relabeled as a different ro
 4. **Package validity:** not created in the future, not expired.
 5. **Contents:** exactly the listed files; size, digest, allowed media type and content sniffing for each.
 6. **BOM:** file references resolve, parents exist, no cycles.
-7. **Engineering model** (0.2 only): strict parse and cross-check against the manifest; stale geometry links are flagged for review.
+7. **Engineering model** (0.2/0.3): strict parse and cross-check against the manifest; stale geometry links are flagged for review. In 0.3, the signed reference set is strictly parsed too; exact identity review grants no release authority and nonempty references hold new restricted workflow steps for policy-aware review.
 
 Workflow ledgers are verified separately against a trusted 0.2 baseline (`verifyLedger`): chain, signature, identity and organization binding, baseline and item binding, policy binding, role, transition, evidence hashes, payload semantics. See [engineering-workflow.md](engineering-workflow.md).
 

@@ -1,9 +1,14 @@
-# Package format (`tdp-manifest/0.1` and `0.2`)
+# Package format (`tdp-manifest/0.1`, `0.2` and `0.3`)
 
-Two manifest versions are accepted, selected by the `schema` field; anything else is rejected.
+Three manifest versions are accepted, selected by the `schema` field; anything else is rejected.
 
 - `tdp-manifest/0.1`: the original format, verified exactly as before. No engineering model is inferred.
 - `tdp-manifest/0.2`: identical, plus one required field `"engineering": { "path": "engineering/model.json", "schema": "tdp-engineering/0.1" }` naming a listed `application/json` file that holds the canonical engineering model ([engineering-workflow.md](engineering-workflow.md)). The model is signed like every listed file and cross-checked against the manifest; an inconsistent model rejects the package.
+
+- `tdp-manifest/0.3`: engineering as in 0.2, plus a required `references` pointer with `path` and
+  `schema: "tdp-references/0.1"` to a listed JSON reference set. Exact identity review is read-only;
+  nonempty references hold new restricted workflow steps pending policy-aware review. Older strict
+  verifiers reject 0.3. See [cross-package references](cross-package-references.md).
 
 Downstream workflow records never go inside a `.tdp`. They live in a separate ledger file (below).
 

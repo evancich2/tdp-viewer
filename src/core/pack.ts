@@ -21,6 +21,8 @@ export interface ManifestOptions {
    * `tdp-manifest/0.2` manifest; leaving it out produces the original `tdp-manifest/0.1`.
    */
   engineering?: string;
+  /** Signed reference file; explicitly opts into manifest 0.3 and requires an engineering model. */
+  references?: string;
 }
 
 export async function buildManifest(
@@ -30,12 +32,20 @@ export async function buildManifest(
   opts: ManifestOptions = {},
 ): Promise<Manifest> {
   const files: ManifestFile[] = [];
+  if(opts.references!==undefined&&!opts.references)throw new Error("reference path must not be empty");
+  if(opts.references&&!opts.engineering)throw new Error("references require an engineering model");
   for (const { bytes, ...meta } of inputs) {
     files.push({ ...meta, size: bytes.length, sha256: await sha256Hex(bytes) });
   }
   if (opts.engineering) {
     if (!files.some((f) => f.path === opts.engineering)) throw new Error(`engineering model ${opts.engineering} is not among the files`);
-    return { schema: "tdp-manifest/0.2", package: pkg, files, bom, engineering: { path: opts.engineering, schema: "tdp-engineering/0.1" } };
+    const engineering={path:opts.engineering,schema:"tdp-engineering/0.1" as const};
+    if(opts.references){
+      if(!files.some(f=>f.path===opts.references))throw new Error("reference set is not among the files");
+      if(opts.references===opts.engineering)throw new Error("reference set and engineering model need distinct files");
+      return {schema:"tdp-manifest/0.3",package:pkg,files,bom,engineering,references:{path:opts.references,schema:"tdp-references/0.1"}};
+    }
+    return { schema: "tdp-manifest/0.2", package: pkg, files, bom, engineering };
   }
   return { schema: "tdp-manifest/0.1", package: pkg, files, bom };
 }

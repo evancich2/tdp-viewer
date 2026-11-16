@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { criticalRanges, loadTsaCertificates, requestTimestamp, timestampRequest, verifyTimestamp } from "../tools/timestamp";
+import { OPENSSL as openssl } from "./helpers/openssl";
 
 const F = "tests/fixtures/tsa";
 const resp = readFileSync(`${F}/response.der`);
@@ -59,14 +60,13 @@ describe("RFC 3161 timestamps", () => {
 });
 
 describe("RFC 3161 end to end with a local OpenSSL TSA", () => {
-  const openssl = (() => { for (const bin of ["/opt/local/bin/openssl", "openssl"]) { try { execFileSync(bin, ["ts", "-help"], { stdio: "ignore" }); return bin; } catch { /* next */ } } return null; })();
-  it("requests a timestamp for a tree-head digest with a fresh nonce and verifies the TSA's answer", async () => {
-    if (!openssl) return console.warn("openssl ts unavailable; skipped");
+  it("requests a timestamp for a tree-head digest with a fresh nonce and verifies the TSA's answer", async (context) => {
+    if (!openssl) return context.skip();
     const T = mkdtempSync(join(tmpdir(), "tdp-tsa-"));
     try {
-      const run = (...a: string[]) => execFileSync(openssl, a, { cwd: T, stdio: ["pipe", "pipe", "ignore"] });
+      const run = (...a: string[]) => execFileSync(openssl!, a, { cwd: T, stdio: ["pipe", "pipe", "ignore"] });
       writeFileSync(join(T, "ext.cnf"), "[ca]\nbasicConstraints=critical,CA:TRUE\nkeyUsage=critical,keyCertSign\n[tsa]\nbasicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature\nextendedKeyUsage=critical,timeStamping\n");
-      writeFileSync(join(T, "ts.cnf"), `[ tsa ]\ndefault_tsa = t\n[ t ]\nserial = ${join(T, "serial")}\nsigner_digest = sha256\ndefault_policy = 1.2.3.4.1\ndigests = sha256\ness_cert_id_alg = sha256\n`);
+      writeFileSync(join(T, "ts.cnf"), `[ tsa ]\ndefault_tsa = t\n[ t ]\nserial = ${join(T, "serial").replace(/\\/g, "/")}\nsigner_digest = sha256\ndefault_policy = 1.2.3.4.1\ndigests = sha256\ness_cert_id_alg = sha256\n`);
       writeFileSync(join(T, "serial"), "01\n");
       run("req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", "ca.key", "-subj", "/CN=Local Test CA", "-days", "2", "-out", "ca.pem", "-addext", "basicConstraints=critical,CA:TRUE");
       run("req", "-new", "-newkey", "rsa:2048", "-nodes", "-keyout", "tsa.key", "-subj", "/CN=Local Test TSA", "-out", "tsa.csr");

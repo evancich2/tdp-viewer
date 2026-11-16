@@ -71,9 +71,15 @@ export const ManifestV02 = z
   .strict();
 
 /** Every manifest version this viewer understands. An unknown `schema` is rejected, never guessed at. */
-export const Manifest = z.discriminatedUnion("schema", [ManifestV01, ManifestV02]);
+/** Explicit opt-in: older strict verifiers reject 0.3 instead of ignoring dependency semantics. */
+export const ManifestV03=z.object({
+  schema:z.literal("tdp-manifest/0.3"),...manifestBody,
+  engineering:ManifestV02.shape.engineering,
+  references:z.object({path:z.string().min(1).max(255),schema:z.literal("tdp-references/0.1")}).strict(),
+}).strict();
+export const Manifest = z.discriminatedUnion("schema", [ManifestV01, ManifestV02,ManifestV03]);
 export type Manifest = z.infer<typeof Manifest>;
-export const MANIFEST_SCHEMAS = ["tdp-manifest/0.1", "tdp-manifest/0.2"] as const;
+export const MANIFEST_SCHEMAS = ["tdp-manifest/0.1", "tdp-manifest/0.2","tdp-manifest/0.3"] as const;
 
 /**
  * Package-signing roles: what a signature on the manifest attests. These are cryptographic roles

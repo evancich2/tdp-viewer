@@ -26,3 +26,4 @@ export * from "./evidence";
 export * from "./keyfile";
 export * from "./custody";
 export * from "./json";
+export * from "./references";

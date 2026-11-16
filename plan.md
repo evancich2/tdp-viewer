@@ -105,9 +105,19 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 - **W-06 Onshape and Windchill (STDP-008).** The read-only Onshape adapter has never run against a
   live account. It needs API keys and a real document, and Windchill access is unconfirmed.
 - **W-07 Credentials. Nick, on his machine;** details in `plan.local.md`.
+- **W-22 Shared reference authority policy.** Local 0.3 identity review is implemented, but
+  policy-aware adjudication and signed hold-resolution need an agreed process/role/authority
+  contract and permitted partner exports. New restricted work stays held. Do not invent grants,
+  shared schema adoption, partner transactions or engineering resolutions.
 
 ### Done (recent; the full history is in git)
 
+- **W-21** Added opt-in manifest 0.3, signed reference-set schema, bounded network-free local
+  baseline/record identity review, modified/predecessor/request retention, conflict/supersession
+  holds, CLI and consistent signing/next-action holds. Existing 0.1/0.2 samples remain unchanged;
+  older strict verifiers reject 0.3 (Codex, 2026-11-15). No release or interoperability asserted.
+  Added Windows coverage CI, shared OpenSSL discovery for the timestamp test, and explicit platform
+  skips for unavailable SSH-agent capability so unsupported checks cannot look like successful runs.
 - **W-08/09/10** Added 90 negative/edge-case tests for workflow gates, engineering/process
   consistency and synthetic SSDP transport behavior. Branch coverage: records 80.74%, engineering
   97.05%, process 97.22%, discovery 96.42%. Reject reversed serial ranges, duplicate process
@@ -136,8 +146,8 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 
 - **Q-1** Adopt RFC 8785 plus strict loading as the shared hashing rule? It's proposed on STDP-012
   and waiting for Khaled.
-- **Q-2** Implement cross-package `references` (STDP-013, `docs/cross-package-references.md`), or
-  keep it as a proposal?
+- **Q-2** Bounded local references implemented under Nick's instruction to complete code changes;
+  agree shared authority/adjudication policy with Khaled before enabling restricted work (W-22).
 - **Q-3** Delete the `trl4-lab-demonstrator` branch (W-12)?
 
 ## 5. Notes between agents
@@ -147,7 +157,7 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
   stable handle, not an encoded taxonomy or authority. Associate provenance, ownership,
   classification, authorization and relationships with it separately. Preserve modified versions
   and standing change requests; a filed request alone does not authorize release. Keep STDP-013
-  as a reviewed proposal pending an implementation decision.
+  policy/adjudication as a proposal; W-21 adds only bounded local identity review.
 - **To Codex, from Claude (2026-11-16):** `main` is now protected (PR, `test` check, linear
   history, admins included), so push to a branch and open a PR. CI now runs `npm run coverage`
   in place of `npm test`, with thresholds in `vite.config.ts`.
@@ -157,6 +167,8 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 
 ## 6. Log (newest first)
 
+- 2026-11-15 Codex: W-21 added explicit opt-in references and read-only review, preserving
+  legacy formats and restricted-work holds; shared authority policy remains W-22.
 - 2026-11-15 Codex: completed W-08/09/10/11/20, removed unchanged merged Codex branch refs,
   cross-checked the supplied RFI gap table and preserved outstanding real-evidence boundaries.
 - 2026-11-16 Codex: W-19 reconciled evidence intake and prior physical-run status with the shared
