@@ -52,3 +52,59 @@ describe("diffManifests", () => {
     expect(formatDiff(d)).toBe(`${m.files.length} files unchanged`);
   });
 });
+
+describe("diffManifests edge cases and formatDiff", () => {
+  const file = (path: string, sha: string, extra: Partial<Manifest["files"][number]> = {}): Manifest["files"][number] =>
+    ({ path, sha256: sha.repeat(64), size: 1, mediaType: "application/pdf", role: "drawing", ...extra });
+  const item = (partNumber: string, extra: Partial<Manifest["bom"][number]> = {}): Manifest["bom"][number] =>
+    ({ partNumber, revision: "A", name: partNumber, quantity: 1, files: [], ...extra });
+  const m = (files: Manifest["files"], bom: Manifest["bom"] = [], p: Partial<Manifest["package"]> = {}) =>
+    ({ schema: "tdp-manifest/0.1", package: { ...pkg("A"), ...p }, files, bom }) as Manifest;
+
+  it("prefers moved (same digest) over revised (same part and role), and needs a part number to revise", () => {
+    const before = m([file("a.pdf", "1", { partNumber: "P-1", revision: "A" }), file("b.pdf", "2", { partNumber: "P-2", revision: "A" }), file("c.pdf", "3")]);
+    const after = m([file("a2.pdf", "1", { partNumber: "P-1", revision: "A" }), file("b2.pdf", "9", { partNumber: "P-2", revision: "B" }), file("c2.pdf", "8")]);
+    const kinds = diffManifests(before, after).files.map((c) => c.kind === "added" || c.kind === "removed" ? `${c.kind} ${c.file.path}` : `${c.kind} ${c.before.path}->${c.after.path}`);
+    expect(kinds).toEqual(["moved a.pdf->a2.pdf", "revised b.pdf->b2.pdf", "added c2.pdf", "removed c.pdf"]);
+  });
+
+  it("treats a role or media type change at the same path as changed, and a role change as blocking revision", () => {
+    const d = diffManifests(m([file("a.pdf", "1"), file("x.pdf", "2", { partNumber: "P", role: "drawing" })]),
+      m([file("a.pdf", "1", { role: "spec" }), file("y.pdf", "3", { partNumber: "P", role: "spec" })]));
+    expect(d.files.map((c) => c.kind)).toEqual(["changed", "added", "removed"]);
+    expect(d.unchangedFiles).toBe(0);
+  });
+
+  it("reports package fields, BOM additions, removals and field changes, with file lists compared as sets", () => {
+    const before = m([file("a.pdf", "1")], [item("P-1", { files: ["a.pdf", "b.pdf"] }), item("P-2"), item("P-3", { quantity: 2, parent: "P-1" })], { distribution: "A" });
+    const after = m([file("a.pdf", "1")], [item("P-1", { files: ["b.pdf", "a.pdf"] }), item("P-3", { quantity: 3 }), item("P-4")], { expires: "2027-01-01T00:00:00Z", distribution: undefined });
+    const d = diffManifests(before, after);
+    expect(d.package).toEqual([{ field: "expires", before: undefined, after: "2027-01-01T00:00:00Z" }, { field: "distribution", before: "A", after: undefined }]);
+    expect(d.bom.map((c) => c.kind === "changed" ? `changed ${c.after.partNumber} ${c.fields.join(",")}` : `${c.kind} ${c.item.partNumber}`))
+      .toEqual(["changed P-3 quantity,parent", "added P-4", "removed P-2"]);
+    expect(formatDiff(d).split("\n")).toEqual([
+      "package expires: — → 2027-01-01T00:00:00Z",
+      "package distribution: A → —",
+      "~ part P-3: quantity 2 → 3, parent P-1 → —",
+      "+ part P-4 rev A P-4 × 1",
+      "- part P-2 rev A P-2",
+      "1 files unchanged",
+    ]);
+  });
+
+  it("writes one line per kind of file change", () => {
+    const d = diffManifests(
+      m([file("same.pdf", "1"), file("old.pdf", "2"), file("rev.pdf", "3", { partNumber: "P", revision: "A" }), file("gone.pdf", "4"), file("edit.pdf", "5")], [item("P", { files: ["rev.pdf"] })]),
+      m([file("same.pdf", "1"), file("new-name.pdf", "2"), file("rev-b.pdf", "6", { partNumber: "P", revision: "B" }), file("fresh.pdf", "7"), file("edit.pdf", "0")], [item("P", { files: ["rev-b.pdf"] })]),
+    );
+    expect(formatDiff(d).split("\n")).toEqual([
+      "~ edit.pdf (content changed)",
+      "> old.pdf → new-name.pdf (same content)",
+      "~ rev.pdf → rev-b.pdf (drawing for P, rev A → B)",
+      "+ fresh.pdf",
+      "- gone.pdf",
+      "~ part P: files",
+      "1 files unchanged",
+    ]);
+  });
+});
