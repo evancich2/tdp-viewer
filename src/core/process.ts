@@ -90,6 +90,9 @@ export function validateProcess(p: ProcessDefinition): string[] {
   const states = new Set(p.states);
   const roles = new Set(p.roles.map((r) => r.id));
   const ids = new Set<string>();
+  if (states.size !== p.states.length) problems.push("duplicate state");
+  if (roles.size !== p.roles.length) problems.push("duplicate role");
+  if (new Set(p.operations).size !== p.operations.length) problems.push("duplicate operation");
   if (!states.has(p.initial)) problems.push(`initial state ${p.initial} is not declared`);
   for (const t of p.terminal) if (!states.has(t)) problems.push(`terminal state ${t} is not declared`);
   for (const t of p.transitions) {
@@ -105,7 +108,11 @@ export function validateProcess(p: ProcessDefinition): string[] {
       if (!states.has(s)) problems.push(`${t.id}: outcome ${o} leads to unknown state ${s}`);
     }
     for (const r of t.roles) if (!roles.has(r)) problems.push(`${t.id}: undeclared role ${r}`);
-    for (const a of t.requires.actions) if (!ids.has(a.id)) problems.push(`${t.id}: requires unknown transition ${a.id}`);
+    for (const a of t.requires.actions) {
+      if (!ids.has(a.id)) problems.push(`${t.id}: requires unknown transition ${a.id}`);
+      else for (const outcome of a.outcomes ?? [])
+        if (!(outcome in p.transitions.find(x => x.id === a.id)!.outcomes)) problems.push(`${t.id}: prerequisite ${a.id} has no outcome ${outcome}`);
+    }
     for (const d of [...t.distinctActorFrom, ...t.distinctOrganizationFrom]) if (!ids.has(d)) problems.push(`${t.id}: independence from unknown transition ${d}`);
     if (t.requires.authorization && !p.operations.includes(t.requires.authorization)) problems.push(`${t.id}: authorization for undeclared operation ${t.requires.authorization}`);
   }

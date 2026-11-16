@@ -65,25 +65,13 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 
 | Item | Who | Branch | Since |
 |---|---|---|---|
-| W-08/09/10/11/12/20 backlog hardening and review | Codex | `codex/backlog-hardening` | 2026-11-15 |
+| | | | |
 
 ### Next (anyone may claim)
 
-- **W-08 Coverage: `src/core/records.ts`.** 74% of branches are covered. This is the workflow gate
-  logic, so denial paths matter most. Raise the `vite.config.ts` thresholds afterwards.
-- **W-09 Coverage: `src/core/engineering.ts` (72% of branches) and `src/core/process.ts` (65%).**
-- **W-10 Coverage: `tools/bambu/discover.ts` (34% of statements).** SSDP discovery parsing; test it
-  with recorded announcement packets.
-- **W-11 Review unused exports.** knip lists about 20 unused exports and 24 unused exported types.
-  Most are the core's public API. Remove only what is truly dead, and say why in the PR.
-- **W-12 Delete merged remote branches.** `codex/interop-and-phase2-handoff`,
-  `codex/signed-print-settings` and `codex/h2c-routing-intake` are merged. Ask Nick before deleting
-  `trl4-lab-demonstrator`. New merges now delete their branch automatically.
-- **W-20 Explain Windows coverage support.** Windows skips 27 subprocess tests; the current
-  `npm run coverage` run passes 203 tests but falls below the global thresholds (76.43% statements,
-  70.12% branches, 79.43% functions, 84.41% lines). Linux CI on `f4c08aa` passes. Confirm the
-  contribution workflow for Windows or make subprocess tests portable; do not lower shared gates
-  merely to hide a platform gap.
+- **W-12 Legacy branch decision.** The three unchanged merged Codex branches were verified against
+  PR heads and removed with restoration hashes retained privately. Keep `trl4-lab-demonstrator`
+  until Nick explicitly decides whether to remove that historical branch. New merges auto-delete.
 
 ### Blocked (waiting on a person; don't fabricate)
 
@@ -103,8 +91,9 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
   patch and bounded queue metadata. A new hardware validation of the reconciled version, including
   W-02's exact payload checks, remains open. Only an authorized operator on the printer network
   should perform it; start read-only and do not infer new validation from the earlier builds.
-- **W-04 RFI Revision 1 gaps (STDP-007).** `docs/rfi-coverage.md` is a working mapping. Closing it
-  needs the gap list from the RFI draft, which only Khaled can share.
+- **W-04 RFI Revision 1 evidence closure (STDP-007).** The supplied RFI's G-01–G-20 gap table
+  is available and was cross-checked against `docs/rfi-coverage.md`. Closing gaps still needs
+  actual account/rights/provider/hardware/engineering evidence and agreed responsibilities.
 - **W-05 Interop samples (STDP-012).** Needs a sample file from each of INV-01, 02, 03 and 05.
   Shared vectors are already published in `samples/vectors/canonical-json.json`.
   Khaled reports successful INV-003 artifact registration, checkout/check-in, byte-change checks
@@ -119,6 +108,16 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 
 ### Done (recent; the full history is in git)
 
+- **W-08/09/10** Added 90 negative/edge-case tests for workflow gates, engineering/process
+  consistency and synthetic SSDP transport behavior. Branch coverage: records 80.74%, engineering
+  97.05%, process 97.22%, discovery 96.42%. Reject reversed serial ranges, duplicate process
+  declarations, impossible prerequisite outcomes, malformed SSDP start lines and invalid durations.
+  Raised global and module coverage floors (Codex, 2026-11-15).
+- **W-11** Reviewed unused-export report; retained the public core API and dynamic build assets.
+  Removed only unused fixture aliases and made fixture-only helpers private (Codex, 2026-11-15).
+- **W-20** Windows discovers Git OpenSSL for the simulated TLS/FTPS suite. All 320 tests execute
+  with no skips; coverage passes without lowering gates. Browser-isolation test now reads source
+  directly instead of silently passing when grep is unavailable (Codex, 2026-11-15).
 - **W-19** Reconciled received private evidence and unsigned intake status, separated earlier
   physical builds from current-main hardware validation, and recorded bounded INV-003 exchange
   inputs (Codex, 2026-11-16). No new acceptance, signed release or physical execution asserted.
@@ -158,6 +157,8 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 
 ## 6. Log (newest first)
 
+- 2026-11-15 Codex: completed W-08/09/10/11/20, removed unchanged merged Codex branch refs,
+  cross-checked the supplied RFI gap table and preserved outstanding real-evidence boundaries.
 - 2026-11-16 Codex: W-19 reconciled evidence intake and prior physical-run status with the shared
   board; recorded Khaled's bounded INV-003 owner evaluation and remaining exchange inputs.
 - 2026-11-16 Claude: protected `main`; ran Semgrep, osv-scanner and coverage; added

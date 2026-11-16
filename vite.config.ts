@@ -133,8 +133,14 @@ export default defineConfig({
       // The UI and the CLI entry points are exercised by the e2e and subprocess tests instead.
       include: ["src/core/**", "tools/workflow-commands.ts", "tools/bambu/**"],
       reporter: ["text-summary", "json-summary"],
-      // A few points under the 2026-11-16 measurement (88.7 / 80.3 / 95.1 / 97.5): a drop fails CI.
-      thresholds: { statements: 86, branches: 78, functions: 93, lines: 95 },
+      // Measured with the simulator enabled: 91.54 / 83.65 / 96.05 / 98.37.
+      thresholds: {
+        statements: 89, branches: 81, functions: 95, lines: 97,
+        "src/core/records.ts": { branches: 78 },
+        "src/core/engineering.ts": { branches: 90 },
+        "src/core/process.ts": { branches: 90 },
+        "tools/bambu/discover.ts": { branches: 90 },
+      },
     },
   },
 });
