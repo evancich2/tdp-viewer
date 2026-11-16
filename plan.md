@@ -65,7 +65,7 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 
 | Item | Who | Branch | Since |
 |---|---|---|---|
-| | | | |
+| W-08/09/10/11/12/20 backlog hardening and review | Codex | `codex/backlog-hardening` | 2026-11-15 |
 
 ### Next (anyone may claim)
 
