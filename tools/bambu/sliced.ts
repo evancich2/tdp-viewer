@@ -7,7 +7,8 @@ import { unzipSync } from "fflate";
 
 export const MAX_SLICED_BYTES = 1024 * 1024 * 1024;
 
-export interface SlicedFilament { id: number; type?: string; color?: string; usedGrams?: number }
+export interface SlicedFilament { id: number; type?: string; color?: string; usedGrams?: number; filamentId?: string; groupId?: number }
+export interface SlicedNozzle { id: number; extruderId: number; diameter: number; volumeType: string }
 export interface SlicedPlate {
   plate: number;
   gcodePath: string;
@@ -20,6 +21,7 @@ export interface SlicedPlate {
   predictionSeconds?: number;
   weightGrams?: number;
   filaments: SlicedFilament[];
+  nozzles: SlicedNozzle[];
 }
 export interface SlicedProject {
   sha256: string;
@@ -27,6 +29,9 @@ export interface SlicedProject {
   plates: number[];
   /** Number of filaments in the whole project (the length the AMS mapping must have). */
   projectFilaments: number;
+  filamentMap?: number[];
+  physicalExtruderMap?: number[];
+  filamentMapMode?: string;
   plate: SlicedPlate;
 }
 
@@ -43,10 +48,16 @@ function plateInfo(xml: string, plate: number) {
     const filaments = [...body.matchAll(/<filament\s[^>]*>/g)].map((t) => ({
       id: Number(attr(t[0], "id")),
       type: attr(t[0], "type"),
+      filamentId: attr(t[0], "tray_info_idx"),
+      groupId: attr(t[0], "group_id") === undefined ? undefined : Number(attr(t[0], "group_id")),
       color: attr(t[0], "color"),
       usedGrams: attr(t[0], "used_g") === undefined ? undefined : Number(attr(t[0], "used_g")),
     })).filter((f) => Number.isInteger(f.id) && f.id > 0);
-    return { meta, filaments };
+    const nozzles = [...body.matchAll(/<nozzle\s[^>]*>/g)].map((t) => ({
+      id: Number(attr(t[0], "id")), extruderId: Number(attr(t[0], "extruder_id")),
+      diameter: Number(attr(t[0], "nozzle_diameter")), volumeType: attr(t[0], "volume_type") ?? "",
+    }));
+    return { meta, filaments, nozzles };
   }
   return undefined;
 }
@@ -79,8 +90,12 @@ export function inspectSliced(bytes: Uint8Array, plate?: number): SlicedProject 
     const text = (p: string) => (files[p] ? new TextDecoder().decode(files[p]) : undefined);
     const info = plateInfo(text("Metadata/slice_info.config") ?? "", want);
     let projectFilaments = 0;
+    let filamentMap: number[] | undefined, physicalExtruderMap: number[] | undefined, filamentMapMode: string | undefined;
     try {
       const ps = JSON.parse(text("Metadata/project_settings.config") ?? "{}") as Record<string, unknown>;
+      filamentMap = Array.isArray(ps.filament_map) ? ps.filament_map.map(Number) : undefined;
+      physicalExtruderMap = Array.isArray(ps.physical_extruder_map) ? ps.physical_extruder_map.map(Number) : undefined;
+      filamentMapMode = typeof ps.filament_map_mode === "string" ? ps.filament_map_mode : undefined;
       const colours = ps.filament_colour ?? ps.filament_type;
       if (Array.isArray(colours)) projectFilaments = colours.length;
     } catch { /* not JSON: fall back below */ }
@@ -93,12 +108,12 @@ export function inspectSliced(bytes: Uint8Array, plate?: number): SlicedProject 
       sha256: createHash("sha256").update(bytes).digest("hex"),
       bytes: bytes.byteLength,
       plates,
-      projectFilaments,
+      projectFilaments, filamentMap, physicalExtruderMap, filamentMapMode,
       plate: {
         plate: want, gcodePath, gcodeBytes: gcode.byteLength, gcodeMd5, declaredMd5: declared,
         printerModelId: info?.meta.printer_model_id, nozzleDiameters: info?.meta.nozzle_diameters,
         predictionSeconds: num(info?.meta.prediction), weightGrams: num(info?.meta.weight),
-        filaments: info?.filaments ?? [],
+        filaments: info?.filaments ?? [], nozzles: info?.nozzles ?? [],
       },
     };
   } catch (e) {

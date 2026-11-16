@@ -27,6 +27,24 @@ the [shared hashing contract](canonical-json.md) and [test vectors](../samples/v
 | Target cannot be found, hash differs, trust fails, or required policy is unavailable | Unresolved/invalid hold with a specific reason | Requested exact identity and resolution failure; no guessed replacement |
 | Target matches and is verified | Resolved identity only; separately evaluate authority and applicability | Verification result, policy version, actor and decision |
 
+## Modified artifacts and standing changes
+
+A legitimate modification is retained as a new content fingerprint under the stable object identity,
+tagged `modified`, with an exact link to its predecessor and a standing change request explaining
+the reason. For example, a shop-floor STEP revision for machinability stays in the evidence record;
+the system does not eliminate it merely because it differs from the source design. Preserve both
+original and modified bytes, hashes, provenance and the reason rather than rewriting either baseline.
+
+The standing change request must identify both versions and the deviation. Its recorded resolution
+can adjudicate the reference/conflict hold under the governing process; no silent content selection
+is permitted. Merely retaining a deviation does not make it an approved released definition or grant
+manufacturing authority. Applicable policy and authorized disposition remain explicit. A modified
+file presented under an unchanged old digest is still an integrity failure, not a valid new version.
+
+Future acceptance tests must show: modified input retained/tagged; missing reason/change request
+holds dependent work; exact-version change request retained through resolution; and unchanged-digest
+tampering rejected. This is proposed workflow behavior, not a claim of implemented change adjudication.
+
 Retrieval must use a configured local repository or explicitly permitted adapter. The browser's
 no-network policy stays intact. Bound traversal depth and visited identities to avoid cycles and
 resource exhaustion. A cached target is usable only under its explicit freshness/authorization rules.
