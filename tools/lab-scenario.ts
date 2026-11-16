@@ -757,7 +757,7 @@ export function legacySample() {
  * `failedCycles` failed builds before a good one, then inspection, disposition and closure. Records
  * are signed directly (the gate is applied once, by the verification being measured).
  */
-export async function buildLargeLedger(lab: Lab, units: number, failedCycles: number): Promise<LedgerFile> {
+async function buildLargeLedger(lab: Lab, units: number, failedCycles: number): Promise<LedgerFile> {
   const serials = Array.from({ length: units }, (_, i) => `SN-${String(6 + i).padStart(4, "0")}`);
   const p = await prelude(lab, `PERF-${units}-${failedCycles}`, lab.revA, serials);
   let L = p.get();

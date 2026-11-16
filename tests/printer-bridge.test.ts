@@ -3,7 +3,7 @@
 // protocol correctly and fails safely; it doesn't show the real printer answers this way.
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import tls from "node:tls";
@@ -489,7 +489,8 @@ live("against a simulated H2C", () => {
 
 it("never ships in the browser bundle", () => {
   // The viewer stays network-free: nothing under src/ may import the bridge.
-  const out = promisify(execFile)("grep", ["-rlE", "tools/bambu|node:tls|node:dgram", "src"]).then((r) => r.stdout, () => "");
-  return expect(out).resolves.toBe("");
+  const files = readdirSync("src", { recursive: true, withFileTypes: true }).filter(f => f.isFile());
+  const offending = files.filter(f => /tools[\\/]bambu|node:tls|node:dgram/.test(readFileSync(join(f.parentPath, f.name), "utf8")));
+  expect(offending.map(f => join(f.parentPath, f.name))).toEqual([]);
 });
 

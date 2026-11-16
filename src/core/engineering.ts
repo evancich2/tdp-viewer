@@ -286,6 +286,8 @@ export function validateEngineering(model: EngineeringModel, manifest: Manifest)
     for (const end of [rel.from, rel.to]) if (!known.has(end)) error(`${rel.type} relationship refers to unknown ${end}`);
   if (model.baseline.effectivity.kind === "serial" && !serialComparable(model.baseline.effectivity.from, model.baseline.effectivity.to))
     error("serial effectivity bounds must share a prefix and digit count");
+  if (model.baseline.effectivity.kind === "serial" && model.baseline.effectivity.from > model.baseline.effectivity.to)
+    error("serial effectivity bounds are reversed");
   return issues;
 }
 

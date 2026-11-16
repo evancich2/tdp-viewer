@@ -11,7 +11,14 @@ import { join } from "node:path";
 import tls from "node:tls";
 import { unzipSync } from "fflate";
 
-export const OPENSSL = (() => { for (const bin of ["/opt/local/bin/openssl", "/usr/bin/openssl", "openssl"]) { try { execFileSync(bin, ["version"], { stdio: "ignore" }); return bin; } catch { /* next */ } } return null; })();
+// Git for Windows ships OpenSSL but does not normally put its usr/bin on PATH.
+export const OPENSSL = (() => {
+  const windows = process.platform === "win32" ? [join(process.env.ProgramFiles ?? "C:/Program Files", "Git", "usr", "bin", "openssl.exe"), join(process.env.LOCALAPPDATA ?? "", "Programs", "Git", "usr", "bin", "openssl.exe")] : [];
+  for (const bin of ["openssl", ...windows, "/opt/local/bin/openssl", "/usr/bin/openssl"]) {
+    try { execFileSync(bin, ["version"], { stdio: "ignore" }); return bin; } catch { /* next */ }
+  }
+  return null;
+})();
 
 export function makeCert(cn: string): { key: Buffer; cert: Buffer; fingerprint: string } {
   if (!OPENSSL) throw new Error("openssl not available");

@@ -18,7 +18,7 @@ export interface Announcement {
 
 export function parseAnnouncement(text: string, from: string): Announcement | undefined {
   const lines = text.split(/\r?\n/);
-  if (!/^(NOTIFY|HTTP\/1\.1 200|M-SEARCH)/i.test(lines[0] ?? "")) return undefined;
+  if (!/^(?:(?:NOTIFY|M-SEARCH) \* HTTP\/1\.1|HTTP\/1\.1 200(?: .*)?)$/i.test(lines[0] ?? "")) return undefined;
   const headers: Record<string, string> = {};
   for (const l of lines.slice(1)) {
     const i = l.indexOf(":");
@@ -41,6 +41,7 @@ export function parseAnnouncement(text: string, from: string): Announcement | un
 }
 
 export async function discover(seconds: number, onFound?: (a: Announcement) => void): Promise<Announcement[]> {
+  if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 60) throw new Error("discovery duration must be greater than zero and at most 60 seconds");
   const found = new Map<string, Announcement>();
   const sockets = [2021, 1990].map((port) => {
     const s = dgram.createSocket({ type: "udp4", reuseAddr: true });
@@ -50,7 +51,7 @@ export async function discover(seconds: number, onFound?: (a: Announcement) => v
       const key = a.serial ?? a.host;
       if (!found.has(key)) { found.set(key, a); onFound?.(a); }
     });
-    s.on("error", () => s.close());
+    s.on("error", () => { try { s.close(); } catch { /* bind may have failed before opening */ } });
     s.bind(port, () => { try { s.addMembership("239.255.255.250"); } catch { /* broadcast still arrives */ } });
     return s;
   });

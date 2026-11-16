@@ -15,11 +15,9 @@ import type { EngineeringModel } from "../src/core/engineering";
 import { buildPackage, type PackInput } from "../src/core/pack";
 import type { ProcessDefinition } from "../src/core/process";
 import {
-  genesisDigest,
   recordSigningMessage,
   type EvidenceRef,
   type LedgerFile,
-  type RecordData,
 } from "../src/core/records";
 import type { SignerRole, TrustStore } from "../src/core/schema";
 import { signWith } from "../src/core/signing";
@@ -30,7 +28,7 @@ import { writeStep, type Prism } from "./step-writer";
 export const SYNTHETIC = "SYNTHETIC SURROGATE: not the controlled design. Demonstration data only; dimensions, limits, approvals, builds and measurements are invented.";
 
 /** Fixed scenario clock. */
-export const T0 = Date.parse("2026-11-10T13:00:00Z");
+const T0 = Date.parse("2026-11-10T13:00:00Z");
 export const at = (minutes: number) => new Date(T0 + minutes * 60_000);
 export const iso = (minutes: number) => at(minutes).toISOString();
 /** Evaluation time used for the generated outputs: two days into the scenario. */
@@ -52,7 +50,7 @@ export interface DemoKey {
 }
 
 /** Ed25519 key from a public seed. DEMO ONLY: the seed is in this source file. */
-export async function demoKey(name: string): Promise<DemoKey> {
+async function demoKey(name: string): Promise<DemoKey> {
   const seed = new Uint8Array(await crypto.subtle.digest("SHA-256", utf8.encode(`tdp-lab-demo-key/${name}`)));
   const pkcs8 = new Uint8Array([0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20, ...seed]);
   const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8 as BufferSource, { name: "Ed25519" }, true, ["sign"]);
@@ -242,7 +240,7 @@ export function printedPartProcess(version = 1): ProcessDefinition {
 }
 
 /** Second configuration, same engine: first-article process with two independent inspections, no queue, quality-engineer disposition, no suitability gap acceptance. */
-export function firstArticleProcess(): ProcessDefinition {
+function firstArticleProcess(): ProcessDefinition {
   const none = { actions: [], evidence: [], freshAuthority: false, unit: false };
   return {
     schema: "tdp-process/0.1",
@@ -384,8 +382,6 @@ export async function forceAppend(ledger: LedgerFile, signer: DemoKey, record: R
   return { ...ledger, entries: [...ledger.entries, { record, signature: { schema: "tdp-record-signature/0.1", recordSha256: sha, keyId: signer.keyId, alg: "Ed25519", sig } }] };
 }
 
-export { genesisDigest };
-export type { RecordData };
 
 /** Rezips a package with one entry changed (for tamper demonstrations). */
 export function rezip(tdp: Uint8Array, edit: (files: Record<string, Uint8Array>) => void): Uint8Array {

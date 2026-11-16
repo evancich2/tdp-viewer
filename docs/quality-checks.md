@@ -68,6 +68,24 @@ grows.
 
 ## Property tests and fuzzing
 
+On Windows, install Git for Windows or put OpenSSL on PATH. The simulated-printer tests also
+look in Git's standard Program Files and per-user installation paths. Run in an environment that
+permits local loopback sockets and certificate-generation subprocesses. The full simulator suite
+must run for the shared coverage gate; missing OpenSSL is reported as skipped tests, not hardware
+validation. No real printer is contacted. The browser-isolation test walks source files directly
+and does not depend on `grep` being installed.
+
+The backlog test additions exercise altered workflow identity/policy/evidence, process dependency
+validation, engineering consistency, serial effectivity and synthetic SSDP packets. Global coverage
+thresholds are raised, with additional branch floors for the workflow, engineering, process and
+discovery modules. A passing coverage gate is software evidence, not physical process qualification.
+
+Unused-export review retained the verifying core's intentionally exported API, schema/type exports,
+protocol primitives and externally useful CLI helpers. Local fixture-only helpers and unused fixture
+re-export aliases were made private/removed. The service-worker template is read by Vite at build
+time and `tools/make-icons.ts` is a maintenance entry point; neither is dead code. Scanner reports
+alone are not a reason to remove either asset or break the public core API.
+
 - `tests/json.test.ts`: a seeded property test compares `parseJson` with `JSON.parse` on generated
   documents (random whitespace, `\u` escapes, key order), requires duplicate names and lone
   surrogates to be refused, checks canonical output is stable, and requires mutated text to fail
