@@ -4,6 +4,10 @@ import { spawn } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { unzipSync } from "fflate";
 import { chromium } from "playwright-core";
+import { buildPackage } from "../../src/core/pack";
+import { sha256Hex, utf8 } from "../../src/core/bytes";
+import { buildWorld, LAB_NOW } from "../../tools/lab-fixtures";
+import { sampleContents } from "../../tools/sample-data";
 
 const PORT = 4180;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
@@ -120,6 +124,36 @@ try {
   const auditText = await page.locator(".audit").innerText();
   if (!/export/.test(auditText)) fail("export missing from audit log");
   console.log("ok  export recorded in audit log");
+
+  // New settings path: a synthetic signed package, explicit selector and downloaded metadata.
+  const world = await buildWorld();
+  const content = sampleContents(), settingPath = "process/print-settings.json";
+  const settingBytes = utf8.encode(JSON.stringify({ schema: "tdp-print-settings/0.1", modelPath: "models/SMP-1000_B.stp", modelSha256: await sha256Hex(content.inputs.find((f) => f.path === "models/SMP-1000_B.stp")!.bytes), printerId: "bambu-h2c", parameters: { material: "SYNTHETIC PETG", layerHeightMm: 0.2 } }));
+  const original3mf = new Uint8Array(readFileSync(path));
+  const withSettings = await buildPackage({ id: "8f2d1c3a-6b4e-4f0a-9c1d-2e3f4a5b6c7d", title: "SYNTHETIC print settings browser test", partNumber: "SMP-1000", revision: "B", created: LAB_NOW.toISOString() }, [
+    ...content.inputs,
+    { path: settingPath, bytes: settingBytes, mediaType: "application/json", role: "other" },
+    { path: "process/derived.3mf", bytes: original3mf, mediaType: "model/3mf", role: "other" },
+  ], content.bom, [{ ...world.keys.author!, role: "author" }, { ...world.keys.approver!, role: "approver" }], LAB_NOW);
+  await page.getByRole("button", { name: "Use lab demo keys" }).click();
+  await page.getByText(/✓ Signed by Lab Authority Root/).waitFor();
+  await page.locator('input[accept=".tdp,.zip"]').first().setInputFiles({ name: "synthetic-settings.tdp", mimeType: "application/zip", buffer: Buffer.from(withSettings) });
+  await page.getByText("TRUSTED", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "models/SMP-1000_B.stp" }).click();
+  await page.getByLabel("Signed print settings").selectOption(settingPath);
+  const settingsDownloadPromise = page.waitForEvent("download", { timeout: 60_000 });
+  await page.getByRole("button", { name: "Export 3MF for Bambu Studio" }).click();
+  const settingsDownload = await settingsDownloadPromise;
+  const settingsModel = utf8.decode(unzipSync(new Uint8Array(readFileSync(await settingsDownload.path())))["3D/3dmodel.model"]!);
+  if (!settingsModel.includes(`tdp:PrintSettingsSha256">${await sha256Hex(settingBytes)}`) || !settingsModel.includes("SYNTHETIC PETG")) fail("signed print settings missing from 3MF");
+  await page.getByText(/Settings attached: process\/print-settings.json/).waitFor();
+  await page.getByRole("button", { name: "process/derived.3mf" }).click();
+  await page.getByText(/geometry and slicer instructions are not inspected/).waitFor();
+  const inputDownloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save process input" }).click();
+  const inputDownload = await inputDownloadPromise;
+  if (!readFileSync(await inputDownload.path()).equals(Buffer.from(original3mf))) fail("3MF process input changed on export");
+  console.log("ok  signed settings included in 3MF metadata; opaque process-input export preserves exact bytes");
 
   // Laboratory workflow (synthetic surrogate): baseline, authority, signed ledger, evidence, sync.
   await page.getByRole("button", { name: "Use lab demo keys" }).click();

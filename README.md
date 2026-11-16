@@ -50,6 +50,10 @@ In the app, click **Use demo keys** (it pins the demo root and loads the root-si
 
 ### Printing on a Bambu Lab printer
 
+Optional signed settings can travel from a verified package into 3MF provenance metadata;
+they must be checked/applied in the slicer. Existing 3MF files can be carried as opaque process
+inputs. See [signed print settings](docs/print-settings.md) for the schema, checks and limits.
+
 1. Open a trusted package and select a `.stp` model.
 2. Leave **Printer** on *Bambu Lab H2C* (or pick another) and click **Export 3MF for Bambu Studio**. The browser saves `<part>_<rev>.3mf` and warns if a solid can't fit the build volume. The H2C check uses a conservative 300 × 320 × 320 mm, which holds in both single- and dual-nozzle modes. The H2C profile also records the lab printer's firmware, **01.03.00.00**, and the 3MF carries it as `tdp:TargetPrinterFirmware` beside `tdp:TargetPrinter`.
 3. Open the 3MF in Bambu Studio, choose the H2C profile, nozzles and filament, slice, and print over LAN or cloud as usual.

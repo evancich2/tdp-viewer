@@ -1,6 +1,7 @@
 import { zipSync } from "fflate";
 import { utf8 } from "./bytes";
 import type { Mesh } from "./mesh";
+import { printSettingsMetadata, type PrintSettings } from "./printsettings";
 
 /** Traceability back to the verified package, written into the 3MF so a print can be audited. */
 export interface Provenance {
@@ -14,6 +15,9 @@ export interface Provenance {
   exportedAt: string;
   targetPrinter?: string;
   targetPrinterFirmware?: string;
+  printSettings?: PrintSettings;
+  printSettingsPath?: string;
+  printSettingsSha256?: string;
 }
 
 const xml = (s: string) =>
@@ -50,6 +54,9 @@ export function write3mf(meshes: Mesh[], provenance: Provenance): Uint8Array {
     ["tdp:SourceSha256", p.sourceSha256],
     ...(p.targetPrinter ? [["tdp:TargetPrinter", p.targetPrinter] as [string, string]] : []),
     ...(p.targetPrinter && p.targetPrinterFirmware ? [["tdp:TargetPrinterFirmware", p.targetPrinterFirmware] as [string, string]] : []),
+    ...(p.printSettings ? [["tdp:PrintSettings", printSettingsMetadata(p.printSettings)] as [string, string]] : []),
+    ...(p.printSettingsPath ? [["tdp:PrintSettingsPath", p.printSettingsPath] as [string, string]] : []),
+    ...(p.printSettingsSha256 ? [["tdp:PrintSettingsSha256", p.printSettingsSha256] as [string, string]] : []),
   ];
 
   const model = `<?xml version="1.0" encoding="UTF-8"?>
