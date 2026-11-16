@@ -18,6 +18,7 @@ import { AUTH_REFUSED, BambuPrinter, PrinterFile, amsMapping2, buildMapping, exp
 import { MAX_PACKET, PacketReader, decodePublish, encodeConnect, encodeLength, encodePublish, encodeSubscribe } from "../tools/bambu/mqtt";
 import { PinMismatch, normalizeFingerprint } from "../tools/bambu/pinned";
 import { SlicedFileError, inspectSliced } from "../tools/bambu/sliced";
+import { explicitSlice, installed } from "./helpers/routing-fixture";
 import { OPENSSL, makeCert, startFakeH2C, type FakeH2C, type FakeOptions } from "./helpers/fake-h2c";
 
 const SERIAL = "0948AB123400042";
@@ -315,6 +316,36 @@ live("against a simulated H2C", () => {
     expect(await c.size("c.gcode.3mf")).toBeNull();
     await expect(c.cmd("NOOP\r\nDELE x")).rejects.toThrow(/control characters/);
     c.close();
+  });
+
+  it("dispatches explicit external/nozzle routing to the simulator", async () => {
+    const f = await start(); Object.assign(f.state, installed());
+    const result = await startPrint(await pinned(f), CODE, { bytes: explicitSlice(), localName: "white.gcode.3mf", source: { kind: "spool", side: "right" }, extruder: "right" });
+    expect(result.outcome).toBe("started");
+    const sent = f.requests.find(q => q.print?.command === "project_file")!.print;
+    expect(sent).toMatchObject({ use_ams: false, ams_mapping: [-1], ams_mapping2: [{ ams_id: 255, slot_id: 0 }], nozzle_mapping: [16] });
+    expect(result.records.queueEntry).toMatchObject({ settings: { nozzleRouting: expect.stringContaining('"physicalSide":"right"') } });
+  });
+
+  it("dispatches a physical-left external spool build without using the rack", async () => {
+    const f = await start(); Object.assign(f.state, installed());
+    const result = await startPrint(await pinned(f), CODE, { bytes: explicitSlice("left"), localName: "white-left.gcode.3mf", source: { kind: "spool", side: "left" }, extruder: "left" });
+    expect(result.outcome).toBe("started");
+    expect(f.requests.find(q => q.print?.command === "project_file")!.print).toMatchObject({ use_ams: false, ams_mapping: [-1], ams_mapping2: [{ ams_id: 254, slot_id: 0 }], nozzle_mapping: [1] });
+  });
+
+  it("does not upload while AMS filament remains loaded for an external-left request", async () => {
+    const f = await start(); const state = installed(); state.device.extruder.info[1]!.snow = 0; Object.assign(f.state, state);
+    await expect(startPrint(await pinned(f), CODE, { bytes: explicitSlice("left"), localName: "held.gcode.3mf", source: { kind: "spool", side: "left" }, extruder: "left" })).rejects.toThrow(/external spool is not reported loaded/);
+    expect(f.files.size).toBe(0);
+    expect(f.requests.some(q => q.print?.command === "project_file")).toBe(false);
+  });
+
+  it("does not upload or dispatch when explicit nozzle preflight fails", async () => {
+    const f = await start(); Object.assign(f.state, installed());
+    await expect(startPrint(await pinned(f), CODE, { bytes: explicitSlice(), localName: "white.gcode.3mf", source: { kind: "spool", side: "left" }, extruder: "right" })).rejects.toThrow(/external feed does not match/);
+    expect(f.files.size).toBe(0);
+    expect(f.requests.some(q => q.print?.command === "project_file")).toBe(false);
   });
 
   it("prints: uploads, sends project_file, sees the job start, and produces valid workflow record data", async () => {

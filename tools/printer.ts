@@ -9,7 +9,8 @@
 //   printer files --printer <printer.json>
 //   printer delete <remote name> --printer <printer.json> [--yes]
 //   printer upload <file.gcode.3mf> --printer <printer.json> [--name <remote name>]
-//   printer print <file.gcode.3mf> --printer <printer.json> (--ams <tray,...> | --spool left|right) [--plate N] [--name <remote>] [--job <jobId>]
+//   printer plan <file.gcode.3mf> --printer <printer.json> --spool left --extruder left  (read-only live preflight)
+//   printer print <file.gcode.3mf> --printer <printer.json> (--ams <tray,...> | --spool left|right) [--extruder left|right] [--plate N] [--name <remote>] [--job <jobId>]
 //                 [--no-bed-leveling] [--flow-cali] [--vibration-cali] [--layer-inspect] [--timelapse] [--bed-type auto] [--records <dir>] [--yes]
 //   printer watch --printer <printer.json> [--until-done] [--job <jobId> --sha256 <hex> --started-at <ISO> --records <dir>]
 //   printer pause|resume --printer <printer.json>
@@ -23,7 +24,8 @@ import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
 import { control, deleteFile, formatStatus, listFiles, pinPrinter, readFirmware, remoteNameFor, startPrint, suitabilityResource, uploadFile, watch, withPrinter } from "./bambu/commands";
 import { discover } from "./bambu/discover";
-import { PrinterFile } from "./bambu/h2c";
+import { PrinterFile, buildMapping, amsMapping2 } from "./bambu/h2c";
+import { prepareNozzleRouting } from "./bambu/routing";
 import { inspectSliced } from "./bambu/sliced";
 import { parseJson } from "../src/core/json";
 
@@ -71,7 +73,7 @@ async function main() {
     options: {
       seconds: { type: "string" }, host: { type: "string" }, resource: { type: "string" }, serial: { type: "string" }, model: { type: "string" },
       out: { type: "string" }, force: { type: "boolean" }, printer: { type: "string" }, json: { type: "boolean" }, "resource-out": { type: "string" },
-      plate: { type: "string" }, name: { type: "string" }, ams: { type: "string" }, spool: { type: "string" }, job: { type: "string" },
+      plate: { type: "string" }, name: { type: "string" }, ams: { type: "string" }, spool: { type: "string" }, extruder: { type: "string" }, job: { type: "string" },
       "no-bed-leveling": { type: "boolean" }, "flow-cali": { type: "boolean" }, "vibration-cali": { type: "boolean" }, "layer-inspect": { type: "boolean" },
       timelapse: { type: "boolean" }, "bed-type": { type: "string" }, records: { type: "string" }, yes: { type: "boolean" },
       "until-done": { type: "boolean" }, sha256: { type: "string" }, "started-at": { type: "string" },
@@ -155,19 +157,32 @@ async function main() {
       console.log(`uploaded ${name} (${bytes.length} bytes, sha256 ${p.sha256}); confirmed by ${r.confirmedBy === "226" ? "transfer completion" : "file size"}`);
       return;
     }
+    case "plan":
     case "print": {
       const file = positionals[0] ?? die("usage: printer print <file.gcode.3mf> --printer <printer.json> (--ams 0,1 | --spool left|right)");
       const cfg = loadPrinter(a.printer);
       if (!!a.ams === !!a.spool) die("say where the filament comes from: --ams <tray per project filament, e.g. 0 or 0,1,-1> or --spool left|right");
-      if (a.spool && a.spool !== "left" && a.spool !== "right") die("--spool is left or right");
+      if (a.spool && a.spool !== "left" && a.spool !== "right") die("--spool must be physical left or right; numeric feed labels are ambiguous");
+      if (a.extruder !== undefined && a.extruder !== "left" && a.extruder !== "right") die("--extruder must be physical left or right; numeric labels are ambiguous");
+      const extruder = a.extruder;
       const source = a.ams ? { kind: "ams" as const, trays: a.ams.split(",").map((t) => Number(t.trim())) } : { kind: "spool" as const, side: a.spool as "left" | "right" };
       const bytes = readFileSync(file);
       const p = inspectSliced(bytes, plate);
+      if (cmd === "plan") {
+        const mapping = buildMapping(p, source);
+        await withPrinter(cfg, await accessCode(), async (printer) => {
+          const status = await printer.refresh();
+          if (["RUNNING", "PREPARE", "PAUSE", "SLICING"].includes(status.state)) die(`printer is ${status.state}; plan held`);
+          const routing = prepareNozzleRouting(p, mapping, printer.state, extruder);
+          console.log(json({ mode: "READ ONLY - no upload or dispatch", printerState: status.state, sha256: p.sha256, useAMS: source.kind === "ams", ams_mapping: mapping.map(t => t === 254 || t === 255 ? -1 : t), ams_mapping2: mapping.map(amsMapping2), routing }));
+        });
+        return;
+      }
       if (a.records && existsSync(join(a.records, "queue-entry.json"))) die(`${a.records}/queue-entry.json already exists; not overwriting`);
       console.log(`${basename(file)} plate ${p.plate.plate} → ${cfg.resourceId} (${cfg.model}, ${cfg.serial} at ${cfg.host})`);
       await confirm(a.yes, "This starts a print on a real machine. Check the plate is clear and the right filament is loaded.");
       const r = await startPrint(cfg, await accessCode(), {
-        bytes, localName: file, remoteName: a.name, plate, source, jobId: a.job,
+        bytes, localName: file, remoteName: a.name, plate, source, extruder, jobId: a.job,
         bedLeveling: !a["no-bed-leveling"], flowCalibration: !!a["flow-cali"], vibrationCalibration: !!a["vibration-cali"],
         layerInspect: !!a["layer-inspect"], timelapse: !!a.timelapse, bedType: a["bed-type"],
       }, (l) => console.log(`  ${l}`));

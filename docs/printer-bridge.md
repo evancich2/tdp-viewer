@@ -122,3 +122,58 @@ The MQTT and FTPS clients are small and in this repository (`tools/bambu/`) rath
   - the basic-ftp client against the simulated FTPS server (session reuse included).
 
 None of this shows the real H2C answers the same way. The first real run is the test that matters: `status` and `firmware` first, then a small single-filament print watched at the printer.
+
+## Local H2C routing correction (2026-11-14, physical-side revision)
+
+Use explicit physical sides. User labels such as "extruder 1" must not be equated with internal
+main/deputy indexes. An owner-reported local attempt incorrectly selected the RIGHT extruder and was
+stopped before layer 1 after the printer requested filament there. That real-printer result
+supersedes the first patch's intended-side validation. Numeric CLI side aliases are removed.
+
+```
+npm run printer -- plan part.gcode.3mf --printer h2c.printer.json --spool left --extruder left
+npm run printer -- print part.gcode.3mf --printer h2c.printer.json --spool left --extruder left
+```
+
+Physical LEFT uses internal extruder ID 1, fixed hotend 1, external AMS ID 254.
+Physical RIGHT uses internal extruder ID 0, replaceable main hotend, external AMS ID 255.
+External sources send -1 in legacy ams_mapping and retain 254/255 in ams_mapping2 and
+ams_mapping_info. Logical slicer IDs are a separate namespace: both filament_map and
+physical_extruder_map must match the requested side. The bridge supports one filament,
+Manual mapping, logical nozzle group 0 and Standard flow; unsupported mappings fail closed.
+
+The fixed left hotend may report serial N/A; it is checked using existence bits, normal status
+and diameter. The replaceable right hotend additionally requires a serial and preserves its
+current src_id/tar_id rack association. No hotend replacements are commanded by the bridge.
+Nozzle mapping, nozzle information and filament mapping are included in the dispatch and
+recorded with the queue settings. Spool color is operator-reported; stale printer color metadata
+is not physical color verification. Material type must match the sliced file and feed metadata.
+
+The plan command uses the pinned authenticated status connection only: no upload, dispatch,
+heating or extrusion. Print retains confirmation. Read-only preflight and simulator passes do
+not prove deposition; controlled physical testing and inspection remain necessary.
+
+Official Bambu Studio v02.09.01.70 source conventions:
+
+- [DevDefs.h](https://github.com/bambulab/BambuStudio/blob/v02.09.01.70/src/slic3r/GUI/DeviceCore/DevDefs.h): external and physical extruder IDs.
+- [DevMappingNozzle.cpp](https://github.com/bambulab/BambuStudio/blob/v02.09.01.70/src/slic3r/GUI/DeviceCore/DevMappingNozzle.cpp): group mapping and right/main tar_id substitution.
+- [SelectMachine.cpp](https://github.com/bambulab/BambuStudio/blob/v02.09.01.70/src/slic3r/GUI/SelectMachine.cpp): external legacy sentinel and dispatch metadata.
+- [PrintJob.cpp](https://github.com/bambulab/BambuStudio/blob/v02.09.01.70/src/slic3r/GUI/Jobs/PrintJob.cpp): nozzle fields passed to the private networking component.
+
+The private networking component was not audited. Added fields require physical integration
+verification. These changes do not establish TRL 4 validation or resolve the initial AMS failure.
+
+External-spool readiness: plan and dispatch require the selected extruder snow field to report
+external slot 0 before upload (left 65024, right 65280). This prevents an implicit switch from
+a previously loaded AMS source. Attempt 005 failed retracting AMS slot 1; user manually
+changed the printer source afterward, and live left snow/star 65024 confirmed that change.
+A physical source transition remains a printer-control/manual operation, not a metadata flag.
+
+### Workflow-record settings compatibility
+
+The original local patch serialized all routing data into one `nozzleRouting` string, which can
+exceed `tdp-record/0.1`'s 200-character setting limit. New queue records retain it in bounded
+`nozzleRouting`, `nozzlesInfo` and `amsMappingInfo` fields with
+`nozzleRoutingEncoding: split-fields/1`. Recombining those JSON values reproduces the complete
+routing object. Metadata that cannot fit is held before upload, never truncated. Original historical
+records remain unchanged; any normalized intake copy must retain its source hash and transformation.

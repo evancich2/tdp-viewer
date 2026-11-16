@@ -148,6 +148,7 @@ export function buildMapping(project: SlicedProject, source: FilamentSource): nu
 }
 
 export interface PrintOptions {
+  routing?: import("./routing").NozzleRouting;
   remoteName: string;
   project: SlicedProject;
   mapping: number[];
@@ -185,7 +186,8 @@ export function projectFileCommand(o: PrintOptions, sequenceId: string): Json {
       project_id: o.taskId,
       subtask_id: o.taskId,
       task_id: o.taskId,
-      ams_mapping: o.mapping,
+      ams_mapping: o.mapping.map((tray) => tray === 254 || tray === 255 ? -1 : tray),
+      ...(o.routing ? { nozzle_mapping: o.routing.nozzle_mapping, nozzles_info: o.routing.nozzles_info, ams_mapping_info: o.routing.ams_mapping_info } : {}),
       ams_mapping2: o.mapping.map(amsMapping2),
     },
   };

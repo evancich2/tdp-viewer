@@ -6,6 +6,8 @@ import { BambuPrinter, FTPS_PORT, LAN_USER, MQTT_PORT, PrinterFile, buildMapping
 import { connectPinned, type PeerCert } from "./pinned";
 import { inspectSliced, type SlicedProject } from "./sliced";
 
+import { prepareNozzleRouting, routingRecordSettings, type ExtruderSide } from "./routing";
+
 export type Log = (line: string) => void;
 const H2C = PRINTERS.find((p) => p.id === "bambu-h2c")!;
 
@@ -108,6 +110,7 @@ export interface PrintRequest {
   remoteName?: string;
   plate?: number;
   source: FilamentSource;
+  extruder?: ExtruderSide;
   jobId?: string;
   bedLeveling?: boolean;
   flowCalibration?: boolean;
@@ -160,6 +163,11 @@ export async function startPrint(cfg: PrinterFile, code: string, r: PrintRequest
     const status = await p.refresh();
     log(`printer ${cfg.resourceId} is ${status.state}`);
     if (BUSY.has(status.state)) throw new Error(`printer is ${status.state}${status.file ? ` (${status.file})` : ""}; not sending a new job`);
+    const routing = prepareNozzleRouting(project, mapping, p.state, r.extruder);
+    if (routing) {
+      Object.assign(settings, routingRecordSettings(routing));
+      log(`physical ${routing.physicalSide} extruder (protocol ${routing.protocolExtruderId}), nozzle mapping ${JSON.stringify(routing.nozzle_mapping)}`);
+    }
     let firmware: string | undefined;
     try {
       const fw = await readFirmware(p);
@@ -172,7 +180,7 @@ export async function startPrint(cfg: PrinterFile, code: string, r: PrintRequest
     log(`upload confirmed (${up.confirmedBy === "226" ? "transfer complete" : "by file size"})`);
 
     const cmd = projectFileCommand({
-      remoteName, project, mapping, useAms: r.source.kind === "ams", taskId,
+      remoteName, project, mapping, routing, useAms: r.source.kind === "ams", taskId,
       bedLeveling: r.bedLeveling ?? true, flowCalibration: r.flowCalibration ?? false, vibrationCalibration: r.vibrationCalibration ?? false,
       layerInspect: r.layerInspect ?? false, timelapse: r.timelapse ?? false, bedType: r.bedType ?? "auto",
     }, p.nextSequence());
