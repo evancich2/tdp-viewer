@@ -65,7 +65,7 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 
 | Item | Who | Branch | Since |
 |---|---|---|---|
-| | | | |
+| W-21 Bounded local cross-package reference review | Codex | `codex/local-reference-review` | 2026-11-15 |
 
 ### Next (anyone may claim)
 
