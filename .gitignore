@@ -13,3 +13,6 @@ node_modules/
 dist/
 coverage/
 .DS_Store
+
+# Machine-specific notes and partner contacts for agents (see plan.md §0)
+plan.local.md

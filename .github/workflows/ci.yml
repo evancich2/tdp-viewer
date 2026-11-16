@@ -24,7 +24,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run vectors -- --check
-      - run: npm test
+      - run: npm run coverage # the unit tests, failing if coverage drops below the thresholds in vite.config.ts
       - run: npm run build
       - run: npm run tdp -- verify samples/sample.tdp --trust samples/trust-store.json
       - run: npm run lab

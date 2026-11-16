@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
@@ -126,4 +127,14 @@ export default defineConfig({
   // This does not reduce the separate OCCT worker/WASM or offline precache download size.
   build: { sourcemap: true, chunkSizeWarningLimit: 600 },
   worker: { format: "es", plugins: () => [inlineOcctWasm()] },
+  test: {
+    coverage: {
+      // Unit-testable logic: the verifying core, the CLI's workflow layer and the printer bridge.
+      // The UI and the CLI entry points are exercised by the e2e and subprocess tests instead.
+      include: ["src/core/**", "tools/workflow-commands.ts", "tools/bambu/**"],
+      reporter: ["text-summary", "json-summary"],
+      // A few points under the 2026-11-16 measurement (88.7 / 80.3 / 95.1 / 97.5): a drop fails CI.
+      thresholds: { statements: 86, branches: 78, functions: 93, lines: 95 },
+    },
+  },
 });

@@ -4,7 +4,8 @@
 |---|---|---|
 | Type check | `npm run typecheck` | CI |
 | Lint | `npm run lint` | CI |
-| Unit tests | `npm test` | CI |
+| Unit tests | `npm test` | local |
+| Unit tests with coverage thresholds | `npm run coverage` | CI; fails below the thresholds in `vite.config.ts` |
 | Shared digest vectors | `npm run vectors -- --check` | CI; published fixture must match code |
 | Laboratory demonstrations | `npm run lab` | CI (and byte-for-byte reproducible) |
 | End-to-end, real Chrome, production CSP | `npm run e2e` | CI |
@@ -56,6 +57,45 @@ committed.
 `npm audit`, cross-checked with [osv-scanner](https://github.com/google/osv-scanner)
 (`osv-scanner scan source --lockfile package-lock.json`) against the OSV database, which includes
 the GitHub advisories. Check the Node.js runtime separately: <https://nodejs.org/en/blog/vulnerability>.
+
+## Coverage
+
+`npm run coverage` measures the verifying core (`src/core`), the CLI's workflow layer
+(`tools/workflow-commands.ts`) and the printer bridge (`tools/bambu`). The UI and the CLI entry
+points are exercised by the end-to-end and subprocess tests, which unit coverage doesn't count.
+Thresholds sit a few points under the measured values, so a drop fails CI; raise them as coverage
+grows.
+
+## Property tests and fuzzing
+
+- `tests/json.test.ts`: a seeded property test compares `parseJson` with `JSON.parse` on generated
+  documents (random whitespace, `\u` escapes, key order), requires duplicate names and lone
+  surrogates to be refused, checks canonical output is stable, and requires mutated text to fail
+  only with `JsonError`. It also checks that every input class is actually generated.
+- Seeded generators use `Math.imul`. A plain `seed * 1103515245` overflows 2^53 and drops the low
+  bits: one test only ever mutated every fourth byte, and another never injected a duplicate key.
+- `tests/fuzz.test.ts` (hostile archives) and the ledger mangling test in `tests/workflow.test.ts`.
+
+## Results, 2026-11-16
+
+- Semgrep 1.182.1 (`pip install "semgrep<1.183.0"`, the last release with an Intel macOS build),
+  167 rules, 138 files: one finding, the developer's own gitignored SSH key. 0 in the code.
+- osv-scanner 2.7.1: no issues. npm audit: 0 vulnerabilities. shellcheck 0.11.0 at `-S style`:
+  clean on `install.sh` and `tools/make-tsa-fixtures.sh`.
+- oxlint with the pedantic, perf, nursery and restriction categories as well: only false positives
+  (fallthrough after `process.exit`, rejections handled by `.then`'s second argument) and style.
+  Event handlers named like hooks (`useDemoKeys`) were renamed.
+- TypeScript with `noImplicitReturns` and `allowUnreachableCode: false` as well: only code after
+  `process.exit()` or `die()`.
+- JSON parser: 2,000,000 generated and mutated inputs, 0 disagreements.
+
+Fixed as a result:
+
+- `verifyInclusion` accepted leaf index -1 or 0.5; both Merkle verifiers threw on malformed
+  digests. They now require non-negative safe-integer sizes and well-formed digests.
+- `write3mf` passed XML-illegal characters from titles or STEP part names into the model.
+- `canonicalJson` wrote sparse arrays as `[1,,2]`.
+- Policy: the 3MF process-input export now honours `print.allowExport`.
 
 ## Results, 2026-11-15
 
