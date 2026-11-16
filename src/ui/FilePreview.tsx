@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { utf8 } from "../core/bytes";
+import { exportProcessInput } from "../core/print";
 import type { ManifestFile } from "../core/schema";
 import type { PackageSession } from "../core/session";
 import { PrintPanel } from "./PrintPanel";
@@ -34,12 +35,12 @@ export function FilePreview({ session, path, onAccess }: { session: PackageSessi
   const { file, bytes } = state;
   async function saveProcessInput() {
     try {
-      const opened = await session.openFile(file.path, "export process input");
-      const url = URL.createObjectURL(new Blob([opened.bytes as BlobPart], { type: "model/3mf" }));
-      const a = document.createElement("a"); a.href = url; a.download = file.path.split("/").pop()!; a.click(); URL.revokeObjectURL(url);
-      await session.audit.append("export", file.path, `opaque 3MF process input sha256 ${file.sha256}`);
+      const out = await exportProcessInput(session, file.path);
+      const url = URL.createObjectURL(new Blob([out.bytes as BlobPart], { type: "model/3mf" }));
+      const a = document.createElement("a"); a.href = url; a.download = out.fileName; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
       onAccess();
-    } catch (e) { setState({ kind: "denied", message: (e as Error).message }); }
+    } catch (e) { setState({ kind: "denied", message: (e as Error).message }); onAccess(); }
   }
   return (
     <div className="preview">
@@ -63,7 +64,7 @@ export function FilePreview({ session, path, onAccess }: { session: PackageSessi
           </details>
         </>
       ) : file.mediaType === "model/3mf" ? (
-        <div><p className="muted">Binary 3MF process input. Its bytes are hash-verified; geometry and slicer instructions are not inspected or executed by this viewer.</p><button onClick={saveProcessInput}>Save process input</button></div>
+        <div><p className="muted">Binary 3MF process input. Its bytes are hash-verified; geometry and slicer instructions are not inspected or executed by this viewer.</p><button disabled={!session.policy.print.allowExport} onClick={saveProcessInput}>Save process input</button></div>
       ) : (
         <pre>{utf8.decode(bytes)}</pre>
       )}

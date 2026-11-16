@@ -102,3 +102,20 @@ export async function exportForPrint(
   await session.audit.append("export", path, `3MF for printing, ${triangles} triangles, ${fitNote}, sha256 ${sha256}${settings ? `, settings ${settings.path} sha256 ${settings.sha256}` : ""}`);
   return { fileName, bytes: out, sha256, meshes: stats, printer, fits, settings };
 }
+
+/**
+ * Hands back a packaged 3MF process input's exact bytes for saving outside the viewer. Leaving the
+ * viewer is an export, so the same policy switch as exportForPrint governs it.
+ */
+export async function exportProcessInput(session: PackageSession, path: string): Promise<{ fileName: string; bytes: Uint8Array; sha256: string }> {
+  const deny = async (why: string): Promise<never> => {
+    await session.audit.append("deny", path, `process input export: ${why}`);
+    throw new AccessDenied(`${path}: ${why}`);
+  };
+  if (!session.policy.print.allowExport) return deny("export is disabled by policy");
+  const meta = session.manifest?.files.find((f) => f.path === path);
+  if (meta && (meta.role !== "other" || meta.mediaType !== "model/3mf")) return deny("not a 3MF process input");
+  const { file, bytes } = await session.openFile(path, "export process input");
+  await session.audit.append("export", path, `opaque 3MF process input sha256 ${file.sha256}`);
+  return { fileName: file.path.split("/").pop()!, bytes, sha256: file.sha256 };
+}

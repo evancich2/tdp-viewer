@@ -22,7 +22,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
-import { control, deleteFile, formatStatus, listFiles, pinPrinter, readFirmware, remoteNameFor, startPrint, suitabilityResource, uploadFile, watch, withPrinter } from "./bambu/commands";
+import { BUSY, control, deleteFile, formatStatus, listFiles, pinPrinter, readFirmware, remoteNameFor, startPrint, suitabilityResource, uploadFile, watch, withPrinter } from "./bambu/commands";
 import { discover } from "./bambu/discover";
 import { PrinterFile, buildMapping, amsMapping2 } from "./bambu/h2c";
 import { prepareNozzleRouting } from "./bambu/routing";
@@ -170,12 +170,14 @@ async function main() {
       const p = inspectSliced(bytes, plate);
       if (cmd === "plan") {
         const mapping = buildMapping(p, source);
-        await withPrinter(cfg, await accessCode(), async (printer) => {
+        // Throw rather than die() inside: withPrinter must get to close the connection.
+        const plan = await withPrinter(cfg, await accessCode(), async (printer) => {
           const status = await printer.refresh();
-          if (["RUNNING", "PREPARE", "PAUSE", "SLICING"].includes(status.state)) die(`printer is ${status.state}; plan held`);
+          if (BUSY.has(status.state)) throw new Error(`printer is ${status.state}; plan held`);
           const routing = prepareNozzleRouting(p, mapping, printer.state, extruder);
-          console.log(json({ mode: "READ ONLY - no upload or dispatch", printerState: status.state, sha256: p.sha256, useAMS: source.kind === "ams", ams_mapping: mapping.map(t => t === 254 || t === 255 ? -1 : t), ams_mapping2: mapping.map(amsMapping2), routing }));
+          return json({ mode: "READ ONLY - no upload or dispatch", printerState: status.state, sha256: p.sha256, useAMS: source.kind === "ams", ams_mapping: mapping.map(t => t === 254 || t === 255 ? -1 : t), ams_mapping2: mapping.map(amsMapping2), routing });
         });
+        console.log(plan);
         return;
       }
       if (a.records && existsSync(join(a.records, "queue-entry.json"))) die(`${a.records}/queue-entry.json already exists; not overwriting`);

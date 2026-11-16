@@ -4,9 +4,8 @@ import { PRINTERS } from "../../src/core/printers";
 import { FtpsClient, checkRemoteName } from "./ftps";
 import { BambuPrinter, FTPS_PORT, LAN_USER, MQTT_PORT, PrinterFile, buildMapping, controlCommand, projectFileCommand, type FilamentSource, type Module, type StatusSummary } from "./h2c";
 import { connectPinned, type PeerCert } from "./pinned";
-import { inspectSliced, type SlicedProject } from "./sliced";
-
 import { prepareNozzleRouting, routingRecordSettings, type ExtruderSide } from "./routing";
+import { inspectSliced, type SlicedProject } from "./sliced";
 
 export type Log = (line: string) => void;
 const H2C = PRINTERS.find((p) => p.id === "bambu-h2c")!;
@@ -135,7 +134,7 @@ export interface PrintResult {
   records: { queueEntry: Record<string, unknown>; buildStart?: Record<string, unknown> };
 }
 
-const BUSY = new Set(["RUNNING", "PREPARE", "PAUSE", "SLICING"]);
+export const BUSY: ReadonlySet<string> = new Set(["RUNNING", "PREPARE", "PAUSE", "SLICING"]);
 
 export async function startPrint(cfg: PrinterFile, code: string, r: PrintRequest, log: Log = () => {}): Promise<PrintResult> {
   const now = r.now ?? (() => new Date());

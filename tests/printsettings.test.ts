@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { unzipSync, zipSync } from "fflate";
 import { beforeAll, describe, expect, it } from "vitest";
-import { AuditLog, EngineeringModel, Manifest, PackageSession, buildPackage, defaultPolicy, exportForPrint, generateKeyPair, parsePrintSettings, validateEngineering, type PrintSettings, type StepMesher, type TrustStore } from "../src/core";
+import { AuditLog, EngineeringModel, Manifest, PackageSession, buildPackage, defaultPolicy, exportForPrint, exportProcessInput, generateKeyPair, parsePrintSettings, validateEngineering, type PrintSettings, type StepMesher, type TrustStore } from "../src/core";
 import { sha256Hex, utf8 } from "../src/core/bytes";
 import { sampleContents } from "../tools/sample-data";
 import { LAB_NOW } from "../tools/lab-fixtures";
@@ -58,6 +58,17 @@ describe("signed print settings", () => {
     expect((await open(await pack(undefined,{bytes:generated.bytes,role:"other"}))).trusted).toBe(true);
     expect((await open(await pack(undefined,{bytes:generated.bytes,role:"model"}))).trusted).toBe(false);
     expect((await open(await pack(undefined,{bytes:utf8.encode("not zip"),role:"other"}))).trusted).toBe(false);
+  });
+  it("exports a 3MF process input byte-for-byte only when policy allows export", async () => {
+    const generated=await exportForPrint(await open(await pack()),modelPath,mesh,{now,settingsPath});
+    const bytes=await pack(undefined,{bytes:generated.bytes,role:"other"});
+    const out=await exportProcessInput(await open(bytes),"process/derived.3mf");
+    expect(out.fileName).toBe("derived.3mf");
+    expect(Buffer.from(out.bytes).equals(Buffer.from(generated.bytes))).toBe(true);
+    const locked=await PackageSession.open("settings.tdp",bytes,store,{...defaultPolicy,print:{...defaultPolicy.print,allowExport:false}},new AuditLog(() => now),now);
+    await expect(exportProcessInput(locked,"process/derived.3mf")).rejects.toThrow(/disabled by policy/);
+    expect((await locked.audit.list()).at(-1)).toMatchObject({action:"deny",subject:"process/derived.3mf"});
+    await expect(exportProcessInput(await open(bytes),settingsPath)).rejects.toThrow(/not a 3MF process input/);
   });
   it("requires a 0.2 engineering artifact to classify 3MF as non-authoritative process input", () => {
     const files=unzipSync(readFileSync("samples/lab/SYN-PH-2000_A.tdp"));
