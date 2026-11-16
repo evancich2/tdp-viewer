@@ -65,7 +65,7 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 
 | Item | Who | Branch | Since |
 |---|---|---|---|
-| | | | |
+| W-19 Reconcile received evidence and capsule exchange notes | Codex | `codex/evidence-plan-sync` | 2026-11-16 |
 
 ### Next (anyone may claim)
 
