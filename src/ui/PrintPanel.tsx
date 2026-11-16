@@ -21,12 +21,14 @@ function download(name: string, bytes: Uint8Array) {
 export function PrintPanel({ session, file, onAccess }: { session: PackageSession; file: ManifestFile; onAccess: () => void }) {
   const [state, setState] = useState<State>({ kind: "idle" });
   const [printerId, setPrinterId] = useState(PRINTERS[0]!.id);
+  const [settingsPath, setSettingsPath] = useState("");
   const printer = PRINTERS.find((p) => p.id === printerId)!;
+  const settingsFiles = session.manifest!.files.filter((f) => f.role === "other" && f.mediaType === "application/json" && (!session.engineering || session.engineering.model.artifacts.some((a) => a.path === f.path && a.class === "process-input" && !a.authoritative)));
 
   async function run() {
     setState({ kind: "working" });
     try {
-      const out = await exportForPrint(session, file.path, workerMesher, { printer });
+      const out = await exportForPrint(session, file.path, workerMesher, { printer, settingsPath: settingsPath || undefined });
       download(out.fileName, out.bytes);
       setState({ kind: "done", out });
     } catch (e) {
@@ -49,6 +51,13 @@ export function PrintPanel({ session, file, onAccess }: { session: PackageSessio
       </p>
       <div className="row">
         <label className="row">
+          Signed print settings
+          <select value={settingsPath} onChange={(e) => { setSettingsPath(e.target.value); setState({ kind: "idle" }); }}>
+            <option value="">No settings attached</option>
+            {settingsFiles.map((f) => <option key={f.path} value={f.path}>{f.path}</option>)}
+          </select>
+        </label>
+        <label className="row">
           Printer
           <select value={printerId} onChange={(e) => { setPrinterId(e.target.value); setState({ kind: "idle" }); }}>
             {PRINTERS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -58,6 +67,7 @@ export function PrintPanel({ session, file, onAccess }: { session: PackageSessio
           {state.kind === "working" ? "Meshing…" : "Export 3MF for Bambu Studio"}
         </button>
       </div>
+      <p className="muted small">Attached settings are recorded in 3MF metadata for review. Confirm them in the slicer; they are not automatically applied or a permission to print.</p>
       {printer.buildVolume.every(Number.isFinite) && (
         <p className="muted">
           Build volume checked: {printer.buildVolume.join(" × ")} mm. {printer.note}
@@ -69,6 +79,7 @@ export function PrintPanel({ session, file, onAccess }: { session: PackageSessio
         <div className={`banner ${state.out.fits ? "pass" : "fail"}`}>
           {!state.out.fits && <p><strong>Too large for the {state.out.printer.name}</strong> in any orientation. Split or scale it in the slicer.</p>}
           Saved <strong>{state.out.fileName}</strong> (SHA-256 <code>{state.out.sha256.slice(0, 16)}…</code>)
+          {state.out.settings && <p>Settings attached: {state.out.settings.path}. Confirm the recorded values in the slicer.</p>}
           <ul>
             {state.out.meshes.map((m, i) => (
               <li key={i}>

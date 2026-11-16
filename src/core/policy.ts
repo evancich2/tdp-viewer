@@ -49,6 +49,8 @@ export const defaultPolicy: Policy = {
   allowedMediaTypes: {
     "application/pdf": startsWith("%PDF-"),
     "model/step": startsWith("ISO-10303-21;"),
+    // Opaque process input: ZIP prefix only, never sliced, executed or recursively extracted here.
+    "model/3mf": startsWith("PK\x03\x04"),
     "application/json": isUtf8Text,
     "text/csv": isUtf8Text,
     "text/plain": isUtf8Text,

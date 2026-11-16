@@ -1,4 +1,5 @@
 import { sha256Hex } from "./bytes";
+import { parsePrintSettings, type PrintSettings } from "./printsettings";
 import { meshStats, weld, type Mesh, type MeshStats } from "./mesh";
 import { PRINTERS, checkFit, type FitResult, type PrinterProfile } from "./printers";
 import { AccessDenied, type PackageSession } from "./session";
@@ -15,6 +16,7 @@ export interface PrintExport {
   printer: PrinterProfile;
   /** True when every solid fits the printer's build volume in some orientation. */
   fits: boolean;
+  settings?: { path: string; sha256: string; value: PrintSettings };
 }
 
 /**
@@ -27,7 +29,7 @@ export async function exportForPrint(
   session: PackageSession,
   path: string,
   mesher: StepMesher,
-  { now = new Date(), printer = PRINTERS[0]! }: { now?: Date; printer?: PrinterProfile } = {},
+  { now = new Date(), printer = PRINTERS[0]!, settingsPath }: { now?: Date; printer?: PrinterProfile; settingsPath?: string } = {},
 ): Promise<PrintExport> {
   const { print } = session.policy;
   const deny = async (why: string): Promise<never> => {
@@ -39,6 +41,23 @@ export async function exportForPrint(
   if (meta && (meta.role !== "model" || meta.mediaType !== "model/step")) return deny("not a STEP model");
 
   const { file, bytes } = await session.openFile(path, "print export");
+  let settings: PrintExport["settings"];
+  if (settingsPath) {
+    try {
+      const opened = await session.openFile(settingsPath, "print settings");
+      if (opened.file.mediaType !== "application/json" || opened.file.role !== "other") throw new Error("settings must be a manifest-listed JSON process input with role other");
+      if (session.engineering) {
+        const artifact = session.engineering.model.artifacts.find((a) => a.path === settingsPath);
+        if (!artifact || artifact.class !== "process-input" || artifact.authoritative) throw new Error("settings must be a non-authoritative process-input artifact");
+      }
+      const value = parsePrintSettings(new TextDecoder("utf-8", { fatal: true }).decode(opened.bytes));
+      if (value.modelPath !== path || value.modelSha256 !== file.sha256) throw new Error("settings are bound to a different model or model digest");
+      if (value.printerId !== printer.id) throw new Error("settings are bound to a different printer profile");
+      settings = { path: settingsPath, sha256: opened.file.sha256, value };
+    } catch (e) {
+      return deny(`invalid print settings: ${(e as Error).message}`);
+    }
+  }
   let meshes: Mesh[];
   try {
     meshes = (await mesher(bytes)).map((m) => weld(m));
@@ -71,12 +90,15 @@ export async function exportForPrint(
     exportedAt: now.toISOString(),
     targetPrinter: sized ? printer.name : undefined,
     targetPrinterFirmware: sized ? printer.firmware : undefined,
+    printSettings: settings?.value,
+    printSettingsPath: settings?.path,
+    printSettingsSha256: settings?.sha256,
   });
   const sha256 = await sha256Hex(out);
   const base = file.path.split("/").pop()!.replace(/\.[^.]+$/, "");
   const fileName = `${base}.3mf`;
   const target = printer.firmware ? `${printer.name} (firmware ${printer.firmware})` : printer.name;
   const fitNote = fits ? `fits ${target}` : `TOO LARGE for ${target}`;
-  await session.audit.append("export", path, `3MF for printing, ${triangles} triangles, ${fitNote}, sha256 ${sha256}`);
-  return { fileName, bytes: out, sha256, meshes: stats, printer, fits };
+  await session.audit.append("export", path, `3MF for printing, ${triangles} triangles, ${fitNote}, sha256 ${sha256}${settings ? `, settings ${settings.path} sha256 ${settings.sha256}` : ""}`);
+  return { fileName, bytes: out, sha256, meshes: stats, printer, fits, settings };
 }

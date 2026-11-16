@@ -264,8 +264,14 @@ export function validateEngineering(model: EngineeringModel, manifest: Manifest)
     const f = manifest.files.find((x) => x.path === a.path);
     if (!f) error(`artifact ${a.id}: ${a.path} is not in the manifest`);
     else if (f.sha256 !== a.sha256) error(`artifact ${a.id}: digest differs from the manifest's for ${a.path}`);
+    if (f?.mediaType === "model/3mf" && (a.class !== "process-input" || a.authoritative))
+      error(`artifact ${a.id}: 3MF must be a non-authoritative process-input`);
     if (a.item) needItem(a.item, `artifact ${a.id}`);
     if (a.source && !sources.has(a.source)) error(`artifact ${a.id} names unknown source ${a.source}`);
+  }
+  for (const f of manifest.files) {
+    if (f.mediaType === "model/3mf" && !model.artifacts.some((a) => a.path === f.path))
+      error(`3MF ${f.path} needs a non-authoritative process-input artifact`);
   }
   for (const g of model.geometryLinks) {
     if (!artifacts.has(g.artifact)) error(`geometry link ${g.id} names unknown artifact ${g.artifact}`);

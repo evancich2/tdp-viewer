@@ -219,6 +219,7 @@ export async function checkContents(
     seen.add(f.path);
     if (pathProblem) problems.push(pathProblem);
     if (f.path === MANIFEST_PATH || f.path === SIGNATURES_PATH) problems.push("reserved path");
+    if (f.mediaType === "model/3mf" && f.role !== "other") problems.push("3MF is a process input, not an authoritative model: use role other");
     if (!entry) problems.push("missing from package");
     else {
       if (entry.bytes.length !== f.size) problems.push(`size ${entry.bytes.length}, manifest says ${f.size}`);

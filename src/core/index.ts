@@ -9,6 +9,7 @@ export * from "./pack";
 export * from "./mesh";
 export * from "./threemf";
 export * from "./print";
+export * from "./printsettings";
 export * from "./diff";
 export * from "./printers";
 export * from "./imagediff";

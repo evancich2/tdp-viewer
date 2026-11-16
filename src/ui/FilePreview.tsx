@@ -32,6 +32,15 @@ export function FilePreview({ session, path, onAccess }: { session: PackageSessi
   if (state.kind === "denied") return <div className="banner fail">Access denied: {state.message}</div>;
 
   const { file, bytes } = state;
+  async function saveProcessInput() {
+    try {
+      const opened = await session.openFile(file.path, "export process input");
+      const url = URL.createObjectURL(new Blob([opened.bytes as BlobPart], { type: "model/3mf" }));
+      const a = document.createElement("a"); a.href = url; a.download = file.path.split("/").pop()!; a.click(); URL.revokeObjectURL(url);
+      await session.audit.append("export", file.path, `opaque 3MF process input sha256 ${file.sha256}`);
+      onAccess();
+    } catch (e) { setState({ kind: "denied", message: (e as Error).message }); }
+  }
   return (
     <div className="preview">
       <h3>{file.path}</h3>
@@ -53,6 +62,8 @@ export function FilePreview({ session, path, onAccess }: { session: PackageSessi
             <pre>{utf8.decode(bytes)}</pre>
           </details>
         </>
+      ) : file.mediaType === "model/3mf" ? (
+        <div><p className="muted">Binary 3MF process input. Its bytes are hash-verified; geometry and slicer instructions are not inspected or executed by this viewer.</p><button onClick={saveProcessInput}>Save process input</button></div>
       ) : (
         <pre>{utf8.decode(bytes)}</pre>
       )}
