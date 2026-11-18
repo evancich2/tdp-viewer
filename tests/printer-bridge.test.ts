@@ -410,6 +410,27 @@ live("against a simulated H2C", () => {
     expect(RecordData.parse(w.buildComplete)).toEqual({ kind: "build-complete", jobId: "J-1", submittedFileSha256: sha256(bytes), startedAt: "2026-11-13T12:00:00.000Z", completedAt: "2026-11-13T13:00:00.000Z", errors: [], settings: { finalState: "FINISH" } });
   });
 
+  it("retains an observed HMS after it clears before FINISH", async () => {
+    const f = await start({ autoRun: "finish", transientDiagnostics: true, stepMs: 150 });
+    const cfg = await pinned(f);
+    const r = await startPrint(cfg, CODE, { bytes: sliced(), localName: "a.gcode.3mf", source: { kind: "spool", side: "left" }, jobId: "J-transient" });
+    const w = await watch(cfg, CODE, { untilDone: true, onUpdate: () => {}, job: { jobId: "J-transient", sha256: r.project.sha256, startedAt: "2026-11-13T12:00:00.000Z" } });
+    expect(w.final.hms).toEqual([]);
+    expect(w.final.state).toBe("FINISH");
+    const bc = RecordData.parse(w.buildComplete);
+    expect(bc.kind === "build-complete" && bc.errors).toContain("HMS 0300-0300-0001-0004");
+  });
+
+  it("retains an observed print error after the final status clears it", async () => {
+    const f = await start({ autoRun: "finish", transientDiagnostics: true, stepMs: 150 });
+    const cfg = await pinned(f);
+    const r = await startPrint(cfg, CODE, { bytes: sliced(), localName: "a.gcode.3mf", source: { kind: "spool", side: "left" }, jobId: "J-transient-error" });
+    const w = await watch(cfg, CODE, { untilDone: true, onUpdate: () => {}, job: { jobId: "J-transient-error", sha256: r.project.sha256, startedAt: "2026-11-13T12:00:00.000Z" } });
+    expect(w.final.printError).toBeUndefined(); // the status summary omits a cleared zero
+    const bc = RecordData.parse(w.buildComplete);
+    expect(bc.kind === "build-complete" && bc.errors).toContain("print_error 0x0300400c");
+  });
+
   it("records the printer's errors when a job fails", async () => {
     const f = await start({ autoRun: "fail" });
     const cfg = await pinned(f);
@@ -440,7 +461,7 @@ live("against a simulated H2C", () => {
 
   it("drives the CLI end to end: pin, status, firmware, inspect, print, watch", async () => {
     const certs = makeCert(SERIAL);
-    const f = await start({ autoRun: "finish", stepMs: 200, certs });
+    const f = await start({ autoRun: "finish", transientDiagnostics: true, stepMs: 1000, certs });
     const dir = mkdtempSync(join(tmpdir(), "printer-cli-"));
     const run = (args: string[], env: Record<string, string> = {}) => promisify(execFile)(process.execPath, ["--import", "tsx", "tools/printer.ts", ...args], { env: { ...process.env, ...env }, timeout: 60_000 }).then((r) => ({ code: 0, ...r }), (e: { code: number; stdout: string; stderr: string }) => e);
     const cfg = await pinned(f);
@@ -467,7 +488,9 @@ live("against a simulated H2C", () => {
     expect(RecordData.parse(q).kind).toBe("queue-entry");
     const w = await run(["watch", "--printer", pr, "--until-done", "--job", "J-0601", "--sha256", q.submittedFile.sha256, "--started-at", b.startedAt, "--records", join(dir, "rec")], env);
     expect(w.stdout).toMatch(/FINISH/);
-    expect(RecordData.parse(JSON.parse(readFileSync(join(dir, "rec", "build-complete.json"), "utf8")))).toMatchObject({ kind: "build-complete", jobId: "J-0601", errors: [] });
+    expect(w.stdout).toContain("2 retained diagnostics");
+    expect(w.stdout).toContain("machine completion is not inspection acceptance");
+    expect(RecordData.parse(JSON.parse(readFileSync(join(dir, "rec", "build-complete.json"), "utf8")))).toMatchObject({ kind: "build-complete", jobId: "J-0601", errors: ["print_error 0x0300400c", "HMS 0300-0300-0001-0004"] });
     // Refused (Developer Mode off): exit 1, no records, and the cleanup command is offered and works.
     await f.close();
     const off = await startFakeH2C({ serial: SERIAL, accessCode: CODE, devMode: false, refusal: "err_code", certs });

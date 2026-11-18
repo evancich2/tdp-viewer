@@ -219,7 +219,15 @@ export async function watch(cfg: PrinterFile, code: string, o: { onUpdate: (s: S
   const now = o.now ?? (() => new Date());
   return withPrinter(cfg, code, async (p) => {
     let last = "";
-    const emit = () => { const s = p.summary; const k = JSON.stringify([s.state, s.percent, s.layer, s.hms, s.printError]); if (k !== last) { last = k; o.onUpdate(s); } };
+    const observedHms = new Set<string>();
+    const observedPrintErrors = new Set<number>();
+    const emit = () => {
+      const s = p.summary;
+      for (const h of s.hms) observedHms.add(h);
+      if (s.printError) observedPrintErrors.add(s.printError);
+      const k = JSON.stringify([s.state, s.percent, s.layer, s.hms, s.printError]);
+      if (k !== last) { last = k; o.onUpdate(s); }
+    };
     await p.refresh();
     emit();
     if (!o.untilDone) return { final: p.summary };
@@ -232,8 +240,8 @@ export async function watch(cfg: PrinterFile, code: string, o: { onUpdate: (s: S
     const final = p.summary;
     if (!ended) return { final };
     const errors = [
-      ...(final.printError ? [`print_error 0x${final.printError.toString(16).padStart(8, "0")}`] : []),
-      ...final.hms.map((h) => `HMS ${h}`),
+      ...[...observedPrintErrors].map((e) => `print_error 0x${e.toString(16).padStart(8, "0")}`),
+      ...[...observedHms].map((h) => `HMS ${h}`),
       ...(ended !== "FINISH" ? [`printer reported ${ended}`] : []),
     ];
     const buildComplete = o.job ? { kind: "build-complete", jobId: o.job.jobId, submittedFileSha256: o.job.sha256, startedAt: o.job.startedAt, completedAt: now().toISOString(), errors, settings: { finalState: ended } } : undefined;

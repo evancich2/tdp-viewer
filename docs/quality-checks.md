@@ -1,5 +1,41 @@
 # Quality checks
 
+## Withdrawn-advisory CI repair, 2026-11-18
+
+Run `npm run audit:ci` for the CI gate. It preserves the raw `npm audit --json` report in
+`audit-results/` and the job log. For each high/critical transitive path it verifies every
+underlying GHSA against GitHub's live public advisory API. Only a reviewed, already withdrawn
+advisory with matching identity and npm package can be reconciled. Active or unknown findings,
+inconsistent counts, unresolved/cyclic-only paths, malformed JSON and failed/offline lookups
+fail the gate. Redirects are refused and credentials go only to the fixed GitHub API origin.
+There is no static advisory allowlist or automatic dependency downgrade.
+
+Twenty regression/negative tests cover withdrawal, active findings, mixed causes, malformed
+reports and lookup failures. Typecheck/lint and 249 Windows-supported tests with coverage
+passed; the Unix SSH-agent tests remain a Linux-CI requirement. Live checking reconciled seven
+npm package paths through GHSA-fc5q-39xc-vjpf, withdrawn at 2026-11-18T15:38:56Z. This is not a
+claim that raw npm audit returned zero; its exit code and original findings remain in the output.
+Public API documentation: https://docs.github.com/en/rest/security-advisories/global-advisories#get-a-global-security-advisory
+
+## Evidence follow-through, 2026-11-18
+
+Transient HMS retention, transient print-error retention and CLI completion reporting were each
+reproduced failing, fixed and retested against a local synthetic printer. Typecheck and lint
+passed. Windows coverage passed with 229 tests after explicitly excluding `tests/agent.test.ts`:
+its Unix SSH-agent socket tests fail with ENOTSOCK on Windows; they must run in Linux CI, and
+are not counted as local passes. Coverage: statements 88.69%, branches 80.24%, functions 95.10%,
+lines 97.51%. Digest vectors, 54 lab demonstrations, lab reproducibility and both production
+Chrome/PWA suites passed. No real printer operation was performed.
+
+`npm audit --omit=dev` reported zero findings. Full `npm audit` still reported seven affected
+development-tool package paths through one picomatch advisory,
+[GHSA-fc5q-39xc-vjpf / CVE-2026-112366](https://github.com/advisories/GHSA-fc5q-39xc-vjpf).
+GitHub marks that advisory withdrawn on November 18; the registry still listed it when checked.
+The official registry's latest picomatch was 4.0.7, already locked here. No speculative downgrade,
+audit suppression or dependency replacement was made. The full audit gate remains enabled;
+its raw failure is retained rather than described as a clean full audit. This update did not
+rerun Semgrep or OSV; the prior results below remain historical.
+
 | Check | Command | Gate |
 |---|---|---|
 | Type check | `npm run typecheck` | CI |
@@ -9,7 +45,7 @@
 | Shared digest vectors | `npm run vectors -- --check` | CI; published fixture must match code |
 | Laboratory demonstrations | `npm run lab` | CI (and byte-for-byte reproducible) |
 | End-to-end, real Chrome, production CSP | `npm run e2e` | CI |
-| Known vulnerabilities in dependencies | `npm audit` | CI (`--audit-level=high`) |
+| Known vulnerabilities in dependencies | `npm run audit:ci` | CI; active high/critical findings and unverified withdrawal status block |
 | All of type check, lint and tests | `npm run check` | local |
 
 ## Build size and byte preservation

@@ -53,7 +53,7 @@ npm run coverage                       # unit tests with coverage thresholds (wh
 npm run vectors -- --check             # published digest vectors match the code
 npm run lab                            # then: git diff samples/lab shows only timings
 npm run e2e                            # production build, real Chrome, production CSP
-npm audit                              # expect 0 vulnerabilities
+npm run audit:ci                       # blocks active high/critical findings; verifies live withdrawals
 ```
 
 New lab demonstrations must be added to `DEMO_CATEGORIES` in `tools/lab-scenario.ts`, or tests
@@ -82,16 +82,19 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 
 ### Blocked (waiting on a person; don't fabricate)
 
-- **W-01 Real BasePlate package (STDP-001/002/005). Waiting on Khaled** for the controlled design
-  files and drawing, the approved limits and decision rule, the article 1 and 2 measurements, the
-  gauge-check readings and the evidence files. Then build a real `tdp-manifest/0.2` package and
-  enter the INV-06 history as signed records labeled real. The steps are in
-  `docs/laboratory-demo.md`.
+- **W-01 Real BasePlate trusted release (STDP-001/002/005).** Source/build records, instrument
+  reference check and owner dispositions are received in the private evidence collection.
+  Do not reopen those completed owner decisions or claim they are still missing. Controlled
+  release authority, applicable rights, record/signing delegation and a verified real intake
+  remain separate. Never turn raw evidence into invented signed history. Follow-on hardware
+  corrective action and warning disposition remain in the private action tracker.
 - **W-02 H2C hardware checks (STDP-002). Waiting on Khaled.** Requested 2026-11-16. Two things are
   confirmed only against the simulator: external spools sent as `ams_mapping` -1, and `nozzleId`
   taken from the slicer's extruder number. Start with the read-only `printer plan`.
-- **W-03 First real printer-bridge run.** Needs a machine on the printer's network with LAN Only
-  and Developer Mode on. Nick's Mac can't reach the printer.
+- **W-03 Physical validation of reconciled main.** Earlier owner-executed builds used the
+  recorded old-base integration patch; current main already incorporates the routing work
+  through PR #3. New hardware validation of this revision remains separate. Start read-only;
+  only an authorized operator on the printer network should perform any physical run.
 - **W-04 RFI Revision 1 gaps (STDP-007).** `docs/rfi-coverage.md` is a working mapping. Closing it
   needs the gap list from the RFI draft, which only Khaled can share.
 - **W-05 Interop samples (STDP-012).** Needs a sample file from each of INV-01, 02, 03 and 05.
@@ -101,6 +104,17 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 - **W-07 Credentials. Nick, on his machine;** details in `plan.local.md`.
 
 ### Done (recent; the full history is in git)
+
+- **W-24** Added a fail-closed npm audit gate that follows transitive finding paths and
+  verifies live GitHub withdrawal status, identity and package. No static ignores or version
+  downgrades. Raw audit/withdrawal records are retained; active findings and lookup/schema
+  failures block CI. Twenty negative/withdrawal tests, lint/typecheck and 249 Windows-supported
+  tests/coverage passed (Codex, 2026-11-18); full Linux verification runs on the PR.
+
+- **W-23** Retain observed HMS/print errors after their live fields clear; surface diagnostic
+  count and machine-completion/inspection separation in the CLI (Codex, 2026-11-18).
+  Three regression/fix/retest cycles used only the simulator. Updated the received-evidence
+  boundary without importing private records or altering owner dispositions.
 
 - **W-13** Semgrep, osv-scanner, shellcheck and extended lint runs; coverage gate in CI;
   `diff.ts` and `workflow-commands.ts` tests (Claude, 2026-11-16).
@@ -131,6 +145,13 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
   it only through tracker comments that Nick has approved.
 
 ## 6. Log (newest first)
+
+- 2026-11-18 Codex: W-24 reconciles stale npm advisories only after an authoritative live
+  withdrawal check; all high/critical paths must qualify and uncertainty blocks the gate.
+
+- 2026-11-18 Codex: W-23 preserves cleared diagnostics in completion evidence and makes
+  machine completion distinct from inspection acceptance. Existing owner dispositions remain
+  closed; current-revision hardware validation and workflow follow-ons remain separate.
 
 - 2026-11-16 Claude: protected `main`; ran Semgrep, osv-scanner and coverage; added
   `diff`/`workflow-commands` tests and a CI coverage gate; turned this file into the shared board

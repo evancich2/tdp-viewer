@@ -177,3 +177,17 @@ exceed `tdp-record/0.1`'s 200-character setting limit. New queue records retain 
 `nozzleRoutingEncoding: split-fields/1`. Recombining those JSON values reproduces the complete
 routing object. Metadata that cannot fit is held before upload, never truncated. Original historical
 records remain unchanged; any normalized intake copy must retain its source hash and transformation.
+
+### Retained completion diagnostics
+
+`watch --until-done --job ...` retains each distinct HMS code and nonzero print error it
+observes during that watch, even if a later report clears the field before `FINISH`.
+Repeated reports do not duplicate a diagnostic. The final live status remains a snapshot;
+the generated `build-complete.json` carries the retained diagnostics in `errors`.
+Diagnostics before the watcher connects cannot be reconstructed from a later clean status.
+
+The CLI reports machine completion and the retained diagnostic count separately. A `FINISH`
+state does not establish dimensional acceptance, close a discrepancy or authorize release.
+Warnings still require an operator's disposition. No nozzle-flow coupon, inspection or
+assembly activation is executed by watching the printer; those require their own workflow
+and actual operator evidence. Regression tests exercise a synthetic printer only.
