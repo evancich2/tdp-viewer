@@ -211,7 +211,8 @@ async function main() {
       if (r.buildComplete && a.records) {
         mkdirSync(a.records, { recursive: true });
         writeNew(join(a.records, "build-complete.json"), r.buildComplete);
-        console.log(`wrote ${a.records}/build-complete.json (record outcome: ${r.final.state === "FINISH" ? "completed" : "failed"})`);
+        const diagnostics = Array.isArray(r.buildComplete.errors) ? r.buildComplete.errors.length : 0;
+        console.log(`wrote ${a.records}/build-complete.json (record outcome: ${r.final.state === "FINISH" ? "completed" : "failed"}; ${diagnostics} retained diagnostics; machine completion is not inspection acceptance)`);
       }
       return;
     }

@@ -39,6 +39,8 @@ export interface FakeOptions {
   maxTlsVersion?: tls.SecureVersion;
   /** Run a started job to FINISH (or FAILED with an HMS) by itself. */
   autoRun?: "finish" | "fail" | false;
+  /** Synthetic warning/error which clears before FINISH; tests retained evidence. */
+  transientDiagnostics?: boolean;
   stepMs?: number;
   /** Send a hostile oversized MQTT packet header after CONNACK. */
   hostileOversize?: boolean;
@@ -145,8 +147,10 @@ export async function startFakeH2C(o: FakeOptions): Promise<FakeH2C> {
       later(step, () => report({ gcode_state: "PREPARE", task_id: p.task_id, subtask_name: p.subtask_name, mc_percent: 0, total_layer_num: 40 }));
       later(step * 2, () => report({ gcode_state: "RUNNING", mc_percent: 1, layer_num: 1, mc_remaining_time: 42 }));
       if (o.autoRun === "finish") {
-        later(step * 3, () => report({ mc_percent: 50, layer_num: 20, mc_remaining_time: 21 }));
-        later(step * 4, () => report({ gcode_state: "FINISH", mc_percent: 100, layer_num: 40, mc_remaining_time: 0 }));
+        later(step * 3, () => report({ mc_percent: 50, layer_num: 20, mc_remaining_time: 21,
+          ...(o.transientDiagnostics ? { print_error: 0x0300400c, hms: [{ attr: 0x03000300, code: 0x00010004 }] } : {}) }));
+        later(step * 4, () => report({ gcode_state: "FINISH", mc_percent: 100, layer_num: 40, mc_remaining_time: 0,
+          ...(o.transientDiagnostics ? { print_error: 0, hms: [] } : {}) }));
       } else if (o.autoRun === "fail") {
         later(step * 3, () => report({ gcode_state: "FAILED", print_error: 0x0300400c, hms: [{ attr: 0x03000300, code: 0x00010004 }] }));
       }
