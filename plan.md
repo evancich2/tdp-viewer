@@ -53,7 +53,7 @@ npm run coverage                       # unit tests with coverage thresholds (wh
 npm run vectors -- --check             # published digest vectors match the code
 npm run lab                            # then: git diff samples/lab shows only timings
 npm run e2e                            # production build, real Chrome, production CSP
-npm audit                              # expect 0 vulnerabilities
+npm run audit:ci                       # blocks active high/critical findings; verifies live withdrawals
 ```
 
 New lab demonstrations must be added to `DEMO_CATEGORIES` in `tools/lab-scenario.ts`, or tests
@@ -105,6 +105,12 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
 
 ### Done (recent; the full history is in git)
 
+- **W-24** Added a fail-closed npm audit gate that follows transitive finding paths and
+  verifies live GitHub withdrawal status, identity and package. No static ignores or version
+  downgrades. Raw audit/withdrawal records are retained; active findings and lookup/schema
+  failures block CI. Twenty negative/withdrawal tests, lint/typecheck and 249 Windows-supported
+  tests/coverage passed (Codex, 2026-11-18); full Linux verification runs on the PR.
+
 - **W-23** Retain observed HMS/print errors after their live fields clear; surface diagnostic
   count and machine-completion/inspection separation in the CLI (Codex, 2026-11-18).
   Three regression/fix/retest cycles used only the simulator. Updated the received-evidence
@@ -139,6 +145,9 @@ fail. Static analysis (Semgrep, osv-scanner, shellcheck) is described in `docs/q
   it only through tracker comments that Nick has approved.
 
 ## 6. Log (newest first)
+
+- 2026-11-18 Codex: W-24 reconciles stale npm advisories only after an authoritative live
+  withdrawal check; all high/critical paths must qualify and uncertainty blocks the gate.
 
 - 2026-11-18 Codex: W-23 preserves cleared diagnostics in completion evidence and makes
   machine completion distinct from inspection acceptance. Existing owner dispositions remain

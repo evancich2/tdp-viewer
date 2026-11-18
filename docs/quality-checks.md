@@ -1,5 +1,22 @@
 # Quality checks
 
+## Withdrawn-advisory CI repair, 2026-11-18
+
+Run `npm run audit:ci` for the CI gate. It preserves the raw `npm audit --json` report in
+`audit-results/` and the job log. For each high/critical transitive path it verifies every
+underlying GHSA against GitHub's live public advisory API. Only a reviewed, already withdrawn
+advisory with matching identity and npm package can be reconciled. Active or unknown findings,
+inconsistent counts, unresolved/cyclic-only paths, malformed JSON and failed/offline lookups
+fail the gate. Redirects are refused and credentials go only to the fixed GitHub API origin.
+There is no static advisory allowlist or automatic dependency downgrade.
+
+Twenty regression/negative tests cover withdrawal, active findings, mixed causes, malformed
+reports and lookup failures. Typecheck/lint and 249 Windows-supported tests with coverage
+passed; the Unix SSH-agent tests remain a Linux-CI requirement. Live checking reconciled seven
+npm package paths through GHSA-fc5q-39xc-vjpf, withdrawn at 2026-11-18T15:38:56Z. This is not a
+claim that raw npm audit returned zero; its exit code and original findings remain in the output.
+Public API documentation: https://docs.github.com/en/rest/security-advisories/global-advisories#get-a-global-security-advisory
+
 ## Evidence follow-through, 2026-11-18
 
 Transient HMS retention, transient print-error retention and CLI completion reporting were each
@@ -28,7 +45,7 @@ rerun Semgrep or OSV; the prior results below remain historical.
 | Shared digest vectors | `npm run vectors -- --check` | CI; published fixture must match code |
 | Laboratory demonstrations | `npm run lab` | CI (and byte-for-byte reproducible) |
 | End-to-end, real Chrome, production CSP | `npm run e2e` | CI |
-| Known vulnerabilities in dependencies | `npm audit` | CI (`--audit-level=high`) |
+| Known vulnerabilities in dependencies | `npm run audit:ci` | CI; active high/critical findings and unverified withdrawal status block |
 | All of type check, lint and tests | `npm run check` | local |
 
 ## Build size and byte preservation

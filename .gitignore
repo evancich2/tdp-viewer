@@ -12,6 +12,7 @@ key2.pub
 node_modules/
 dist/
 coverage/
+audit-results/
 .DS_Store
 
 # Machine-specific notes and partner contacts for agents (see plan.md §0)

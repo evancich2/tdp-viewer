@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "oxlint -c .oxlintrc.json --deny-warnings src tools tests vite.config.ts",
     "check": "npm run typecheck && npm run lint && npm test",
+    "audit:ci": "tsx tools/dependency-audit.ts",
     "tdp": "tsx tools/tdp.ts",
     "sample": "tsx tools/make-sample.ts",
     "e2e": "vite build && tsx tests/e2e/viewer.e2e.ts && tsx tests/e2e/pwa.e2e.ts",
