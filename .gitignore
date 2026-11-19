@@ -12,4 +12,5 @@ key2.pub
 node_modules/
 dist/
 coverage/
+.lab-evidence/
 .DS_Store
